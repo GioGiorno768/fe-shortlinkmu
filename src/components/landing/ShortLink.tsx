@@ -6,7 +6,7 @@ export default function ShortLink() {
           type="text"
           id="hero-input"
           name="hero-input"
-          className="py-[1em] sm:py-[1em] px-[2.5em] block w-full shadow-sm shadow-slate-500/40 text-[1.6em] focus:outline-bluelight disabled:opacity-50 disabled:pointer-events-none rounded-full"
+          className="py-[1em] sm:py-[1em] px-[2.5em] block w-full shadow-sm shadow-slate-500/40 text-[1.6em] focus:outline-bluelight disabled:opacity-50 disabled:pointer-events-none rounded-full bg-white"
           placeholder="Paste your link here..."
         />
         <button
@@ -17,7 +17,7 @@ export default function ShortLink() {
         </button>
       </form>
       <div className="font-figtree">
-        <div className="shadow-sm px-[3.5em] py-[2em] shadow-slate-500/40 rounded-3xl flex justify-between items-center">
+        <div className="shadow-sm px-[3.5em] py-[2em] shadow-slate-500/40 rounded-3xl flex justify-between items-center bg-white">
           <div className="w-fit flex gap-[3em] items-center">
             <span className="fontisto--link w-[2em] h-[2em] bg-bluelight"></span>
             <div className="gap-[.5em] flex flex-col">

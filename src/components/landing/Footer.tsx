@@ -35,7 +35,9 @@ export default function Footer() {
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <div className="w-4 h-4 bg-primary rounded-full"></div>
               </div>
-              <span className="text-[2.4em] font-bold text-white">LOGO</span>
+              <span className="text-[2.4em] font-bold text-white">
+                Shortlinkmu
+              </span>
             </div>
             <p className="text-purple-200 text-[1.6em] w-[60%]">
               Easiest and most trusted link shortener
@@ -48,7 +50,7 @@ export default function Footer() {
               <h3 className="font-semibold mb-[1em] text-[2em] text-white ">
                 Discover
               </h3>
-              <ul className="space-y-2 text-sm text-purple-200">
+              <ul className="space-y-2 text-[1.6em] font-semibold  text-bluefooter">
                 <li>
                   <Link href="/" className="hover:text-white transition-colors">
                     Home
@@ -70,37 +72,13 @@ export default function Footer() {
                     About
                   </Link>
                 </li>
-              </ul>
-            </div>
-
-            {/* Help & Support */}
-            <div className="w-fit">
-              <h3 className="font-semibold mb-[1em] text-[2em] text-white">
-                Help & Support
-              </h3>
-              <ul className="space-y-2 text-sm text-purple-200">
                 <li>
                   <Link
-                    href="/contact"
+                    href="https://subs4unlock.id"
+                    target="_blank"
                     className="hover:text-white transition-colors"
                   >
-                    Contact Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/forum"
-                    className="hover:text-white transition-colors"
-                  >
-                    Forum
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/advertisers"
-                    className="hover:text-white transition-colors"
-                  >
-                    Advertisers
+                    subs4unlock
                   </Link>
                 </li>
               </ul>
@@ -111,7 +89,15 @@ export default function Footer() {
               <h3 className="font-semibold mb-[1em] text-[2em] text-white">
                 Resource
               </h3>
-              <ul className="space-y-2 text-sm text-purple-200">
+              <ul className="space-y-2 text-[1.6em] font-semibold  text-bluefooter">
+                <li>
+                  <Link
+                    href="/contact"
+                    className="hover:text-white transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
                 <li>
                   <Link
                     href="/terms"
@@ -142,11 +128,11 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-purple-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-purple-200">
+        <div className="border-t border-blue-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-blue-200">
             © {currentYear} Shortut. All Rights Reserved
           </p>
-          <p className="text-sm text-purple-200">{time}</p>
+          <p className="text-sm text-blue-200">{time}</p>
         </div>
       </div>
     </footer>

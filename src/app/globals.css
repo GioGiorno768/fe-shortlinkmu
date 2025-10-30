@@ -10,9 +10,9 @@
   --grays: #7c7c85;
   --card: #f3f7ff;
   --yellowlink: #dca500;
-  --purplelink: #EA20CF;
-  --bluetitle: #DDEBFF;
-
+  --purplelink: #ea20cf;
+  --bluetitle: #ddebff;
+  --bluefooter: #bcd1ff;
 }
 
 @theme inline {
@@ -27,9 +27,9 @@
   --color-yellowlink: var(--yellowlink);
   --color-purplelink: var(--purplelink);
   --color-bluetitle: var(--bluetitle);
+  --color-bluefooter: var(--bluefooter);
   --font-figtree: "Figtree", sans-serif;
   --font-geist: "Geist", sans-serif;
-
 }
 
 body {

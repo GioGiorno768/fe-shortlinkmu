@@ -49,16 +49,16 @@ export default function Navbar() {
             </button>
           </div>
           <div className="lg:hidden static">
-            <label className="flex flex-col gap-2 w-8">
+            <label className="flex flex-col gap-[0.4em] w-[3.5em] h-[3.5em] justify-center items-center cursor-pointer border-[0.15em] border-bluelight rounded-[0.8em] hover:bg-bluelight/5 transition-all duration-200">
               <input
                 className="peer hidden"
                 type="checkbox"
                 ref={openMenu}
                 onChange={handleOpenMenu}
               />
-              <div className="rounded-2xl h-[3px] w-1/2 bg-black duration-500 peer-checked:rotate-[225deg] origin-right peer-checked:-translate-x-[12px] peer-checked:-translate-y-[1px]" />
-              <div className="rounded-2xl h-[3px] w-full bg-black duration-500 peer-checked:-rotate-45" />
-              <div className="rounded-2xl h-[3px] w-1/2 bg-black duration-500 place-self-end peer-checked:rotate-[225deg] origin-left peer-checked:translate-x-[12px] peer-checked:translate-y-[1px]" />
+              <span className="block h-[0.2em] w-[2em] bg-bluelight rounded-full transition-all duration-300 ease-out peer-checked:rotate-45 peer-checked:translate-y-[0.6em]" />
+              <span className="block h-[0.2em] w-[2em] bg-bluelight rounded-full transition-all duration-300 ease-out peer-checked:opacity-0 peer-checked:scale-0" />
+              <span className="block h-[0.2em] w-[2em] bg-bluelight rounded-full transition-all duration-300 ease-out peer-checked:-rotate-45 peer-checked:-translate-y-[0.6em]" />
             </label>
           </div>
         </div>
