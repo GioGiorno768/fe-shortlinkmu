@@ -18,36 +18,49 @@ export default function Navbar() {
           <div className="flex items-center gap-[2em]">
             <div className="w-[3em] h-[3em] rounded-full bg-bluelight"></div>
             <Link
-              href="#"
+              href="/"
               className="text-[2em] text-bluelight font-semibold tracking-tight"
             >
               Shortlinkmu
             </Link>
           </div>
           <div className="lg:flex hidden gap-[5em] items-center">
-            <Link href="#features" className="text-[1.8em] font-semibold tracking-tight">
-              Features
+            <Link
+              href="/payout-rates"
+              className="text-[1.8em] font-semibold tracking-tight"
+            >
+              Payout Rates
             </Link>
-            <Link href="#faq" className="text-[1.8em] font-semibold tracking-tight">
-              FAQ
+            <Link
+              href="/about"
+              className="text-[1.8em] font-semibold tracking-tight"
+            >
+              About
             </Link>
-            <Link href="/contact" className="text-[1.8em] font-semibold tracking-tight">
+            <Link
+              href="/contact"
+              className="text-[1.8em] font-semibold tracking-tight"
+            >
               Contact
             </Link>
           </div>
           <div className="items-center gap-[4em] hidden lg:flex">
             <button className="flex items-center gap-[1em] ">
               <span className="tabler--world w-[2.5em] h-[2.5em] bg-white"></span>
-              <span className="text-[1.6em] font-semibold text-white">
-                EN
-              </span>
+              <span className="text-[1.6em] font-semibold text-white">EN</span>
             </button>
-            <button className="text-[1.6em] font-semibold tracking-tight text-white">
+            <Link
+              href="/login"
+              className="text-[1.6em] font-semibold tracking-tight text-white"
+            >
               Login
-            </button>
-            <button className="text-[1.6em] font-semibold tracking-tight bg-white text-bluelight px-[1.5em] py-[.5em] rounded-full">
+            </Link>
+            <Link
+              href="/register"
+              className="text-[1.6em] font-semibold tracking-tight bg-white text-bluelight px-[1.5em] py-[.5em] rounded-full"
+            >
               Register
-            </button>
+            </Link>
           </div>
           <div className="lg:hidden static">
             <label className="flex flex-col gap-[0.4em] w-[3.5em] h-[3.5em] justify-center items-center cursor-pointer border-[0.15em] border-bluelight rounded-[0.8em] hover:bg-bluelight/5 transition-all duration-200">
@@ -71,18 +84,18 @@ export default function Navbar() {
         >
           <div className="py-[2em] max-w-[140em] px-[1.6em] lg:px-[2.4em] m-auto bg-white/95 backdrop-blur-md lg:hidden flex flex-col items-start gap-[1.5em] border-t border-gray-100">
             <Link
-              href="#features"
+              href="/payout-rates"
               className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-blue-50 text-bluelight py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform"
               style={{ animationDelay: "0ms" }}
             >
-              Features
+              Payout Rates
             </Link>
             <Link
-              href="#faq"
+              href="/about"
               className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] text-shortblack py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform"
               style={{ animationDelay: "100ms" }}
             >
-              FAQ
+              About
             </Link>
             <Link
               href="/contact"

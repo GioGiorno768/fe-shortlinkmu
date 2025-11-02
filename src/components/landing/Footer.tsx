@@ -30,7 +30,7 @@ export default function Footer() {
       <div className="max-w-[130em] px-[1.6em] md:px-[2.4em] lg:px-[4em] py-[5em] md:py-[6em] mx-auto space-y-[5em]">
         <div className="flex flex-col md:flex-row justify-between gap-[5em]">
           {/* Logo Section */}
-          <div>
+          <div className="flex flex-col items-center sm:justify-start justify-start text-center">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <div className="w-4 h-4 bg-primary rounded-full"></div>
@@ -44,18 +44,13 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-wrap md:flex-nowrap lg:gap-[20em]  gap-[5em]">
+          <div className="flex flex-wrap md:flex-nowrap lg:gap-[20em] justify-center items-start  gap-[5em]">
             {/* Discover */}
             <div className="w-fit">
               <h3 className="font-semibold mb-[1em] text-[2em] text-white ">
                 Discover
               </h3>
               <ul className="space-y-2 text-[1.6em] font-semibold  text-bluefooter">
-                <li>
-                  <Link href="/" className="hover:text-white transition-colors">
-                    Home
-                  </Link>
-                </li>
                 <li>
                   <Link
                     href="/payout-rates"
@@ -100,7 +95,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/terms"
+                    href="/terms-of-service"
                     className="hover:text-white transition-colors"
                   >
                     Term Of Services
@@ -108,7 +103,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/privacy"
+                    href="/privacy-policy"
                     className="hover:text-white transition-colors"
                   >
                     Privacy Policy
@@ -116,10 +111,10 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link
-                    href="/dmca"
+                    href="/report-abuse"
                     className="hover:text-white transition-colors"
                   >
-                    DMCA
+                    Report Abuse
                   </Link>
                 </li>
               </ul>
