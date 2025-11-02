@@ -24,7 +24,7 @@ export default function Features() {
       title: "Fast Response Support",
       description:
         "We're here to help — our support team is available 24/7 to address any concerns you may have.",
-      icons: "tabler--mail-fast",
+      icons: "hugeicons--customer-support",
       image: "/landing/secure.png",
     },
     {
@@ -33,7 +33,7 @@ export default function Features() {
       description:
         "Earn more as your traffic scales higher quality means higher CPM rewards across global audiences.",
       icons: "ci--chart-line",
-      image: "/landing/secure.png",
+      image: "/landing/cpm.png",
     },
     {
       id: 5,
@@ -41,7 +41,7 @@ export default function Features() {
       description:
         "Cash out your earnings faster with a low payout threshold, no long waiting time.",
       icons: "hugeicons--payment-success-01",
-      image: "/landing/secure.png",
+      image: "/landing/minimum.png",
     },
     {
       id: 6,
@@ -49,7 +49,7 @@ export default function Features() {
       description:
         "Invite friends, share special referral links, and earn extra rewards.",
       icons: "tabler--user-dollar",
-      image: "/landing/secure.png",
+      image: "/landing/referal.png",
     },
   ];
   return (

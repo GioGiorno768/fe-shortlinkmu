@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 
 export default function Navbar() {
@@ -16,23 +17,23 @@ export default function Navbar() {
         <div className="max-w-[140em] px-[1.6em] lg:px-[2.4em]  m-auto py-[1.6em] lg:py-[3em] flex justify-between items-center">
           <div className="flex items-center gap-[2em]">
             <div className="w-[3em] h-[3em] rounded-full bg-bluelight"></div>
-            <a
+            <Link
               href="#"
               className="text-[2em] text-bluelight font-semibold tracking-tight"
             >
               Shortlinkmu
-            </a>
+            </Link>
           </div>
           <div className="lg:flex hidden gap-[5em] items-center">
-            <a href="#features" className="text-[1.8em] font-semibold tracking-tight">
+            <Link href="#features" className="text-[1.8em] font-semibold tracking-tight">
               Features
-            </a>
-            <a href="#faq" className="text-[1.8em] font-semibold tracking-tight">
+            </Link>
+            <Link href="#faq" className="text-[1.8em] font-semibold tracking-tight">
               FAQ
-            </a>
-            <a href="#contact" className="text-[1.8em] font-semibold tracking-tight">
+            </Link>
+            <Link href="/contact" className="text-[1.8em] font-semibold tracking-tight">
               Contact
-            </a>
+            </Link>
           </div>
           <div className="items-center gap-[4em] hidden lg:flex">
             <button className="flex items-center gap-[1em] ">
@@ -69,27 +70,27 @@ export default function Navbar() {
           }`}
         >
           <div className="py-[2em] max-w-[140em] px-[1.6em] lg:px-[2.4em] m-auto bg-white/95 backdrop-blur-md lg:hidden flex flex-col items-start gap-[1.5em] border-t border-gray-100">
-            <a
-              href="#"
+            <Link
+              href="#features"
               className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-blue-50 text-bluelight py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform"
               style={{ animationDelay: "0ms" }}
             >
               Features
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="#faq"
               className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] text-shortblack py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform"
               style={{ animationDelay: "100ms" }}
             >
               FAQ
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/contact"
               className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] text-shortblack py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform"
               style={{ animationDelay: "200ms" }}
             >
               Contact
-            </a>
+            </Link>
             <div className="w-full border-t border-gray-200 my-[1em]"></div>
             <div className="flex items-center gap-[3em] justify-stretch w-full">
               <button className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-gray-50 text-shortblack py-[.8em] rounded-full transition-all duration-300 hover:bg-blues hover:text-white hover:shadow-lg hover:shadow-blue-500/30 hover:scale-[1.02] transform">

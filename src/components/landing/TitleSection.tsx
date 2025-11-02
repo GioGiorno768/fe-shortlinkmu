@@ -21,7 +21,7 @@ const TitleSection = ({
       >
         {h1Text}
       </h1>
-      <p className={`text-[2em] font-medium ${pClassName}`}>{pText}</p>
+      <p className={`text-[2em] font-medium text-grays ${pClassName}`}>{pText}</p>
     </div>
   );
 };
