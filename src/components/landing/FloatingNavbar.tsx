@@ -94,7 +94,7 @@ export default function FloatingNavbar() {
                     FAQ
                   </motion.a>
                   <motion.a
-                    href="#contact"
+                    href="/contact"
                     className="text-[1.6em] font-medium tracking-tight hover:text-white/70 transition-colors"
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
@@ -173,7 +173,13 @@ export default function FloatingNavbar() {
                         (item, index) => (
                           <motion.a
                             key={item}
-                            href={item === "Home" ? "#" : `#${item.toLowerCase()}`}
+                            href={
+                              item == "Contact"
+                                ? `/${item.toLowerCase()}`
+                                : item == "Home"
+                                ? `#`
+                                : `#${item.toLowerCase()}`
+                            }
                             className="text-[1.6em] font-medium tracking-tight hover:text-white/70 transition-colors"
                             variants={{
                               hidden: { y: 10, opacity: 0 },

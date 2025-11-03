@@ -1,7 +1,7 @@
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import TitleSection from "@/components/landing/TitleSection";
-import { UserCheck } from "lucide-react"; // Kita pake icon biar clean
+import { Headset } from "lucide-react"; // Kita pake icon biar clean
 
 export default function Contact() {
   const contacts = [
@@ -55,7 +55,7 @@ export default function Contact() {
               >
                 {/* Icon */}
                 <div className="w-[8em] h-[8em] bg-blue-100 rounded-full flex items-center justify-center mb-[2em] flex-shrink-0">
-                  <UserCheck className="w-[4em] h-[4em] text-bluelight" />
+                  <Headset className="w-[4em] h-[4em] text-bluelight" />
                 </div>
 
                 {/* Judul Card */}
@@ -71,7 +71,7 @@ export default function Contact() {
                 {/* Tombol Mailto */}
                 <a
                   href={`mailto:${contact.email}`}
-                  className="text-[1.8em] w-full mt-auto bg-bluelight text-white px-[2em] py-[1.5em] rounded-full cursor-pointer font-semibold hover:bg-opacity-90 transition-all"
+                  className="text-[1.8em] w-full mt-auto bg-bluelight text-white px-[2em] py-[1em] rounded-full cursor-pointer font-semibold hover:bg-opacity-90 transition-all"
                 >
                   Hubungi via Email
                 </a>

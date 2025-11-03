@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function Navbar() {
   const openMenu = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const path = usePathname();
 
   const handleOpenMenu = () => {
     setIsOpen(openMenu.current?.checked ?? false);
@@ -46,18 +48,34 @@ export default function Navbar() {
           </div>
           <div className="items-center gap-[4em] hidden lg:flex">
             <button className="flex items-center gap-[1em] ">
-              <span className="tabler--world w-[2.5em] h-[2.5em] bg-white"></span>
-              <span className="text-[1.6em] font-semibold text-white">EN</span>
+              <span
+                className={`tabler--world w-[2.5em] h-[2.5em] ${
+                  path == "/" ? "bg-white" : "bg-bluelight"
+                }`}
+              ></span>
+              <span
+                className={`text-[1.6em] font-semibold tracking-tight ${
+                  path == "/" ? "text-white" : "text-bluelight"
+                }`}
+              >
+                EN
+              </span>
             </button>
             <Link
               href="/login"
-              className="text-[1.6em] font-semibold tracking-tight text-white"
+              className={`text-[1.6em] font-semibold tracking-tight ${
+                path != "/" ? "text-bluelight" : "text-white"
+              }`}
             >
               Login
             </Link>
             <Link
               href="/register"
-              className="text-[1.6em] font-semibold tracking-tight bg-white text-bluelight px-[1.5em] py-[.5em] rounded-full"
+              className={`text-[1.6em] font-semibold tracking-tight ${
+                path != "/"
+                  ? "bg-bluelight text-white"
+                  : "bg-white text-bluelight"
+              } px-[1.5em] py-[.5em] rounded-full`}
             >
               Register
             </Link>

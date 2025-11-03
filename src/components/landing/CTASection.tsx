@@ -103,8 +103,8 @@ export default function CTASection() {
           </h2>
 
           {/* Description */}
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Create clean, secure links you can share anywhere — and get paid for
+          <p className="text-lg text-gray-600 md:max-w-[50%] lg:max-w-[35%] mx-auto">
+            Create clean, secure links you can share anywhere and get paid for
             every click.
           </p>
 

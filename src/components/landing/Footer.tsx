@@ -30,7 +30,7 @@ export default function Footer() {
       <div className="max-w-[130em] px-[1.6em] md:px-[2.4em] lg:px-[4em] py-[5em] md:py-[6em] mx-auto space-y-[5em]">
         <div className="flex flex-col md:flex-row justify-between gap-[5em]">
           {/* Logo Section */}
-          <div className="flex flex-col items-center sm:justify-start justify-start text-center">
+          <div className="flex flex-col sm:items-start items-center sm:justify-start justify-start sm:text-start text-center">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <div className="w-4 h-4 bg-primary rounded-full"></div>

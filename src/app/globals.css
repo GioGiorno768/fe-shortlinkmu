@@ -13,6 +13,7 @@
   --purplelink: #ea20cf;
   --bluetitle: #ddebff;
   --bluefooter: #bcd1ff;
+  --redshortlink: #CD0D7A;
 }
 
 @theme inline {
@@ -28,6 +29,7 @@
   --color-purplelink: var(--purplelink);
   --color-bluetitle: var(--bluetitle);
   --color-bluefooter: var(--bluefooter);
+  --color-redshortlink: var(--redshortlink);
   --font-figtree: "Figtree", sans-serif;
   --font-geist: "Geist", sans-serif;
 }

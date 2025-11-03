@@ -29,7 +29,7 @@ export default function TermsOfService() {
           />
 
           {/* Konten Teks Legal */}
-          <div className="w-full md:w-[80%] lg:w-[70%] m-auto bg-white p-[3em] sm:p-[5em] rounded-2xl shadow-lg border border-gray-100">
+          <div className="w-full md:w-[80%] lg:w-[85%] m-auto bg-white p-[3em] sm:p-[5em] rounded-2xl shadow-lg border border-gray-100">
             <div className="space-y-[.5em] text-grays text-[1.8em] leading-relaxed">
               <p className="text-shortblack font-semibold">
                 Terakhir diperbarui: 2 November 2025
@@ -38,19 +38,19 @@ export default function TermsOfService() {
               <p>
                 Selamat datang di Shortlinkmu! Persyaratan Layanan ("Ketentuan")
                 ini mengatur penggunaan Anda atas situs web kami yang berlokasi
-                di [NamaDomainAnda.com] dan layanan apa pun yang terkait ("Layanan"),
-                yang dioperasikan oleh Shortlinkmu ("kami", "milik kami", atau
-                "kita").
+                di [NamaDomainAnda.com] dan layanan apa pun yang terkait
+                ("Layanan"), yang dioperasikan oleh Shortlinkmu ("kami", "milik
+                kami", atau "kita").
               </p>
 
               <h2 className="text-shortblack font-semibold text-[2em]  pt-[1em]">
                 1. Penerimaan Persyaratan
               </h2>
               <p>
-                Dengan mengakses atau menggunakan Layanan kami, Anda setuju untuk
-                terikat oleh Ketentuan ini. Jika Anda tidak setuju dengan bagian
-                mana pun dari ketentuan ini, maka Anda tidak diizinkan untuk
-                mengakses Layanan.
+                Dengan mengakses atau menggunakan Layanan kami, Anda setuju
+                untuk terikat oleh Ketentuan ini. Jika Anda tidak setuju dengan
+                bagian mana pun dari ketentuan ini, maka Anda tidak diizinkan
+                untuk mengakses Layanan.
               </p>
 
               <h2 className="text-shortblack font-semibold text-[2em] pt-[1em]">
@@ -61,7 +61,7 @@ export default function TermsOfService() {
                 yang melanggar hukum atau dilarang oleh Ketentuan ini. Anda
                 setuju untuk tidak:
               </p>
-              <ul className="list-disc list-inside space-y-[1em] pl-[2em]">
+              <ul className="list-disc list-inside space-y-[.5em] pl-[2em] my-[2em]">
                 <li>
                   Menggunakan layanan untuk menyebarkan malware, phishing, atau
                   konten ilegal lainnya.
@@ -75,16 +75,27 @@ export default function TermsOfService() {
                   mendapatkan kode sumber dari perangkat lunak yang mendasari
                   Layanan.
                 </li>
+                <li>
+                  Menggunakan Layanan untuk membuat tautan yang menyesatkan,
+                  menipu, atau mengarahkan ke konten berbahaya.
+                </li>
               </ul>
 
               <h2 className="text-shortblack font-semibold text-[2em] pt-[1em]">
                 3. Akun Pengguna
               </h2>
               <p>
-                Untuk mengakses beberapa fitur Layanan, Anda mungkin diharuskan
-                membuat akun. Anda bertanggung jawab untuk menjaga kerahasiaan
-                kata sandi Anda dan untuk semua aktivitas yang terjadi di bawah
-                akun Anda.
+                Untuk mengakses beberapa fitur Layanan, Anda mungkin perlu
+                membuat akun. Anda bertanggung jawab penuh atas:
+              </p>
+              <ul className="list-disc list-inside space-y-[.5em] pl-[2em] my-[2em]">
+                <li>Keamanan akun dan kata sandi Anda, serta</li>
+                <li>Semua aktivitas yang terjadi di bawah akun tersebut.</li>
+              </ul>
+              <p>
+                Kami tidak akan bertanggung jawab atas kerugian atau kerusakan
+                yang timbul akibat kegagalan Anda menjaga keamanan akun dan kata
+                sandi.
               </p>
 
               <h2 className="text-shortblack font-semibold text-[2em] pt-[1em]">
@@ -92,15 +103,49 @@ export default function TermsOfService() {
               </h2>
               <p>
                 Dalam batas maksimal yang diizinkan oleh hukum yang berlaku,
-                Shortlinkmu tidak akan bertanggung jawab atas kerugian tidak
-                langsung, insidental, khusus, konsekuensial, atau hukuman, atau
-                kerugian apa pun atas keuntungan atau pendapatan, baik yang
-Jalan
-                secara langsung maupun tidak langsung...
+                Shortlinkmu beserta afiliasi, mitra, karyawan, agen, atau
+                penyedia layanannya tidak bertanggung jawab atas segala bentuk
+                kerugian, baik langsung maupun tidak langsung, insidental,
+                khusus, konsekuensial, atau hukuman, termasuk namun tidak
+                terbatas pada:
+              </p>
+              <ul className="list-disc list-inside space-y-[.5em] pl-[2em] my-[2em]">
+                <li>
+                  Kehilangan keuntungan, pendapatan, data, reputasi, atau
+                  peluang bisnis;
+                </li>
+                <li>
+                  Gangguan layanan, bug, error, atau kehilangan akses terhadap
+                  akun pengguna;
+                </li>
+                <li>
+                  Penyalahgunaan tautan pendek (shortlink) oleh pengguna lain
+                  untuk tujuan yang melanggar hukum atau berbahaya;
+                </li>
+                <li>
+                  Kerugian akibat tindakan pihak ketiga seperti peretasan,
+                  pelanggaran keamanan, atau modifikasi data tanpa izin.
+                </li>
+              </ul>
+              <p>
+                Layanan disediakan “sebagaimana adanya” ("as is") dan
+                “sebagaimana tersedia” ("as available"), tanpa jaminan apa pun —
+                baik tersurat maupun tersirat — termasuk namun tidak terbatas
+                pada jaminan atas kelayakan untuk tujuan tertentu, keandalan,
+                ketersediaan, atau keamanan layanan.
               </p>
               <p>
-                [... Bagian ini dan bagian selanjutnya adalah placeholder. Anda
-                HARUS menggantinya dengan T&C legal Anda yang sebenarnya ...]
+                Dalam keadaan apa pun, tanggung jawab maksimal Shortlinkmu atas
+                semua klaim yang timbul dari atau terkait dengan penggunaan
+                Layanan tidak akan melebihi jumlah yang telah Anda bayarkan
+                kepada kami (jika ada) dalam jangka waktu tiga (3) bulan sebelum
+                klaim tersebut muncul.
+              </p>
+              <p>
+                Beberapa yurisdiksi tidak mengizinkan pembatasan tanggung jawab
+                tertentu, sehingga beberapa ketentuan di atas mungkin tidak
+                berlaku bagi Anda. Dalam hal demikian, tanggung jawab kami akan
+                dibatasi sejauh yang diizinkan oleh hukum yang berlaku.
               </p>
 
               <h2 className="text-shortblack font-semibold text-[2em] pt-[1em]">

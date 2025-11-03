@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
           />
 
           {/* Konten Teks Legal */}
-          <div className="w-full md:w-[80%] lg:w-[70%] m-auto bg-white p-[3em] sm:p-[5em] rounded-2xl shadow-lg border border-gray-100">
+          <div className="w-full md:w-[80%] lg:w-[85%] m-auto bg-white p-[3em] sm:p-[5em] rounded-2xl shadow-lg border border-gray-100">
             <div className="space-y-[.5em] text-grays text-[1.8em] leading-relaxed">
               <p className="text-shortblack font-semibold">
                 Terakhir diperbarui: 2 November 2025
