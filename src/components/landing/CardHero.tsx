@@ -28,7 +28,7 @@ export default function CardHero() {
           {howto.map((item) => (
             <div
               key={item.id}
-              className="w-full lg:w-fit flex flex-col items-center justify-center py-[1.5em] px-[3em] rounded-xl shadow-sm shadow-slate-500/40 gap-[1.4em]"
+              className="w-full lg:w-fit flex flex-col items-center justify-center py-[1.5em] px-[3em] rounded-xl shadow-sm shadow-slate-500/40 gap-[1.4em] hover:shadow-xl hover:shadow-slate-500/40 hover:scale-105 transition-all duration-300 ease-in-out"
             >
               <div className="w-[6em] h-[6em] rounded-full shadow-sm shadow-slate-500/40 flex justify-center items-center">
                 <span

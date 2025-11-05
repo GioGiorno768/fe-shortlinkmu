@@ -1,0 +1,17 @@
+{
+  "Navbar": {
+    "payoutRates": "Payout Rates",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "language": "Language",
+    "english": "English",
+    "indonesian": "Indonesian"
+  },
+  "Hero": {
+    "title": "Easiest and most trusted link shortener",
+    "description": "Turn long, messy URLs into short, clean links you can share anywhere.",
+    "generate": "Generate"
+  }
+}

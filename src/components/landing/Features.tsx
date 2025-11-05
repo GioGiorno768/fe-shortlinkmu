@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import TitleSection from "./TitleSection";
+import { motion } from "framer-motion";
 
 export default function Features() {
   const features = [
@@ -70,7 +73,20 @@ export default function Features() {
             />
           </div>
           <div className="flex justify-center items-center gap-[5em] flex-wrap flex-col lg:flex-row relative">
-            <div className="absolute -top-[2em] left-[5em] rotate-[25deg] z-10 p-[2em] bg-yellowlink rounded-2xl">
+            <motion.div
+              animate={{
+                x: [0, 50, -20, 30, 0],
+                y: [0, -30, 40, -10, 0],
+                rotate: [0, 360], // Putar penuh
+              }}
+              transition={{
+                duration: 15, // Durasi lebih panjang
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 0,
+              }}
+              className="absolute -top-[2em] left-[5em] rotate-[25deg] hidden sm:block z-10 p-[2em] bg-yellowlink rounded-2xl"
+            >
               <div className="p-[1.5em] rounded-full shadow-md shadow-slate-500/40 bg-white">
                 <Image
                   src="/landing/shortlinku.svg"
@@ -79,8 +95,21 @@ export default function Features() {
                   height={40}
                 />
               </div>
-            </div>
-            <div className="absolute top-[55em] right-[5em] -rotate-[25deg] z-10  p-[2em] bg-purplelink rounded-2xl">
+            </motion.div>
+            <motion.div
+              animate={{
+                x: [0, -40, 20, -10, 0],
+                y: [0, 20, -30, 50, 0],
+                rotate: [0, -360], // Putar balik
+              }}
+              transition={{
+                duration: 18,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 2,
+              }}
+              className="absolute top-[55em] right-[5em] -rotate-[25deg] hidden sm:block z-10  p-[2em] bg-purplelink rounded-2xl"
+            >
               <div className="p-[1em] rounded-full shadow-md shadow-slate-500/40 bg-white">
                 <Image
                   src="/landing/vinlogo.svg"
@@ -89,8 +118,21 @@ export default function Features() {
                   height={50}
                 />
               </div>
-            </div>
-            <div className="absolute bottom-[30em] left-[5em] rotate-[25deg] z-10 p-[2em] bg-bluelight rounded-2xl">
+            </motion.div>
+            <motion.div
+              animate={{
+                x: [0, 30, -50, 10, 0],
+                y: [0, -20, 30, -40, 0],
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 16,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+              className="absolute bottom-[30em] left-[5em] rotate-[25deg] hidden sm:block z-10 p-[2em] bg-bluelight rounded-2xl"
+            >
               <div className="p-[1em] rounded-full shadow-md shadow-slate-500/40 bg-white">
                 <Image
                   src="/landing/vinlogo-blue.svg"
@@ -99,11 +141,11 @@ export default function Features() {
                   height={50}
                 />
               </div>
-            </div>
+            </motion.div>
             {features.map((item) => (
               <div
                 key={item.id}
-                className="sm:p-[3em] p-[2em] shadow-md shadow-slate-500/40 rounded-2xl lg:w-[45%] xl:w-[40%] sm:w-[70%] w-full space-y-[3em]"
+                className="sm:p-[3em] p-[2em] shadow-md shadow-slate-500/40 rounded-2xl lg:w-[45%] xl:w-[40%] sm:w-[70%] w-full space-y-[3em] hover:shadow-lg hover:shadow-slate-500/40 hover:scale-105 transition duration-300 ease-in-out"
               >
                 <div className="sm:h-[28em] h-[50vw] bg-card rounded-xl relative  overflow-hidden">
                   <Image
