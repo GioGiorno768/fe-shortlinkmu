@@ -1,0 +1,15 @@
+{
+  "Navbar": {
+    "home": "Home",
+    "payoutRates": "Payout Rates",
+    "about": "About",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "switch": "ID"
+  },
+  "Hero": {
+    "title": "Make money from the links you create",
+    "subtitle": "Easiest and most trusted link shortener"
+  }
+}

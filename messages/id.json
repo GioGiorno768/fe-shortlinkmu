@@ -1,0 +1,15 @@
+{
+  "Navbar": {
+    "home": "Beranda",
+    "payoutRates": "Tarif Bayaran",
+    "about": "Tentang",
+    "contact": "Kontak",
+    "login": "Masuk",
+    "register": "Daftar",
+    "switch": "EN"
+  },
+  "Hero": {
+    "title": "Hasilkan uang dari link yang Anda buat",
+    "subtitle": "Shortlink termudah dan terpercaya"
+  }
+}
