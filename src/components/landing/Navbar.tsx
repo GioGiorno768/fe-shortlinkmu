@@ -94,13 +94,19 @@ export default function Navbar() {
 
             <Link
               href="/login"
-              className="text-[1.6em] font-semibold tracking-tight text-bluelight"
+              className={`text-[1.6em] font-semibold tracking-tight ${
+                pathname != "/" ? "text-bluelight" : "text-white"
+              }`}
             >
               {t("login")}
             </Link>
             <Link
               href="/register"
-              className="text-[1.6em] font-semibold tracking-tight bg-bluelight text-white px-[1.5em] py-[.5em] rounded-full"
+              className={`text-[1.6em] font-semibold tracking-tight ${
+                pathname != "/"
+                  ? "bg-bluelight text-white"
+                  : "bg-white text-bluelight"
+              } px-[1.5em] py-[.5em] rounded-full`}
             >
               {t("register")}
             </Link>
