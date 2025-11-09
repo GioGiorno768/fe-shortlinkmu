@@ -6,6 +6,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { Suspense } from "react";
+import TopLoadingBar from "@/components/TopLoadingBar";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -44,7 +46,12 @@ export default async function RootLayout({
     <html lang={locale} className="scroll-smooth">
       <body className={`${figtree.className} ${geist.className} antialiased`}>
         <NextIntlClientProvider messages={messages}>
-          <LenisScrollProvider>{children}</LenisScrollProvider>
+          <LenisScrollProvider>
+            <Suspense fallback={null}>
+              <TopLoadingBar />
+            </Suspense>
+            {children}
+          </LenisScrollProvider>
         </NextIntlClientProvider>
       </body>
     </html>
