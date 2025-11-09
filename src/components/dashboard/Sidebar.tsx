@@ -1,8 +1,12 @@
 // src/components/Sidebar.tsx
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+// --- GANTI IMPORT INI ---
+import { Link, usePathname } from "@/i18n/routing"; // Gunakan dari i18n routing
+// JANGAN PAKAI: import Link from "next/link";
+// JANGAN PAKAI: import { usePathname } from "next/navigation";
+// -------------------------
+
 import {
   LayoutDashboard,
   BarChart3,
@@ -37,7 +41,7 @@ export default function Sidebar({
   onClose,
   toggleSidebar,
 }: SidebarProps) {
-  const pathname = usePathname();
+  const pathname = usePathname(); // Ini sekarang sudah i18n-aware
 
   return (
     <>
@@ -109,10 +113,11 @@ export default function Sidebar({
           <nav className="mt-[1em] px-[1em]">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              // Cek isActive pakai 'pathname' (dari i18n routing)
               const isActive = pathname === item.href;
 
               return (
-                <Link
+                <Link // Pastikan ini Link dari @/i18n/routing
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
@@ -142,6 +147,9 @@ export default function Sidebar({
             })}
           </nav>
         </div>
+
+        {/* User Profile */}
+        {/* ... (tidak perlu diubah) ... */}
 
         {/* User Profile */}
 
