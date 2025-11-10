@@ -1,6 +1,9 @@
 "use client";
+"use client";
 import { options } from "@/lib/types";
-import Link from "next/link";
+// --- UBAH BARIS INI ---
+import { Link } from "@/i18n/routing";
+// --- DARI INI ---
 import { useEffect, useState } from "react";
 
 export default function Footer() {

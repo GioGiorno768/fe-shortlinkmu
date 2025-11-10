@@ -2,7 +2,10 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, Link as LinkIcon, Lock, Mail } from "lucide-react";
-import Link from "next/link";
+// --- UBAH INI ---
+import { Link } from "@/i18n/routing";
+// --- DARI INI ---
+// import Link from "next/link";
 
 export default function LoginPage() {
   // Varian animasi untuk form
