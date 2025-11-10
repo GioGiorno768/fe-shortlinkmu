@@ -53,5 +53,10 @@
     "privacy": "Privacy Policy",
     "about": "About",
     "reportAbuse": "Report Abuse"
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "subtitle": "Sorry, we couldn't find the page you were looking for.",
+    "goHome": "Go back home"
   }
 }

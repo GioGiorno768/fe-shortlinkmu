@@ -33,7 +33,7 @@ const getMenuItems = (t: (key: string) => string): NavItem[] => [
     label: t("myLinks"),
     children: [
       { icon: PlusSquare, label: t("createLink"), href: "/new-link" },
-      { icon: Link2, label: t("subs4unlock"), href: "/subs4unlock" },
+      { icon: Link2, label: t("subs4unlock"), href: "https://subs4unlock.id" },
     ],
   },
   { icon: Users, label: t("users"), href: "/users" },

@@ -51,13 +51,13 @@ export default function SidebarItem({
   if (item.children) {
     return (
       <div ref={ref} className="relative mb-1">
-        {/* Tombol Parent (My Links) */}
+        {/* Tombol Parent (My Links) - GAK BERUBAH */}
         <button
           onClick={() => {
             if (isCollapsed) {
-              setIsPopupOpen(!isPopupOpen); // Toggle popup
+              setIsPopupOpen(!isPopupOpen);
             } else {
-              setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown inline
+              setIsDropdownOpen(!isDropdownOpen);
             }
           }}
           className={`
@@ -135,49 +135,55 @@ export default function SidebarItem({
           </div>
         )}
 
+        {/* === INI YANG DIUBAH === */}
         {/* Popup Flyout (Mode Collapsed) */}
-        {isCollapsed && isPopupOpen && (
-          <div
-            className="
-              absolute left-full top-0 ml-[1.5em] z-50
-              bg-[#10052C] shadow-lg rounded-md p-2
-              w-max animate-in fade-in-0 slide-in-from-left-2 duration-150
-            "
-          >
-            {/* <div className="text-white text-[1.4em] font-medium px-3 pt-2 pb-1">
-              {item.label}
-            </div> */}
-            {item.children.map((child) => {
-              const ChildIcon = child.icon;
-              const isChildActive =
-                pathname === child.href || pathname === `/id${child.href}`;
-              return (
-                <Link
-                  key={child.href}
-                  href={child.href!}
-                  onClick={() => {
-                    onClose();
-                    setIsPopupOpen(false);
-                  }}
-                  className={`
-                    flex items-center gap-3 px-3 py-2 rounded-md mt-1
-                    transition-all duration-200 text-[1.4em] w-full
-                    ${
-                      isChildActive
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                        : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
-                    }
-                  `}
-                >
-                  <ChildIcon className="w-4 h-4 flex-shrink-0" />
-                  <span className="font-medium line-clamp-1">
-                    {child.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+        <div
+          className={`
+            absolute left-full top-0 ml-[1.5em] z-50
+            bg-[#10052C] shadow-lg rounded-md p-2
+            w-max
+            
+            transition-all duration-150 ease-out transform
+            ${
+              isCollapsed && isPopupOpen
+                ? "opacity-100 scale-100 visible"
+                : "opacity-0 scale-95 invisible"
+            }
+            origin-left space-y-[1em]
+          `}
+        >
+          {/* Judul popup (opsional tapi bagus) */}
+          {/* <div className="text-white text-[1.4em] font-medium px-3 pt-2 pb-1">
+            {item.label}
+          </div> */}
+          {item.children.map((child) => {
+            const ChildIcon = child.icon;
+            const isChildActive =
+              pathname === child.href || pathname === `/id${child.href}`;
+            return (
+              <Link
+                key={child.href}
+                href={child.href!}
+                onClick={() => {
+                  onClose();
+                  setIsPopupOpen(false);
+                }}
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-md
+                  transition-all duration-200 text-[1.4em] w-full
+                  ${
+                    isChildActive
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
+                      : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
+                  }
+                `}
+              >
+                <ChildIcon className="w-4 h-4 flex-shrink-0" />
+                <span className="font-medium line-clamp-1">{child.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     );
   }
