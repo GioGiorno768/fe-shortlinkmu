@@ -106,7 +106,8 @@ export default function SidebarItem({
               <div className="mt-1 ml-[3em] pl-[1.5em] border-l border-slate-700">
                 {item.children.map((child) => {
                   const ChildIcon = child.icon;
-                  const isChildActive = pathname === child.href;
+                  const isChildActive =
+                    pathname === child.href || pathname === `/id${child.href}`;
                   return (
                     <Link
                       key={child.href}
@@ -114,7 +115,7 @@ export default function SidebarItem({
                       onClick={onClose}
                       className={`
                         flex items-center gap-3 px-3 py-2 rounded-md mt-1
-                        transition-all duration-200 text-[1.4em]
+                        transition-all duration-200 text-[1.5em]
                         ${
                           isChildActive
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
@@ -138,7 +139,7 @@ export default function SidebarItem({
         {isCollapsed && isPopupOpen && (
           <div
             className="
-              absolute left-full top-0 ml-2 z-50
+              absolute left-full top-0 ml-[1.5em] z-50
               bg-[#10052C] shadow-lg rounded-md p-2
               w-max animate-in fade-in-0 slide-in-from-left-2 duration-150
             "
@@ -148,7 +149,8 @@ export default function SidebarItem({
             </div> */}
             {item.children.map((child) => {
               const ChildIcon = child.icon;
-              const isChildActive = pathname === child.href;
+              const isChildActive =
+                pathname === child.href || pathname === `/id${child.href}`;
               return (
                 <Link
                   key={child.href}
