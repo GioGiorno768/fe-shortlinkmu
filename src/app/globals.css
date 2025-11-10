@@ -224,26 +224,3 @@ body {
 }
 
 /* Icons */
-
-/* Custom NProgress style for top thin bar */
-#nprogress {
-  pointer-events: none;
-}
-
-#nprogress .bar {
-  background: #29d; /* warna biru, ganti sesuai branding */
-  position: fixed;
-  z-index: 9999;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 3px; /* ketebalan garis, bisa disesuaikan */
-}
-
-#nprogress .peg {
-  display: none; /* set kalau mau efek 'glow', bisa diaktifkan */
-}
-
-#nprogress .spinner {
-  display: none; /* sembunyikan spinner bulat, hanya garis */
-}

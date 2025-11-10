@@ -1,23 +1,19 @@
-// src/components/Sidebar.tsx
-"use client";
+// src/components/dashboard/Sidebar.tsx
 
-// --- GANTI IMPORT INI ---
-import { Link, usePathname } from "@/i18n/routing"; // Gunakan dari i18n routing
-// JANGAN PAKAI: import Link from "next/link";
-// JANGAN PAKAI: import { usePathname } from "next/navigation";
-// -------------------------
-
+import { Link, usePathname } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
-  BarChart3,
   Users,
   Settings,
-  X,
   FileText,
   Package,
-  Menu,
   Link2,
+  PlusSquare,
+  ChevronDown,
 } from "lucide-react";
+import { NavItem } from "@/types/type";
+import SidebarItem from "./SidebarItem";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -26,14 +22,12 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Link2, label: "My Links", href: "/mylinks" },
-  { icon: Users, label: "Users", href: "/users" },
-  { icon: Package, label: "Products", href: "/products" },
-  { icon: FileText, label: "Reports", href: "/reports" },
-  { icon: Settings, label: "Settings", href: "/settings" },
-];
+// ==================================================================
+// === KOMPONEN UTAMA SIDEBAR (TIDAK BANYAK BERUBAH) ===
+// ==================================================================
+
+// Ini variabel global, di luar komponen
+let menuItems: NavItem[] = [];
 
 export default function Sidebar({
   isCollapsed,
@@ -41,7 +35,25 @@ export default function Sidebar({
   onClose,
   toggleSidebar,
 }: SidebarProps) {
-  const pathname = usePathname(); // Ini sekarang sudah i18n-aware
+  const pathname = usePathname();
+  const t = useTranslations("Dashboard");
+
+  // Definisikan menuItems (sekarang bisa diakses global di file ini)
+  menuItems = [
+    { icon: LayoutDashboard, label: t("title"), href: "/dashboard" },
+    {
+      icon: Link2,
+      label: t("myLinks"),
+      children: [
+        { icon: PlusSquare, label: t("createLink"), href: "/new-link" },
+        { icon: Link2, label: t("subs4unlock"), href: "/subs4unlock" },
+      ],
+    },
+    { icon: Users, label: "Users", href: "/users" },
+    { icon: Package, label: "Products", href: "/products" },
+    { icon: FileText, label: "Reports", href: "/reports" },
+    { icon: Settings, label: "Settings", href: "/settings" },
+  ];
 
   return (
     <>
@@ -58,15 +70,13 @@ export default function Sidebar({
         className={`
           bg-[#10052C] text-shortblack h-screen fixed left-0 top-0 
           transition-all duration-300 ease-in-out
-          
           ${isCollapsed ? "w-20" : "w-64"}
-          
           ${isMobileOpen ? "translate-x-0 z-50" : "-translate-x-full"}
           lg:translate-x-0 lg:z-40 font-figtree lg:text-[10px] text-[8px] flex flex-col justify-between
         `}
       >
         <div>
-          {/* Header */}
+          {/* Header Sidebar (Logo & Toggle) */}
           <div
             className={`flex w-full items-center justify-between ${
               isCollapsed ? "px-[2em]" : "px-[3em]"
@@ -83,20 +93,12 @@ export default function Sidebar({
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2">
+                <Link href="/" className="flex items-center gap-2">
                   <div className="w-[2em] h-[2em] bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-[1.6em]"></div>
                   <span className="font-semibold text-[1.6em] lg:hidden block">
                     ShortLinkMu
                   </span>
-                </div>
-
-                {/* Close button mobile */}
-                {/* <button
-                onClick={onClose}
-                className="lg:hidden p-2 hover:bg-slate-800 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button> */}
+                </Link>
                 <div>
                   <button
                     onClick={toggleSidebar}
@@ -112,53 +114,31 @@ export default function Sidebar({
           {/* Menu Items */}
           <nav className="mt-[1em] px-[1em]">
             {menuItems.map((item) => {
-              const Icon = item.icon;
-              // Cek isActive pakai 'pathname' (dari i18n routing)
-              const isActive = pathname === item.href;
+              const isActive = item.href === pathname;
+              const isChildActive =
+                item.children?.some((child) => child.href === pathname) ??
+                false;
 
               return (
-                <Link // Pastikan ini Link dari @/i18n/routing
-                  key={item.href}
-                  href={item.href}
-                  onClick={onClose}
-                  className={`
-                  flex items-center gap-3 px-[3em] py-3 rounded-md mb-1
-                  transition-all duration-200
-                  ${
-                    isActive
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
-                      : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
-                  }
-                  ${isCollapsed ? "justify-center" : ""}
-                `}
-                >
-                  <Icon
-                    className={`${
-                      isCollapsed ? "w-6 h-6" : "w-5 h-5"
-                    } flex-shrink-0`}
-                  />
-                  {!isCollapsed && (
-                    <span className="font-medium text-[1.6em] line-clamp-1">
-                      {item.label}
-                    </span>
-                  )}
-                </Link>
+                <SidebarItem
+                  key={item.label}
+                  item={item}
+                  isCollapsed={isCollapsed}
+                  isActive={isActive}
+                  isChildActive={isChildActive}
+                  onClose={onClose}
+                />
               );
             })}
           </nav>
         </div>
 
-        {/* User Profile */}
-        {/* ... (tidak perlu diubah) ... */}
-
-        {/* User Profile */}
-
+        {/* User Profile (Tetap sama) */}
         {!isCollapsed ? (
           <div className=" p-[1.5em] border-t border-slate-800">
             <div className="flex items-center gap-3 hover:bg-[#1f2545] p-[1.5em] rounded-md transition-all duration-200 cursor-default">
               <div className="flex items-center gap-2">
                 <div className="w-[2em] h-[2em] bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-[1.6em]"></div>
-                {/* <span className="font-semibold text-[1.6em]">ShortLinkMu</span> */}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate text-white text-[1.5em]">
@@ -175,7 +155,6 @@ export default function Sidebar({
             <div className="flex items-center hover:bg-[#1f2545] p-[1.5em] rounded-md transition-all duration-200 cursor-default">
               <div className="flex items-center">
                 <div className="w-[2em] h-[2em] bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-[1.6em]"></div>
-                {/* <span className="font-semibold text-[1.6em]">ShortLinkMu</span> */}
               </div>
             </div>
           </div>
