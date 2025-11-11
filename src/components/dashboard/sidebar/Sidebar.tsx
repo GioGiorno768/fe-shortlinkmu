@@ -15,6 +15,10 @@ import {
   User,
   Mail,
   LogOut,
+  ChartSpline,
+  UserPlus2,
+  BanknoteArrowDown,
+  History,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem"; // Asumsi ini ada di folder yang sama
 import { NavItem } from "@/types/type";
@@ -36,10 +40,10 @@ const getMenuItems = (t: (key: string) => string): NavItem[] => [
       { icon: Link2, label: t("subs4unlock"), href: "https://subs4unlock.id" },
     ],
   },
-  { icon: Users, label: t("users"), href: "/users" },
-  { icon: Package, label: "Products", href: "/products" },
-  { icon: FileText, label: "Reports", href: "/reports" },
-  { icon: Settings, label: t("settings"), href: "/settings" },
+  { icon: ChartSpline, label: t("analytics"), href: "/analytics" },
+  { icon: UserPlus2, label: t("referral"), href: "/referral" },
+  { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
+  { icon: History, label: t("history"), href: "/history" },
 ];
 
 export default function Sidebar({

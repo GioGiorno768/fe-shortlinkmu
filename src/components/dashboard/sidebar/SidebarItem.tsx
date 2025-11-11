@@ -60,10 +60,11 @@ export default function SidebarItem({
               setIsDropdownOpen(!isDropdownOpen);
             }
           }}
+          title={item.label}
           className={`
             flex items-center justify-between w-full gap-3 px-[3em] py-3 rounded-md
             transition-all duration-200
-            ${isChildActive ? "text-white" : "text-slate-400"}
+            ${isChildActive ? "text-white" : "text-slate-400 hover:bg-[#1f2545] hover:text-white"}
             ${
               isCollapsed
                 ? "justify-center"
@@ -194,6 +195,7 @@ export default function SidebarItem({
       key={item.href}
       href={item.href!}
       onClick={onClose}
+      title={item.label}
       className={`
         flex items-center gap-3 px-[3em] py-3 rounded-md mb-1
         transition-all duration-200

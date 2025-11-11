@@ -1,7 +1,13 @@
+"use client";
+import { Link } from "@/i18n/routing";
 // src/app/page.tsx
 import { TrendingUp, Users, ShoppingCart, DollarSign } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { usePathname } from "next/navigation";
 
 export default function DashboardPage() {
+  const pathname = usePathname();
+  const t = useTranslations("Dashboard");
   const stats = [
     {
       icon: DollarSign,
@@ -34,31 +40,29 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div>
+    <div className="lg:text-[10px] text-[8px] font-figtree">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-          Dashboard Overview
-        </h1>
-        <p className="text-slate-600 dark:text-slate-400">
-          Welcome back! Here's what's happening with your business today.
+      <div className="mb-8 ml-[4em]">
+        <h1 className="lg:text-[1.8em] text-[2.3em] font-semibold text-slate-900 ">Dashboard</h1>
+        <p className="text-slate-600 lg:text-[1.4em] text-[1.8em] dark:text-slate-400">
+          <Link href="/">Home</Link>
+          {pathname.includes("/id/")
+            ? pathname.replace("/id/", " > ")
+            : pathname.replace(/^\//, " > ")}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => {
-          const Icon = stat.icon;
           return (
             <div
               key={stat.label}
-              className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 
+              className="bg-white p-6 rounded-xl border border-slate-200 dark:border-slate-800 
                        hover:shadow-lg transition-shadow duration-200"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <Icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"></div>
                 <span
                   className={`text-sm font-semibold ${
                     stat.positive ? "text-green-600" : "text-red-600"

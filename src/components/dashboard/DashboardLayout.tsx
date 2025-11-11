@@ -26,7 +26,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 ">
       <Sidebar
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
@@ -42,7 +42,7 @@ export default function DashboardLayout({
       <main
         className={`
           ${isCollapsed ? "lg:ml-20" : "lg:ml-64"}
-          mt-16 p-4 lg:p-6
+          pt-[8.5em] px-4 lg:px-8 py-2
           transition-all duration-300 ease-in-out
           min-h-screen
         `}
