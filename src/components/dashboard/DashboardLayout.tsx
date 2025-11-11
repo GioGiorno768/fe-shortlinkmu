@@ -4,6 +4,8 @@
 import { useState } from "react";
 import Sidebar from "./sidebar/Sidebar";
 import Header from "./Header";
+import { Link, usePathname } from "@/i18n/routing";
+import Breadcrumb from "./Breadcrumb";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +14,7 @@ export default function DashboardLayout({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -26,7 +29,7 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 ">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar
         isCollapsed={isCollapsed}
         isMobileOpen={isMobileOpen}
@@ -41,12 +44,15 @@ export default function DashboardLayout({
 
       <main
         className={`
-          ${isCollapsed ? "lg:ml-20" : "lg:ml-64"}
-          pt-[8.5em] px-4 lg:px-8 py-2
+          ${isCollapsed ? "custom:ml-20" : "custom:ml-64"}
+          pt-[8.5em] px-4 custom:px-8 py-2
           transition-all duration-300 ease-in-out
           min-h-screen
         `}
       >
+        <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50" >
+          <Breadcrumb />
+        </div>
         {children}
       </main>
     </div>

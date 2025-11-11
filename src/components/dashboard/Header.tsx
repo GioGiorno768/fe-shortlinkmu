@@ -52,21 +52,21 @@ export default function Header({
       className={`
         fixed top-0 right-0 
         left-0
-        ${isCollapsed ? "lg:left-20" : "lg:left-64"}
+        ${isCollapsed ? "custom:left-20" : "custom:left-64"}
         transition-all duration-300 ease-in-out z-30
-        px-4 lg:px-8 pt-6
+        px-4 custom:px-8 pt-6
         font-figtree bg-slate-50
       `}
     >
-      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] lg:py-[1.5em] py-[.6em]  text-[10px] bg-white">
+      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[1.5em]  text-[10px] bg-white">
         {/* Left Section */}
         <div className="flex items-center gap-4">
           {/* Mobile menu button */}
           <button
             onClick={openMobileSidebar}
-            className="p-2 hover:text-slate-600 rounded-lg transition-colors lg:hidden"
+            className="hover:text-slate-600 rounded-lg transition-colors w-[3.5em] ml-[1em] h-[3.5en] flex justify-center items-center custom:hidden"
           >
-            <Menu className="w-5 h-5 text-shortblack " />
+            <span className="solar--hamburger-menu-broken w-[3em] h-[3em] bg-shortblack " />
           </button>
 
           {/* Cash Info */}
@@ -79,7 +79,7 @@ export default function Header({
                   index != 2 && "border-r-[.2em] border-gray-dashboard pr-[3em]"
                 } ${index != 0 && "pl-[3em]"} `}
               >
-                <span className="text-gray-text text-[1.6em] tracking-tight ">
+                <span className="text-grays text-[1.6em] tracking-tight ">
                   {item.name}
                 </span>
                 <div className="flex gap-[1.8em] justify-start items-center">
@@ -102,9 +102,9 @@ export default function Header({
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-1 lg:gap-[2em]">
+        <div className="flex items-center gap-1 custom:gap-[2em]">
           {/* bahasa */}
-          <div className="flex items-center bg-blues rounded-full p-[0.5em] border border-bluelight/10">
+          <div className="custom:flex hidden items-center bg-blue-dashboard rounded-full p-[0.5em] border border-bluelight/10">
             <button
               onClick={() => switchLanguage("en")}
               disabled={isPending}
@@ -132,17 +132,17 @@ export default function Header({
           {/* Theme Toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
-            className="w-[5em] h-[5em] flex justify-center items-center rounded-full lg:hover:-translate-y-1 transition-all duration-300 ease-in-out"
+            className="custom:w-[5em] custom:h-[5em] w-[4em] h-[4em] flex justify-center items-center rounded-full custom:hover:-translate-y-1 transition-all duration-300 ease-in-out"
           >
             {isDark ? (
-              <span className="solar--cloudy-moon-broken w-[3em] h-[3em] bg-bluelight " />
+              <span className="solar--moon-stars-broken custom:w-[2.8em] custom:h-[2.8em] w-[1.8em] h-[1.8em] bg-bluelight " />
             ) : (
-              <span className="solar--sun-broken w-[3em] h-[3em] bg-bluelight " />
+              <span className="solar--sun-broken custom:w-[3em] custom:h-[3em] w-[2em] h-[2em] bg-bluelight " />
             )}
           </button>
 
           {/* Notifications */}
-          <button className="p-2 lg:hover:-translate-y-1 translition-all duration-300 ease-in-out relative">
+          <button className="p-2 custom:hover:-translate-y-1 translition-all duration-300 ease-in-out relative">
             <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
             <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>

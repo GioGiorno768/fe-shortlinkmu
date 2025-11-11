@@ -11,72 +11,60 @@ export default function DashboardPage() {
   const stats = [
     {
       icon: DollarSign,
-      label: "Total Revenue",
+      label: t("totalEarnings"),
       value: "$45,231",
-      change: "+20.1%",
-      positive: true,
+      status: "",
     },
     {
       icon: Users,
-      label: "Total Users",
+      label: t("totalClicks"),
       value: "2,345",
-      change: "+12.5%",
-      positive: true,
-    },
-    {
-      icon: ShoppingCart,
-      label: "Orders",
-      value: "1,234",
-      change: "-5.4%",
-      positive: false,
-    },
-    {
-      icon: TrendingUp,
-      label: "Growth",
-      value: "89.2%",
-      change: "+8.1%",
-      positive: true,
+      status: "sd",
     },
   ];
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree">
-      {/* Header */}
-      <div className="mb-8 ml-[4em]">
-        <h1 className="lg:text-[1.8em] text-[2.3em] font-semibold text-slate-900 ">Dashboard</h1>
-        <p className="text-slate-600 lg:text-[1.4em] text-[1.8em] dark:text-slate-400">
-          <Link href="/">Home</Link>
-          {pathname.includes("/id/")
-            ? pathname.replace("/id/", " > ")
-            : pathname.replace(/^\//, " > ")}
-        </p>
-      </div>
-
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {stats.map((stat) => {
           return (
             <div
               key={stat.label}
-              className="bg-white p-6 rounded-xl border border-slate-200 dark:border-slate-800 
+              className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 
                        hover:shadow-lg transition-shadow duration-200"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"></div>
-                <span
+                <p className="text-[1.8em] font-semibold text-shortblack tracking-tight">
+                  {stat.label}
+                </p>
+                {/* <span
                   className={`text-sm font-semibold ${
                     stat.positive ? "text-green-600" : "text-red-600"
                   }`}
                 >
                   {stat.change}
-                </span>
+                </span> */}
+                <div className="relative w-1/2 flex items-center justify-end">
+                  <button className="w-[3.2em] h-[3.2em] flex items-center justify-center rounded-lg hover:bg-blue-dashboard transition-colors duration-300 relative">
+                    <span className="solar--hamburger-menu-broken w-[2.5em] h-[2.5em] bg-shortblack hover:bg-bluelight transition-colors duration-300 " />
+                  </button>
+                  <div className="absolute top-[4em] p-[1em] w-full right-0 bg-white rounded-lg shadow-sm shadow-slate-500/50 grid grid-cols-1">
+                    {["Week", "Month", "Year"].map((item, index) => (
+                      <button
+                        key={index}
+                        className="text-[1.4em] px-[.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 text-start"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+              <h3 className="text-[3em] font-semibold text-bluelight font-manrope">
                 {stat.value}
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {stat.label}
-              </p>
+              <p className="text-[1.4em] text-grays">{stat.label}</p>
             </div>
           );
         })}

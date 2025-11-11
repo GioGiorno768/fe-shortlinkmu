@@ -30,7 +30,7 @@ interface SidebarProps {
   toggleSidebar: () => void;
 }
 
-const getMenuItems = (t: (key: string) => string): NavItem[] => [
+export const getMenuItems = (t: (key: string) => string): NavItem[] => [
   { icon: LayoutDashboard, label: t("title"), href: "/dashboard" },
   {
     icon: Link2,
@@ -137,7 +137,7 @@ export default function Sidebar({
       {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-40 custom:hidden"
           onClick={onClose}
         />
       )}
@@ -148,8 +148,8 @@ export default function Sidebar({
           bg-[#10052C] text-shortblack h-screen fixed left-0 top-0 
           transition-all duration-300 ease-in-out
           ${isCollapsed ? "w-20" : "w-64"}
-          ${isMobileOpen ? "translate-x-0 z-50" : "-translate-x-full"}
-          lg:translate-x-0 lg:z-40 font-figtree lg:text-[10px] text-[8px] flex flex-col justify-between
+          ${isMobileOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"}
+          custom:translate-x-0 custom:z-40 font-figtree custom:text-[10px] text-[8px] flex flex-col justify-between
         `}
       >
         <div>
@@ -163,7 +163,7 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={toggleSidebar}
-                  className=" hover:bg-white dark:hover:bg-[#1f2545] rounded-lg w-fit transition-colors hidden lg:flex items-center justify-center p-2"
+                  className=" hover:bg-white dark:hover:bg-[#1f2545] rounded-lg w-fit transition-colors hidden custom:flex items-center justify-center p-2"
                 >
                   <span className="solar--sidebar-minimalistic-broken w-[2.5em] h-[2.5em] bg-slate-600 hover:bg-white dark:bg-slate-400"></span>
                 </button>
@@ -172,14 +172,14 @@ export default function Sidebar({
               <>
                 <Link href="/" className="flex items-center gap-2">
                   <div className="w-[2em] h-[2em] bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center font-bold text-[1.6em]"></div>
-                  <span className="font-semibold text-[1.6em] lg:hidden block">
+                  <span className="font-semibold text-[1.6em] custom:hidden block">
                     ShortLinkMu
                   </span>
                 </Link>
                 <div>
                   <button
                     onClick={toggleSidebar}
-                    className=" hover:bg-slate-100 dark:hover:bg-[#1f2545] rounded-lg w-fit transition-colors hidden lg:flex items-center justify-center p-2"
+                    className=" hover:bg-slate-100 dark:hover:bg-[#1f2545] rounded-lg w-fit transition-colors hidden custom:flex items-center justify-center p-2"
                   >
                     <span className="solar--sidebar-minimalistic-broken w-[2.5em] h-[2.5em] bg-slate-600 hover:bg-white dark:bg-slate-400"></span>
                   </button>
