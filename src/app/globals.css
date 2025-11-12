@@ -9,14 +9,19 @@
   --blues: #f5f8ff;
   --grays: #7c7c85;
   --gray-text: #979797;
-  --gray-dashboard: #D1D1D1;
+  --gray-dashboard: #d1d1d1;
   --card: #f3f7ff;
   --yellowlink: #dca500;
   --purplelink: #ea20cf;
   --bluetitle: #ddebff;
   --bluefooter: #bcd1ff;
-  --blue-dashboard: #E7EAFF;
+  --blue-dashboard: #e7eaff;
   --redshortlink: #cd0d7a;
+  --darkgreen-dashboard: #0e6c8f;
+  --lightgreen-dashboard: #e7fffc;
+  --lightred-dashboard: #FFE7F3;
+  --darkpurple-dashboard: #9E30D5;
+  --lightpurple-dashboard: #F6DEFF;
 }
 
 @theme inline {
@@ -36,10 +41,15 @@
   --color-gray-dashboard: var(--gray-dashboard);
   --color-gray-text: var(--gray-text);
   --color-blue-dashboard: var(--blue-dashboard);
+  --color-darkgreen-dashboard: var(--darkgreen-dashboard);
+  --color-lightgreen-dashboard: var(--lightgreen-dashboard);
+  --color-lightred-dashboard: var(--lightred-dashboard);
+  --color-darkpurple-dashboard: var(--darkpurple-dashboard);
+  --color-lightpurple-dashboard: var(--lightpurple-dashboard);
   --font-figtree: "Figtree", sans-serif;
   --font-geist: "Geist", sans-serif;
   --font-manrope: "Manrope", sans-serif;
-   --breakpoint-custom: 1025px;
+  --breakpoint-custom: 1025px;
 }
 
 body {
@@ -266,7 +276,6 @@ body {
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
-
 
 /* light mode */
 .solar--sun-broken {

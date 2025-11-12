@@ -1,76 +1,82 @@
 "use client";
 import { Link } from "@/i18n/routing";
 // src/app/page.tsx
-import { TrendingUp, Users, ShoppingCart, DollarSign } from "lucide-react";
+import {
+  TrendingUp,
+  Users,
+  ShoppingCart,
+  DollarSign,
+  BanknoteArrowUp,
+  MousePointerClick,
+  MousePointerBan,
+  MousePointer2Icon,
+} from "lucide-react"; // Pastikan DollarSign dan Users ada
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import StatsCard from "@/components/dashboard/StatsCard"; // <-- IMPORT KOMPONEN BARU
 
 export default function DashboardPage() {
   const pathname = usePathname();
   const t = useTranslations("Dashboard");
-  const stats = [
+
+  // UBAH: Ini jadi array KONFIGURASI, bukan data
+  const statsCards = [
     {
-      icon: DollarSign,
+      icon: BanknoteArrowUp,
+      color: [
+        "text-bluelight",
+        "bg-blue-dashboard",
+        "border-bluelight",
+      ],
       label: t("totalEarnings"),
-      value: "$45,231",
-      status: "",
+      apiEndpoint: "/api/stats/earnings", // Endpoint buat API earnings
     },
     {
-      icon: Users,
+      icon: MousePointerClick,
+      color: [
+        "text-darkpurple-dashboard",
+        "bg-lightpurple-dashboard",
+        "border-darkpurple-dashboard",
+      ],
       label: t("totalClicks"),
-      value: "2,345",
-      status: "sd",
+      apiEndpoint: "/api/stats/clicks", // Endpoint buat API clicks
     },
+    {
+      icon: MousePointer2Icon,
+      color: [
+        "text-darkpurple-dashboard",
+        "bg-lightpurple-dashboard",
+        "border-darkpurple-dashboard",
+      ],
+      label: t("validClicks"),
+      apiEndpoint: "/api/stats/validClicks", // Endpoint buat API clicks
+    },
+    // Lu bisa tambahin kartu lain di sini dengan gampang
+    // {
+    //   icon: ShoppingCart, // Contoh
+    //   label: "Total Sales",
+    //   apiEndpoint: "/api/stats/sales"
+    // },
   ];
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {stats.map((stat) => {
-          return (
-            <div
-              key={stat.label}
-              className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 
-                       hover:shadow-lg transition-shadow duration-200"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-                  {stat.label}
-                </p>
-                {/* <span
-                  className={`text-sm font-semibold ${
-                    stat.positive ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {stat.change}
-                </span> */}
-                <div className="relative w-1/2 flex items-center justify-end">
-                  <button className="w-[3.2em] h-[3.2em] flex items-center justify-center rounded-lg hover:bg-blue-dashboard transition-colors duration-300 relative">
-                    <span className="solar--hamburger-menu-broken w-[2.5em] h-[2.5em] bg-shortblack hover:bg-bluelight transition-colors duration-300 " />
-                  </button>
-                  <div className="absolute top-[4em] p-[1em] w-full right-0 bg-white rounded-lg shadow-sm shadow-slate-500/50 grid grid-cols-1">
-                    {["Week", "Month", "Year"].map((item, index) => (
-                      <button
-                        key={index}
-                        className="text-[1.4em] px-[.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 text-start"
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <h3 className="text-[3em] font-semibold text-bluelight font-manrope">
-                {stat.value}
-              </h3>
-              <p className="text-[1.4em] text-grays">{stat.label}</p>
-            </div>
-          );
-        })}
+        {/* UBAH: Looping diganti jadi ini */}
+        {statsCards.map((card) => (
+          <StatsCard
+            key={card.label}
+            icon={card.icon}
+            color={card.color}
+            label={card.label}
+            apiEndpoint={card.apiEndpoint}
+          />
+        ))}
+        {/* <div className="col-span-2 rounded-xl md:py-[1.3vw] py-[3vw] w-full bg-white shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200"></div> */}
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section (Ini sisa kode lu, gak diubah) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
