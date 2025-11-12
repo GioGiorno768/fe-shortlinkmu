@@ -15,6 +15,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import StatsCard from "@/components/dashboard/StatsCard";
 import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMPORT KARTU BARU
+import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -55,7 +56,6 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       {/* UBAH GRID: 3 kartu pertama + 1 kartu achievement */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        
         {/* Render 3 kartu pertama */}
         {statsCards.map((card) => (
           <StatsCard
@@ -76,27 +76,10 @@ export default function DashboardPage() {
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-            Recent Activity
-          </h3>
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 flex items-center justify-center text-white font-semibold text-sm">
-                  U{i}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    User {i} completed a purchase
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {i} hours ago
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* 2. GANTI "RECENT ACTIVITY" JADI KARTU BARU LU */}
+        {/* KITA BUAT JADI 'lg:col-span-2' BIAR LEBAR SESUAI GAMBAR */}
+        <div className="">
+          <LinkAnalyticsCard />
         </div>
 
         {/* Top Products */}

@@ -1,0 +1,388 @@
+// src/components/dashboard/LinkAnalyticsCard.tsx
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
+import { Loader2, OctagonAlert, ChevronDown } from "lucide-react";
+
+// WAJIB: Import dinamis buat ApexCharts
+const Chart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[300px] flex items-center justify-center">
+      <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+    </div>
+  ),
+});
+
+// Tipe data buat state
+type TimeRange = "perWeek" | "perMonth" | "perYear";
+type StatType = "totalEarnings" | "totalClicks" | "validClicks";
+
+// Tipe data yang kita harapin dari API
+interface AnalyticsData {
+  series: {
+    name: string;
+    data: number[];
+  }[];
+  categories: string[];
+}
+
+// --- FUNGSI API SETUP (GANTI INI NANTI) ---
+async function fetchAnalyticsData(
+  range: TimeRange,
+  stat: StatType,
+): Promise<AnalyticsData> {
+  console.log(`MANGGIL API: /api/analytics?range=${range}&stat=${stat}`);
+
+  // ======================================================
+  // === CONTOH KALO PAKE API BENERAN (NANTI AKTIFIN) ===
+  // ======================================================
+  /*
+  // Ganti URL ini pake API URL lu
+  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/analytics?range=${range}&stat=${stat}`;
+  
+  // Ambil token auth kalo perlu
+  // const token = localStorage.getItem("authToken");
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        // 'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gagal memuat data: ${response.statusText}`);
+    }
+
+    const data: AnalyticsData = await response.json();
+    
+    // Backend HARUS ngembaliin format:
+    // {
+    //   series: [{ name: "Total Clicks", data: [10, 41, 35, 51, 49, 62, 69] }],
+    //   categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    // }
+    
+    return data;
+
+  } catch (err: any) {
+    console.error("Error di fetchAnalyticsData:", err);
+    throw new Error(err.message || "Gagal terhubung ke server.");
+  }
+  */
+  // ======================================================
+  // === AKHIR DARI SETUP API BENERAN ===
+  // ======================================================
+
+
+  // ======================================================
+  // === INI DATA DUMMY (HAPUS NANTI) ===
+  // ======================================================
+  await new Promise((resolve) => setTimeout(resolve, 700)); // Simulasi loading
+
+  let data: AnalyticsData = {
+    series: [{ name: "Clicks", data: [] }],
+    categories: [],
+  };
+  const statName =
+    stat === "totalEarnings"
+      ? "Earnings"
+      : stat === "totalClicks"
+      ? "Clicks"
+      : "Views";
+
+  if (range === "perWeek") {
+    data = {
+      series: [{ name: statName, data: [10, 41, 35, 51, 49, 62, 69] }],
+      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    };
+  } else if (range === "perMonth") {
+    data = {
+      series: [
+        {
+          name: statName,
+          data: [30, 40, 25, 50, 49, 60, 70, 91, 125, 100, 80, 110],
+        },
+      ],
+      categories: [
+        "Wk1", "Wk2", "Wk3", "Wk4", "Wk5", "Wk6", "Wk7", "Wk8", "Wk9", "Wk10", "Wk11", "Wk12"
+      ],
+    };
+  } else { // perYear
+    data = {
+      series: [
+        {
+          name: statName,
+          data: [300, 400, 250, 500, 490, 600, 700, 910, 1250, 1000, 800, 1100],
+        },
+      ],
+      categories: [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      ],
+    };
+  }
+  // Data dummy buat tipe stat berbeda (biar keliatan ganti)
+  if (stat === "totalEarnings") {
+    data.series[0].data = data.series[0].data.map(n => n / 10);
+  } else if (stat === "validClicks") {
+    data.series[0].data = data.series[0].data.map(n => n * 0.8);
+  }
+  return data;
+  // ======================================================
+  // === AKHIR DARI DATA DUMMY ===
+  // ======================================================
+}
+
+export default function LinkAnalyticsCard() {
+  const t = useTranslations("Dashboard");
+
+  // State buat data
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // State buat dropdown
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("perMonth");
+  const [selectedStat, setSelectedStat] = useState<StatType>("totalClicks");
+  const [isRangeOpen, setIsRangeOpen] = useState(false);
+  const [isStatOpen, setIsStatOpen] = useState(false);
+  const rangeRef = useRef<HTMLDivElement>(null);
+  const statRef = useRef<HTMLDivElement>(null);
+
+  // State buat chart
+  const [chartSeries, setChartSeries] = useState<ApexAxisChartSeries>([]);
+  const [chartOptions, setChartOptions] =
+    useState<ApexCharts.ApexOptions>({});
+
+  // Opsi dropdown
+  const timeRanges: { key: TimeRange; label: string }[] = [
+    { key: "perWeek", label: t("perWeek") },
+    { key: "perMonth", label: t("perMonth") },
+    { key: "perYear", label: t("perYear") },
+  ];
+  const statOptions: { key: StatType; label: string }[] = [
+    { key: "totalClicks", label: t("totalClicks") },
+    { key: "totalEarnings", label: t("totalEarnings") },
+    { key: "validClicks", label: t("validClicks") },
+  ];
+
+  // Efek buat fetch data pas state dropdown berubah
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const data = await fetchAnalyticsData(selectedRange, selectedStat);
+
+        // Update state chart-nya
+        setChartSeries(data.series);
+        setChartOptions({
+          ...baseChartOptions, // Pake config dasar
+          xaxis: {
+            ...baseChartOptions.xaxis,
+            categories: data.categories, // Ganti kategori X-axis
+          },
+          tooltip: {
+            ...baseChartOptions.tooltip,
+            x: {
+              format: rangeRef.current?.textContent === 'perMonth' ? 'Week' : undefined
+            }
+          }
+        });
+
+      } catch (err: any) {
+        setError(err.message);
+        setChartSeries([]); // Kosongin chart kalo error
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, [selectedRange, selectedStat]); // <-- Fetch ulang kalo salah satu berubah
+
+  // --- Konfigurasi Dasar Chart Spline Area ---
+  const baseChartOptions: ApexCharts.ApexOptions = {
+    chart: {
+      type: "area",
+      height: 300,
+      zoom: { enabled: false },
+      toolbar: { show: false },
+    },
+    colors: ["#350e8f"], // --color-bluelight
+    fill: {
+      type: "gradient",
+      gradient: {
+        shade: "dark",
+        type: "vertical",
+        shadeIntensity: 0.1,
+        gradientToColors: ["#ffffff"],
+        inverseColors: false,
+        opacityFrom: 0.7,
+        opacityTo: 0.1,
+        stops: [0, 100],
+      },
+    },
+    stroke: {
+      curve: "smooth",
+      width: 3,
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    markers: {
+      size: 4,
+      hover: {
+        size: 6,
+      },
+    },
+    tooltip: {
+      enabled: true,
+      theme: "light",
+      x: {
+        show: true,
+      },
+    },
+    xaxis: {
+      type: "category",
+      categories: [], // Ini diisi sama data dari API
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: {
+      labels: {
+        formatter: (val) => val.toFixed(0),
+      },
+    },
+    grid: {
+      show: true,
+      borderColor: "#f1f1f1",
+      strokeDashArray: 4,
+    },
+  };
+  // ---------------------------------
+
+  // Efek buat nutup dropdown (copy-paste aja)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (rangeRef.current && !rangeRef.current.contains(event.target as Node)) {
+        setIsRangeOpen(false);
+      }
+      if (statRef.current && !statRef.current.contains(event.target as Node)) {
+        setIsStatOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  console.log(statOptions.find((o) => o.key === selectedStat)?.label);
+  
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full">
+      {/* Header (Title + 2 Dropdown) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+        <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
+          {t("clickAnalytics")}
+        </h3>
+
+        {/* Grup Dropdown */}
+        <div className="flex items-center gap-2 z-10">
+          {/* Dropdown 1: Tipe Stat */}
+          <div className="relative" ref={statRef}>
+            <button
+              onClick={() => setIsStatOpen(!isStatOpen)}
+              className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300"
+            >
+              {statOptions.find((o) => o.key === selectedStat)?.label}
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isStatOpen ? "rotate-180" : ""}`} />
+            </button>
+            <div
+              className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
+                isStatOpen ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
+              {statOptions.map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => {
+                    setSelectedStat(opt.key);
+                    setIsStatOpen(false);
+                  }}
+                  className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
+                    selectedStat === opt.key
+                      ? "text-bluelight font-semibold bg-blue-dashboard"
+                      : "text-shortblack hover:bg-blues"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dropdown 2: Range Waktu */}
+          <div className="relative" ref={rangeRef}>
+            <button
+              onClick={() => setIsRangeOpen(!isRangeOpen)}
+              className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 "
+            >
+              {timeRanges.find((o) => o.key === selectedRange)?.label}
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isRangeOpen ? "rotate-180" : ""}`} />
+            </button>
+            <div
+              className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
+                isRangeOpen ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+            >
+              {timeRanges.map((range) => (
+                <button
+                  key={range.key}
+                  onClick={() => {
+                    setSelectedRange(range.key);
+                    setIsRangeOpen(false);
+                  }}
+                  className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
+                    selectedRange === range.key
+                      ? "text-bluelight font-semibold bg-blue-dashboard"
+                      : "text-shortblack hover:bg-blues"
+                  }`}
+                >
+                  {range.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Body (Chart) */}
+      <div className="h-[300px] -ml-[1em]">
+        {isLoading ? (
+          <div className="h-full flex items-center justify-center">
+            <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+          </div>
+        ) : error ? (
+          <div className="h-full flex items-center justify-center text-redshortlink p-4">
+            <OctagonAlert className="w-8 h-8 mx-auto mb-2" />
+            <p className="text-[1.4em] font-medium">{error}</p>
+          </div>
+        ) : (
+          <Chart
+            options={chartOptions}
+            series={chartSeries}
+            type="area"
+            height="100%"
+            width="100%"
+          />
+        )}
+      </div>
+    </div>
+  );
+}

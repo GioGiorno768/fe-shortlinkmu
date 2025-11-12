@@ -39,13 +39,13 @@ export default function Header({
   };
 
   const head = [
-    { name: t("balance"), icon: "solar--wallet-linear", value: "$80,210" },
+    { name: t("balance"), icon: "solar--wallet-linear", value: "$880,210" },
     {
       name: t("payout"),
       icon: "hugeicons--money-send-circle",
       value: "$10,210",
     },
-    { name: t("cpc"), icon: "icon-park-outline--click-tap", value: "$0,010" },
+    { name: t("cpm"), icon: "icon-park-outline--click-tap", value: "$5,000" },
   ];
   return (
     <nav

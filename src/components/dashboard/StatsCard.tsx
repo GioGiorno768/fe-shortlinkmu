@@ -45,7 +45,7 @@ async function fetchStats(endpoint: string, range: TimeRange) {
       case "perWeek":
         return { value: "$1,234", subtitleKey: "perWeek" };
       case "perMonth":
-        return { value: "$5,678", subtitleKey: "perMonth" };
+        return { value: "$700,678", subtitleKey: "perMonth" };
       case "perYear":
         return { value: "$45,231", subtitleKey: "perYear" };
     }
@@ -55,7 +55,7 @@ async function fetchStats(endpoint: string, range: TimeRange) {
       case "perWeek":
         return { value: "580", subtitleKey: "perWeek" };
       case "perMonth":
-        return { value: "2,345", subtitleKey: "perMonth" };
+        return { value: "600.345", subtitleKey: "perMonth" };
       case "perYear":
         return { value: "28,190", subtitleKey: "perYear" };
     }
@@ -65,7 +65,7 @@ async function fetchStats(endpoint: string, range: TimeRange) {
       case "perWeek":
         return { value: "500", subtitleKey: "perWeek" };
       case "perMonth":
-        return { value: "2,000", subtitleKey: "perMonth" };
+        return { value: "600,000", subtitleKey: "perMonth" };
       case "perYear":
         return { value: "28,000", subtitleKey: "perYear" };
     }
