@@ -45,7 +45,7 @@ export default function DashboardPage() {
         "bg-lightgreen-dashboard",
         "border-darkgreen-dashboard",
       ],
-      label: t("validClicks"),
+      label: t("totalViews"),
       apiEndpoint: "/api/stats/validClicks",
     },
   ];
