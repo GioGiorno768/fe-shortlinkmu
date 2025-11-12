@@ -10,26 +10,23 @@ import {
   MousePointerClick,
   MousePointerBan,
   MousePointer2Icon,
-} from "lucide-react"; // Pastikan DollarSign dan Users ada
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import StatsCard from "@/components/dashboard/StatsCard"; // <-- IMPORT KOMPONEN BARU
+import StatsCard from "@/components/dashboard/StatsCard";
+import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMPORT KARTU BARU
 
 export default function DashboardPage() {
   const pathname = usePathname();
   const t = useTranslations("Dashboard");
 
-  // UBAH: Ini jadi array KONFIGURASI, bukan data
+  // Ini 3 kartu pertama
   const statsCards = [
     {
       icon: BanknoteArrowUp,
-      color: [
-        "text-bluelight",
-        "bg-blue-dashboard",
-        "border-bluelight",
-      ],
+      color: ["text-bluelight", "bg-blue-dashboard", "border-bluelight"],
       label: t("totalEarnings"),
-      apiEndpoint: "/api/stats/earnings", // Endpoint buat API earnings
+      apiEndpoint: "/api/stats/earnings",
     },
     {
       icon: MousePointerClick,
@@ -39,31 +36,27 @@ export default function DashboardPage() {
         "border-darkpurple-dashboard",
       ],
       label: t("totalClicks"),
-      apiEndpoint: "/api/stats/clicks", // Endpoint buat API clicks
+      apiEndpoint: "/api/stats/clicks",
     },
     {
       icon: MousePointer2Icon,
       color: [
-        "text-darkpurple-dashboard",
-        "bg-lightpurple-dashboard",
-        "border-darkpurple-dashboard",
+        "text-darkgreen-dashboard",
+        "bg-lightgreen-dashboard",
+        "border-darkgreen-dashboard",
       ],
       label: t("validClicks"),
-      apiEndpoint: "/api/stats/validClicks", // Endpoint buat API clicks
+      apiEndpoint: "/api/stats/validClicks",
     },
-    // Lu bisa tambahin kartu lain di sini dengan gampang
-    // {
-    //   icon: ShoppingCart, // Contoh
-    //   label: "Total Sales",
-    //   apiEndpoint: "/api/stats/sales"
-    // },
   ];
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree">
       {/* Stats Grid */}
+      {/* UBAH GRID: 3 kartu pertama + 1 kartu achievement */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* UBAH: Looping diganti jadi ini */}
+        
+        {/* Render 3 kartu pertama */}
         {statsCards.map((card) => (
           <StatsCard
             key={card.label}
@@ -73,7 +66,11 @@ export default function DashboardPage() {
             apiEndpoint={card.apiEndpoint}
           />
         ))}
-        {/* <div className="col-span-2 rounded-xl md:py-[1.3vw] py-[3vw] w-full bg-white shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200"></div> */}
+
+        {/* TAMBAHKAN KARTU ACHIEVEMENT DI SINI */}
+        <div className="col-span-1 lg:col-span-1">
+          <AchievementCard />
+        </div>
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
