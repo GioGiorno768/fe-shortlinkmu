@@ -17,11 +17,11 @@
   --bluefooter: #bcd1ff;
   --blue-dashboard: #e7eaff;
   --redshortlink: #cd0d7a;
-  --darkgreen-dashboard: #0E6C8F;
-  --lightgreen-dashboard: #E7FFFC;
-  --lightred-dashboard: #FFE7F3;
-  --darkpurple-dashboard: #9E30D5;
-  --lightpurple-dashboard: #F6DEFF;
+  --darkgreen-dashboard: #0e6c8f;
+  --lightgreen-dashboard: #e7fffc;
+  --lightred-dashboard: #ffe7f3;
+  --darkpurple-dashboard: #9e30d5;
+  --lightpurple-dashboard: #f6deff;
 }
 
 @theme inline {
@@ -313,3 +313,30 @@ body {
   mask-size: 100% 100%;
 }
 /* Icons */
+
+/* --- Style Scrollbar Minimalis --- */
+::-webkit-scrollbar {
+  width: 8px; /* Lebar scrollbar */
+  height: 8px; /* Tinggi (buat scroll horizontal) */
+}
+
+
+::-webkit-scrollbar-thumb:hover {
+  /* Pake warna --grays lu pas di-hover */
+  background: var(--color-grays);
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-blue-dashboard); /* Warna track lu */
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-bluelight); /* Warna thumb lu */
+  border-radius: 10px;
+}
+
+

@@ -339,7 +339,13 @@ export default function TopPerformingLinksCard() {
               {error}
             </div>
           ) : (
-            <div className="h-[300px] overflow-y-auto pr-2 space-y-2 overscroll-contain">
+            <div
+              onWheel={(e) => {
+                // Stop scroll dari bocor ke parent (halaman)
+                e.stopPropagation();
+              }}
+              className="h-[300px] overflow-y-auto pr-2 space-y-2 overscroll-contain custom-scrollbar-minimal"
+            >
               {" "}
               {/* pr-2 buat ngasih jarak ke scrollbar */}
               {links.map((link) => (
