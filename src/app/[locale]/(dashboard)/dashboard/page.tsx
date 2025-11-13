@@ -1,14 +1,9 @@
+// src/app/(dashboard)/dashbardpage.tsx
 "use client";
 import { Link } from "@/i18n/routing";
-// src/app/page.tsx
 import {
-  TrendingUp,
-  Users,
-  ShoppingCart,
-  DollarSign,
   BanknoteArrowUp,
   MousePointerClick,
-  MousePointerBan,
   MousePointer2Icon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -16,6 +11,7 @@ import { usePathname } from "next/navigation";
 import StatsCard from "@/components/dashboard/StatsCard";
 import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMPORT KARTU BARU
 import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
+import TopPerformingLinksCard from "@/components/dashboard/TopPerformingLinksCard";
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -82,29 +78,12 @@ export default function DashboardPage() {
           <LinkAnalyticsCard />
         </div>
 
-        {/* Top Products */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-            Top Products
-          </h3>
-          <div className="space-y-3">
-            {[
-              { name: "Product A", sales: 234 },
-              { name: "Product B", sales: 189 },
-              { name: "Product C", sales: 156 },
-              { name: "Product D", sales: 142 },
-            ].map((product, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <span className="text-sm text-slate-700 dark:text-slate-300">
-                  {product.name}
-                </span>
-                <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                  {product.sales} sales
-                </span>
-              </div>
-            ))}
-          </div>
+        {/* --- 2. GANTI BAGIAN INI --- */}
+        {/* Hapus "Top Products" div */}
+        <div className="">
+          <TopPerformingLinksCard />
         </div>
+        {/* --- AKHIR PERUBAHAN --- */}
       </div>
     </div>
   );
