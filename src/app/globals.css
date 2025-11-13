@@ -323,7 +323,7 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   /* Pake warna --grays lu pas di-hover */
-  background: var(--color-grays);
+  background: var(--color-blue-950);
 }
 
 ::-webkit-scrollbar-button {

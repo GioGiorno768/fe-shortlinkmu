@@ -5,6 +5,7 @@ import {
   BanknoteArrowUp,
   MousePointerClick,
   MousePointer2Icon,
+  Eye,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
@@ -36,7 +37,7 @@ export default function DashboardPage() {
       apiEndpoint: "/api/stats/clicks",
     },
     {
-      icon: MousePointer2Icon,
+      icon: Eye,
       color: [
         "text-darkgreen-dashboard",
         "bg-lightgreen-dashboard",
@@ -70,7 +71,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Recent Activity */}
         {/* 2. GANTI "RECENT ACTIVITY" JADI KARTU BARU LU */}
         {/* KITA BUAT JADI 'lg:col-span-2' BIAR LEBAR SESUAI GAMBAR */}
@@ -84,6 +85,12 @@ export default function DashboardPage() {
           <TopPerformingLinksCard />
         </div>
         {/* --- AKHIR PERUBAHAN --- */}
+      </div>
+
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Traffic */}
+
       </div>
     </div>
   );
