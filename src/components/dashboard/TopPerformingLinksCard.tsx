@@ -285,7 +285,7 @@ export default function TopPerformingLinksCard() {
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setIsSortOpen(!isSortOpen)}
-              className="flex items-center gap-2 text-[1.4em] font-medium text-grays hover:text-bluelight transition-colors"
+              className={` flex items-center gap-2 text-[1.4em] font-medium text-grays hover:text-bluelight transition-colors`}
             >
               <span>{sortBy === "latest" ? t("latest") : "Longest"}</span>
               <ChevronDown
@@ -352,9 +352,7 @@ export default function TopPerformingLinksCard() {
                 <div
                   key={link.id}
                   className={`rounded-xl transition-colors ${
-                    openAccordionId === link.id
-                      ? "bg-blue-dashboard"
-                      : "bg-white"
+                    openAccordionId === link.id ? "bg-blues" : "bg-white"
                   }`}
                 >
                   {/* === Link Item (Accordion Trigger) === */}
@@ -368,9 +366,8 @@ export default function TopPerformingLinksCard() {
                         <p className="text-[1.6em] font-semibold text-shortblack truncate">
                           {link.shortUrl}
                         </p>
-                        <p className="text-[1.4em] text-grays">
-                          {`${link.totalViews.toLocaleString("en-US")} Views`} /{" "}
-                          {`$${link.totalEarnings.toFixed(2)}`}
+                        <p className="text-[1.4em] text-grays w-[80%] line-clamp-1">
+                          {link.originalUrl}
                         </p>
                       </div>
                     </div>
@@ -383,9 +380,9 @@ export default function TopPerformingLinksCard() {
                             e.stopPropagation(); // Biar accordion gak ikutan nutup
                             handleActionMenuToggle(link.id);
                           }}
-                          className="p-1 rounded-full hover:bg-white"
+                          className={`p-1 rounded-full hover:text-bluelight text-grays ${openActionMenuId === link.id ? "text-bluelight bg-blue-dashboard" : ""}`}
                         >
-                          <MoreHorizontal className="w-5 h-5 text-grays" />
+                          <MoreHorizontal className="w-5 h-5 " />
                         </button>
                         <AnimatePresence>
                           {openActionMenuId === link.id && (
@@ -417,8 +414,10 @@ export default function TopPerformingLinksCard() {
 
                       {/* === Chevron Accordion === */}
                       <ChevronDown
-                        className={`w-5 h-5 text-grays transition-transform ${
-                          openAccordionId === link.id ? "rotate-180" : ""
+                        className={`w-5 h-5 transition-transform rounded-full ${
+                          openAccordionId === link.id
+                            ? "rotate-180 text-bluelight bg-blue-dashboard"
+                            : "text-grays"
                         }`}
                       />
                     </div>
@@ -512,7 +511,7 @@ export default function TopPerformingLinksCard() {
                     <h3 className="text-[1.8em] font-semibold text-shortblack">
                       {selectedLink.shortUrl}
                     </h3>
-                    <p className="text-[1.4em] text-grays truncate max-w-xs">
+                    <p className="text-[1.4em] text-grays line-clamp-1 w-[95%]">
                       {selectedLink.originalUrl}
                     </p>
                   </div>
