@@ -6,6 +6,7 @@ import Sidebar from "./sidebar/Sidebar";
 import Header from "./Header";
 import { Link, usePathname } from "@/i18n/routing";
 import Breadcrumb from "./Breadcrumb";
+import DashboardFooter from "./DashboardFooter";
 
 export default function DashboardLayout({
   children,
@@ -50,10 +51,12 @@ export default function DashboardLayout({
           min-h-screen
         `}
       >
-        <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50" >
+        <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50">
           <Breadcrumb />
         </div>
         {children}
+
+        <DashboardFooter />
       </main>
     </div>
   );
