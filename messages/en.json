@@ -64,7 +64,12 @@
     "levelElite": "Elite",
     "levelPro": "Pro",
     "levelMaster": "Master",
-    "levelMythic": "Mythic"
+    "levelMythic": "Mythic",
+    "referralTitle": "Referral",
+    "referralSubtitle": "Get 20% commission from your friends earnings",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "share": "Share"
   },
   "NotFound": {
     "title": "Page Not Found",

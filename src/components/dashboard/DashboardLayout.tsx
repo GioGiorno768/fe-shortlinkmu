@@ -45,7 +45,7 @@ export default function DashboardLayout({
       <main
         className={`
           ${isCollapsed ? "custom:ml-20" : "custom:ml-64"}
-          pt-[8.5em] px-4 custom:px-8 py-2
+          pt-[9.2em] px-4 custom:px-8 py-2
           transition-all duration-300 ease-in-out
           min-h-screen
         `}

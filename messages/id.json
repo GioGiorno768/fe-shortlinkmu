@@ -64,7 +64,12 @@
     "levelElite": "Elite",
     "levelPro": "Pro",
     "levelMaster": "Master",
-    "levelMythic": "Mythic"
+    "levelMythic": "Mythic",
+    "referralTitle": "Referral",
+    "referralSubtitle": "Dapat 20% komisi dari pendapatan temanmu",
+    "copy": "Salin",
+    "copied": "Tersalin!",
+    "share": "Bagikan"
   },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",

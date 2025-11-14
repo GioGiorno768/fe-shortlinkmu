@@ -201,23 +201,25 @@ export default function TopTrafficCard() {
 
   return (
     // Card Wrapper
-    <div className=" p-4 rounded-xl h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 px-2">
-        <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-          {t("topTraffic")}
-        </h3>
-        <Link
-          href="/analytics/traffic-source" // Ganti ke rute detail traffic lu
-          className="flex items-center gap-1 text-[1.4em] font-medium text-bluelight hover:underline"
-        >
-          <span>{t("detail")}</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
+    <div className=" p-4 bg-white rounded-xl flex justify-stretch items-stretch flex-col shadow-sm shadow-slate-500/50">
+      <div>
+        <div className="flex items-center justify-between mb-4 px-2">
+          <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
+            {t("topTraffic")}
+          </h3>
+          <Link
+            href="/analytics/traffic-source" // Ganti ke rute detail traffic lu
+            className="flex items-center gap-1 text-[1.4em] font-medium text-bluelight hover:underline"
+          >
+            <span>{t("detail")}</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
 
-      {/* Konten (3 Card) */}
-      <div className="rounded-xl ">{renderContent()}</div>
+        {/* Konten (3 Card) */}
+        <div className="rounded-xl ">{renderContent()}</div>
+      </div>
+      {/* Header */}
     </div>
   );
 }

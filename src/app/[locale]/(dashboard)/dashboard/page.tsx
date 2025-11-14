@@ -14,6 +14,7 @@ import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMP
 import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 import TopPerformingLinksCard from "@/components/dashboard/TopPerformingLinksCard";
 import TopTrafficCard from "@/components/dashboard/TopTrafficCard";
+import ReferralCard from "@/components/dashboard/ReferralCard";
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -96,7 +97,9 @@ export default function DashboardPage() {
 
 
         {/* Referral */}
-        
+        <div>
+          <ReferralCard />
+        </div>
 
       </div>
     </div>

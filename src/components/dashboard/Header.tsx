@@ -58,7 +58,7 @@ export default function Header({
         font-figtree bg-slate-50
       `}
     >
-      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[1.5em]  text-[10px] bg-white">
+      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[2em]  text-[10px] bg-white">
         {/* Left Section */}
         <div className="flex items-center gap-4">
           {/* Mobile menu button */}
