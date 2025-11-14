@@ -24,3 +24,26 @@ export type EditableLinkData = {
   password?: string;
   expiresAt?: string; // Bisa pake string (date) atau Date object
 };
+
+export type UserLevel =
+  | "beginner"
+  | "rookie"
+  | "elite"
+  | "pro"
+  | "master"
+  | "mythic";
+
+export interface TopTrafficStats {
+  topMonth: {
+    month: string; // e.g., "February"
+    views: number; // e.g., 405000
+  };
+  topYear: {
+    year: string; // e.g., "2025"
+    views: number; // e.g., 805000
+  };
+  topLevel: {
+    level: UserLevel;
+    cpmBonusPercent: number; // e.g., 20
+  };
+}

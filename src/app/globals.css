@@ -49,7 +49,8 @@
   --font-figtree: "Figtree", sans-serif;
   --font-geist: "Geist", sans-serif;
   --font-manrope: "Manrope", sans-serif;
-  --breakpoint-custom: 1025px;
+  --breakpoint-custom: 82rem;
+  --breakpoint-custom2: 2805px;
 }
 
 body {

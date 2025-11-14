@@ -55,7 +55,16 @@
     "terms": "Terms Of Services",
     "privacy": "Privacy Policy",
     "about": "About",
-    "reportAbuse": "Report Abuse"
+    "reportAbuse": "Report Abuse",
+    "topTraffic": "Top Traffic",
+    "detail": "Detail",
+    "topLevel": "Top Level",
+    "levelBeginner": "Beginner",
+    "levelRookie": "Rookie",
+    "levelElite": "Elite",
+    "levelPro": "Pro",
+    "levelMaster": "Master",
+    "levelMythic": "Mythic"
   },
   "NotFound": {
     "title": "Page Not Found",

@@ -55,7 +55,16 @@
     "terms": "Ketentuan Layanan",
     "privacy": "Kebijakan Privasi",
     "about": "Tentang",
-    "reportAbuse": "Laporkan Penyalahgunaan"
+    "reportAbuse": "Laporkan Penyalahgunaan",
+    "topTraffic": "Trafik Tertinggi",
+    "detail": "Detail",
+    "topLevel": "Level Teratas",
+    "levelBeginner": "Beginner",
+    "levelRookie": "Rookie",
+    "levelElite": "Elite",
+    "levelPro": "Pro",
+    "levelMaster": "Master",
+    "levelMythic": "Mythic"
   },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",

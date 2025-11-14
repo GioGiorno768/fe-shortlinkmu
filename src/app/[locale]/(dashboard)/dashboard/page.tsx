@@ -13,6 +13,7 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMPORT KARTU BARU
 import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 import TopPerformingLinksCard from "@/components/dashboard/TopPerformingLinksCard";
+import TopTrafficCard from "@/components/dashboard/TopTrafficCard";
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -52,7 +53,7 @@ export default function DashboardPage() {
     <div className="lg:text-[10px] text-[8px] font-figtree">
       {/* Stats Grid */}
       {/* UBAH GRID: 3 kartu pertama + 1 kartu achievement */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 custom:grid-cols-4 gap-6 mb-8">
         {/* Render 3 kartu pertama */}
         {statsCards.map((card) => (
           <StatsCard
@@ -65,13 +66,13 @@ export default function DashboardPage() {
         ))}
 
         {/* TAMBAHKAN KARTU ACHIEVEMENT DI SINI */}
-        <div className="col-span-1 lg:col-span-1">
+        <div >
           <AchievementCard />
         </div>
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 custom:grid-cols-2 gap-6 mb-8">
         {/* Recent Activity */}
         {/* 2. GANTI "RECENT ACTIVITY" JADI KARTU BARU LU */}
         {/* KITA BUAT JADI 'lg:col-span-2' BIAR LEBAR SESUAI GAMBAR */}
@@ -87,9 +88,15 @@ export default function DashboardPage() {
         {/* --- AKHIR PERUBAHAN --- */}
       </div>
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Top Traffic */}
+        <div>
+          <TopTrafficCard />
+        </div>
+
+
+        {/* Referral */}
+        
 
       </div>
     </div>
