@@ -360,8 +360,10 @@ export default function TopPerformingLinksCard() {
                     className="flex items-center justify-between p-4 cursor-pointer"
                     onClick={() => handleAccordionToggle(link.id)}
                   >
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <LinkIcon className="w-5 h-5 text-bluelight flex-shrink-0" />
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-dashboard">
+                        <LinkIcon className="w-4 h-4 text-bluelight flex-shrink-0" />
+                      </div>
                       <div className="flex-1 overflow-hidden">
                         <p className="text-[1.6em] font-semibold text-shortblack truncate">
                           {link.shortUrl}
@@ -380,7 +382,11 @@ export default function TopPerformingLinksCard() {
                             e.stopPropagation(); // Biar accordion gak ikutan nutup
                             handleActionMenuToggle(link.id);
                           }}
-                          className={`p-1 rounded-full hover:text-bluelight text-grays ${openActionMenuId === link.id ? "text-bluelight bg-blue-dashboard" : ""}`}
+                          className={`p-1 rounded-full hover:text-bluelight text-grays ${
+                            openActionMenuId === link.id
+                              ? "text-bluelight bg-blue-dashboard"
+                              : ""
+                          }`}
                         >
                           <MoreHorizontal className="w-5 h-5 " />
                         </button>
