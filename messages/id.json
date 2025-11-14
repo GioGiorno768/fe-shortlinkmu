@@ -70,7 +70,11 @@
     "copy": "Salin",
     "copied": "Tersalin!",
     "share": "Bagikan",
-    "contact": "Kontak"
+    "contact": "Kontak",
+    "avgCPM": "CPM Rata-rata",
+    "topCountries": "Negara Teratas",
+    "topReferrers": "Referrer Teratas",
+    "direct": "Langsung"
   },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",

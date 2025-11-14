@@ -47,3 +47,17 @@ export interface TopTrafficStats {
     cpmBonusPercent: number; // e.g., 20
   };
 }
+
+export interface CountryStat {
+  isoCode: string; // "us", "id", "gb"
+  name: string;
+  views: number;
+  percentage: number; // 0-100
+}
+
+// --- TAMBAHKAN TIPE DI BAWAH INI ---
+export interface ReferrerStat {
+  name: string; // "Google", "Facebook", "Direct", "blog.example.com"
+  views: number;
+  percentage: number; // 0-100
+}

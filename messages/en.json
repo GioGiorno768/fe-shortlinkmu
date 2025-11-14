@@ -70,7 +70,11 @@
     "copy": "Copy",
     "copied": "Copied!",
     "share": "Share",
-    "contact": "Contact"
+    "contact": "Contact",
+    "avgCPM": "Average CPM",
+    "topCountries": "Top Countries",
+    "topReferrers": "Top Referrers",
+    "direct": "Direct"
   },
   "NotFound": {
     "title": "Page Not Found",
