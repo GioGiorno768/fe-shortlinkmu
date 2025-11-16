@@ -136,7 +136,7 @@ export default function TopCountriesCard() {
                   </div>
                 </div>
                 {/* Persentase */}
-                <span className="text-[1.4em] font-medium text-grays w-10 text-right">
+                <span className="text-[1.4em] font-medium text-grays w-10 text-right mr-5">
                   {country.percentage.toFixed(1)}%
                 </span>
               </div>

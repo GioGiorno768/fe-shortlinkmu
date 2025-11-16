@@ -54,6 +54,7 @@ export default function DashboardLayout({
         <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50">
           <Breadcrumb />
         </div>
+        
         {children}
 
         <DashboardFooter />

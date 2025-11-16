@@ -61,3 +61,19 @@ export interface ReferrerStat {
   views: number;
   percentage: number; // 0-100
 }
+
+export type AdLevel = "default" | "level1" | "level2" | "level3";
+
+export interface CreateLinkFormData {
+  url: string;
+  alias?: string;
+  password?: string;
+  title?: string;
+  expiresAt?: string;
+  adsLevel: AdLevel;
+}
+
+export interface GeneratedLinkData {
+  shortUrl: string; // cth: short.link/taik112
+  originalUrl: string; // cth: https://kevinragil.vercel.app
+}
