@@ -64,16 +64,31 @@ export interface ReferrerStat {
 
 export type AdLevel = "noAds" |"level1" | "level2" | "level3" | "level4";
 
-export interface CreateLinkFormData {
-  url: string;
-  alias?: string;
-  password?: string;
-  title?: string;
-  expiresAt?: string;
-  adsLevel: AdLevel;
+// Tipe data dari API untuk satu level (kolom)
+export interface ApiAdLevel {
+  key: AdLevel; // "noAds" | "level1" | "level2" | "level3" | "level4"
+  nameKey: string; // Ini adalah i18n key, cth: "adsLevel1"
+  isRecommended: boolean;
 }
 
-export interface GeneratedLinkData {
-  shortUrl: string; // cth: short.link/taik112
-  originalUrl: string; // cth: https://kevinragil.vercel.app
+// Tipe data untuk value prefixed_string
+export interface PrefixedStringValue {
+  prefixKey?: string; // i18n key for prefix (cth: "upto10")
+  value: string; // "10", "$15", dll
+}
+
+// Tipe data dari API untuk satu fitur (baris)
+export interface ApiAdFeature {
+  nameKey: string; // i18n key, cth: "cpmRate"
+  displayType: "boolean" | "string" | "prefixed_string";
+  values: Record<
+    string,
+    boolean | string | PrefixedStringValue
+  >; // cth: { level1: true, level2: "Low", level3: { prefixKey: "upto10", value: "10" } }
+}
+
+// Tipe data response API utama
+export interface AdsComparisonData {
+  levels: ApiAdLevel[];
+  features: ApiAdFeature[];
 }
