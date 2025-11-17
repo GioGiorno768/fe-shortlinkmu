@@ -19,6 +19,7 @@ import {
   UserPlus2,
   BanknoteArrowDown,
   History,
+  Megaphone,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem"; // Asumsi ini ada di folder yang sama
 import { NavItem } from "@/types/type";
@@ -32,6 +33,7 @@ interface SidebarProps {
 
 export const getMenuItems = (t: (key: string) => string): NavItem[] => [
   { icon: LayoutDashboard, label: t("title"), href: "/dashboard" },
+  { icon: Megaphone, label: t("adsInfo"), href: "/ads-info" },
   {
     icon: Link2,
     label: t("myLinks"),

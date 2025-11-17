@@ -1,7 +1,6 @@
 // src/app/[locale]/(dashboard)/new-link/page.tsx
 
-import AdsLevelCompare from "@/components/newlink/AdsLevelCompare";
-import CreateShortlink from "@/components/newlink/CreateShortlink";
+import CreateShortlink from "@/components/dashboard/CreateShortlink";
 
 export default function NewLinkPage() {
   return (
@@ -9,7 +8,6 @@ export default function NewLinkPage() {
       {/* --- 2. BUNGKUS DALAM SPACE-Y --- */}
       <div className="space-y-6">
         <CreateShortlink />
-        <AdsLevelCompare />
       </div>
     </div>
   );

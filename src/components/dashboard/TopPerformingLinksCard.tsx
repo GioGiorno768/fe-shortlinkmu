@@ -189,16 +189,38 @@ export default function TopPerformingLinksCard() {
     setOpenActionMenuId(openActionMenuId === id ? null : id);
   };
 
+  // Helper buat ngedapetin format YYYY-MM-DDThh:mm (waktu LOKAL)
+  const getMinDateTimeLocal = () => {
+    const localDate = new Date();
+    localDate.setMinutes(
+      localDate.getMinutes() - localDate.getTimezoneOffset()
+    );
+    return localDate.toISOString().slice(0, 16);
+  };
+
   // --- Modal Handlers ---
   const openModal = (link: TopLinkItem) => {
     setSelectedLink(link);
+    // --- UBAH BLOK INI ---
+    // Helper buat format tanggal dari API ke input datetime-local
+    let expiryValue = "";
+    if (link.expiresAt) {
+      // 1. Buat Date object (ini otomatis pake timezone LOKAL user)
+      const localDate = new Date(link.expiresAt);
+      // 2. Offset manual biar bener
+      localDate.setMinutes(
+        localDate.getMinutes() - localDate.getTimezoneOffset()
+      );
+      // 3. Format ke "YYYY-MM-DDThh:mm"
+      expiryValue = localDate.toISOString().slice(0, 16);
+    }
+
     setFormData({
       alias: link.alias || link.shortUrl.split("/").pop() || "",
       password: link.password || "",
-      expiresAt: link.expiresAt
-        ? new Date(link.expiresAt).toISOString().split("T")[0]
-        : "",
+      expiresAt: expiryValue, // <-- Pake value yang udah diformat
     });
+    // --- AKHIR PERUBAHAN ---
     setIsModalOpen(true);
     setOpenActionMenuId(null); // Tutup menu kebab
   };
@@ -568,28 +590,30 @@ export default function TopPerformingLinksCard() {
                     </div>
                   </div>
 
+                  {/* === UBAH BLOK INI === */}
                   {/* Expired Date */}
                   <div>
                     <label
                       htmlFor="expiresAt"
                       className="block text-[1.4em] font-medium text-shortblack mb-1"
                     >
-                      Set expired date for link
+                      {/* Kita pake terjemahan dari CreateShortlink */}
+                      {t("setExpiry")}
                     </label>
                     <div className="relative">
                       <Calendar className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
                       <input
-                        type="date"
+                        type="datetime-local" // <-- 1. GANTI TYPE
                         id="expiresAt"
                         name="expiresAt"
                         value={formData.expiresAt}
                         onChange={handleFormChange}
                         className="w-full text-[1.6em] px-10 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-bluelight"
-                        placeholder="(Opsional)"
-                        min={new Date().toISOString().split("T")[0]} // Tanggal minimal hari ini
+                        min={getMinDateTimeLocal()} // <-- 2. GANTI MIN
                       />
                     </div>
                   </div>
+                  {/* === AKHIR PERUBAHAN === */}
                 </div>
 
                 {/* Tombol Submit Modal */}

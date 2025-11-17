@@ -62,7 +62,7 @@ export interface ReferrerStat {
   percentage: number; // 0-100
 }
 
-export type AdLevel = "default" | "level1" | "level2" | "level3";
+export type AdLevel = "noAds" |"level1" | "level2" | "level3" | "level4";
 
 export interface CreateLinkFormData {
   url: string;

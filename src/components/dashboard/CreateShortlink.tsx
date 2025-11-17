@@ -19,6 +19,8 @@ import {
   Facebook,
   Twitter,
   Send,
+  Settings,
+  Megaphone,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type {
@@ -26,6 +28,7 @@ import type {
   CreateLinkFormData,
   GeneratedLinkData,
 } from "@/types/type";
+import { Link } from "@/i18n/routing";
 
 // ========================================================
 // === DESAIN API (MOCK/DUMMY) ===
@@ -102,7 +105,7 @@ export default function CreateShortlink() {
     password: "",
     title: "",
     expiresAt: "",
-    adsLevel: "default",
+    adsLevel: "level1",
   });
 
   // State UI
@@ -121,10 +124,11 @@ export default function CreateShortlink() {
 
   // Opsi Ad Level
   const adLevels: { key: AdLevel; label: string }[] = [
-    { key: "default", label: t("adsLevelDefault") },
+    { key: "noAds", label: t("noAds") },
     { key: "level1", label: t("adsLevel1") },
     { key: "level2", label: t("adsLevel2") },
     { key: "level3", label: t("adsLevel3") },
+    { key: "level4", label: t("adsLevel4") },
   ];
 
   // Efek: Nutup dropdown pas klik di luar
@@ -306,9 +310,7 @@ export default function CreateShortlink() {
                 transition={{ duration: 0.3 }}
               >
                 <div
-                  className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${
-                    !isAdvancedOpen && "pt-4"
-                  }`}
+                  className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300`}
                 >
                   {/* Password */}
                   <div className="relative">
@@ -349,7 +351,7 @@ export default function CreateShortlink() {
                   </div>
                   {/* === AKHIR PERUBAHAN === */}
                   {/* Ads Level Dropdown */}
-                  <div className="relative" ref={adsLevelRef}>
+                  <div className="relative flex justify-stretch items-stretch gap-3" ref={adsLevelRef}>
                     <button
                       type="button"
                       onClick={() => setIsAdsLevelOpen(!isAdsLevelOpen)}
@@ -358,7 +360,7 @@ export default function CreateShortlink() {
                     >
                       <span
                         className={
-                          formData.adsLevel === "default"
+                          formData.adsLevel === "level1"
                             ? "text-grays"
                             : "text-shortblack"
                         }
@@ -397,6 +399,9 @@ export default function CreateShortlink() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+                    <Link href={"/ads-info"} className="relative px-[1.5em] rounded-lg bg-blue-dashboard flex items-center justify-center">
+                      <Megaphone className="w-6 h-6 text-bluelight" />
+                    </Link>
                   </div>
                 </div>
               </motion.div>
@@ -409,7 +414,7 @@ export default function CreateShortlink() {
             disabled={isLoading}
             className="w-full bg-blue-dashboard text-bluelight text-[1.6em] font-semibold py-4 rounded-xl 
                        hover:bg-bluelight hover:text-white transition-all duration-300
-                       disabled:opacity-50 flex items-center justify-center gap-2"
+                       disabled:opacity-50 flex items-center justify-center gap-2 relative"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
