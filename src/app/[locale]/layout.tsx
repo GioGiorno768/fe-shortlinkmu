@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Suspense } from "react";
 import TopLoadingBar from "@/components/TopLoadingBar";
+import GlobalAlert from "@/components/dashboard/GlobalAlert";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -19,7 +20,7 @@ const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
-})
+});
 
 const geist = Geist({
   variable: "--font-geist",
@@ -39,23 +40,24 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Pastikan locale valid
   const { locale } = await params;
   if (!routing.locales.includes(locale as any)) {
     notFound();
   }
 
-  // Ambil semua pesan terjemahan di sisi server
   const messages = await getMessages();
 
   return (
     <html lang={locale} className="scroll-smooth">
-      <body className={`${figtree.className} ${manrope.className} ${geist.className} antialiased`}>
+      <body
+        className={`${figtree.className} ${manrope.className} ${geist.className} antialiased`}
+      >
         <NextIntlClientProvider messages={messages}>
           <LenisScrollProvider>
             <Suspense fallback={null}>
               <TopLoadingBar />
             </Suspense>
+            <GlobalAlert /> {/* <--- 2. PASANG DISINI */}
             {children}
           </LenisScrollProvider>
         </NextIntlClientProvider>

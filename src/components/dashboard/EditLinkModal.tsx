@@ -1,0 +1,317 @@
+// src/components/dashboard/EditLinkModal.tsx
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
+import {
+  Edit,
+  Loader2,
+  Lock,
+  Calendar,
+  X,
+  Megaphone,
+  ChevronDown,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import type { EditableLinkData, AdLevel } from "@/types/type";
+
+interface EditLinkModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: EditableLinkData) => Promise<void>;
+  initialData: EditableLinkData | null;
+  isUpdating: boolean;
+  shortUrlDisplay?: string; // Buat nampilin shortlink di header modal
+  originalUrlDisplay?: string; // Buat nampilin original link di header modal
+}
+
+export default function EditLinkModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData,
+  isUpdating,
+  shortUrlDisplay,
+  originalUrlDisplay,
+}: EditLinkModalProps) {
+  const t = useTranslations("Dashboard");
+  const modalRef = useRef<HTMLDivElement>(null);
+  const adLevelRef = useRef<HTMLDivElement>(null);
+
+  // State Form
+  const [formData, setFormData] = useState<EditableLinkData>({
+    alias: "",
+    password: "",
+    expiresAt: "",
+    adsLevel: "level1",
+  });
+
+  // State Dropdown Ads Level
+  const [isAdLevelDropdownOpen, setIsAdLevelDropdownOpen] = useState(false);
+
+  // Opsi Ad Level
+  const adLevels: { key: AdLevel; label: string }[] = [
+    { key: "noAds", label: t("noAds") },
+    { key: "level1", label: t("adsLevel1") },
+    { key: "level2", label: t("adsLevel2") },
+    { key: "level3", label: t("adsLevel3") },
+    { key: "level4", label: t("adsLevel4") },
+  ];
+
+  // Isi form saat modal dibuka / data berubah
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFormData({
+        alias: initialData.alias || "",
+        password: initialData.password || "",
+        expiresAt: initialData.expiresAt || "",
+        adsLevel: initialData.adsLevel || "level1",
+      });
+    }
+  }, [isOpen, initialData]);
+
+  // Handle klik luar untuk nutup modal & dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Tutup dropdown ads level
+      if (
+        adLevelRef.current &&
+        !adLevelRef.current.contains(event.target as Node)
+      ) {
+        setIsAdLevelDropdownOpen(false);
+      }
+      // Tutup modal (klik backdrop)
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node) &&
+        (event.target as HTMLElement).id === "modal-backdrop"
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleAdLevelChange = (level: AdLevel) => {
+    setFormData({ ...formData, adsLevel: level });
+    setIsAdLevelDropdownOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  };
+
+  // Helper min datetime
+  const getMinDateTimeLocal = () => {
+    const localDate = new Date();
+    localDate.setMinutes(
+      localDate.getMinutes() - localDate.getTimezoneOffset()
+    );
+    return localDate.toISOString().slice(0, 16);
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          id="modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+        >
+          <motion.div
+            ref={modalRef}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative flex flex-col max-h-[90vh]"
+          >
+            {/* Tombol Close */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 rounded-full text-grays hover:bg-blues hover:text-shortblack transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Form */}
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col h-full"
+            >
+              {/* Header Modal */}
+              <div className="flex items-start gap-4 mb-6 pr-8 flex-shrink-0">
+                <div className="flex-shrink-0 w-12 h-12 bg-blue-dashboard rounded-xl flex items-center justify-center">
+                  <Edit className="w-6 h-6 text-bluelight" />
+                </div>
+                <div className="overflow-hidden">
+                  <h3 className="text-[1.8em] font-bold text-shortblack truncate">
+                    {shortUrlDisplay || "Edit Link"}
+                  </h3>
+                  <p className="text-[1.4em] text-grays truncate">
+                    {originalUrlDisplay || "Update details for your shortlink"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Form Inputs (Scrollable) */}
+              <div className="space-y-5  pr-2 custom-scrollbar-minimal flex-1 pb-4">
+                {/* Alias */}
+                <div>
+                  <label className="block text-[1.4em] font-semibold text-shortblack mb-2">
+                    Alias (Custom URL)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="alias"
+                      value={formData.alias}
+                      onChange={handleChange}
+                      className="w-full text-[1.5em] px-5 py-3 rounded-xl border border-gray-200 bg-blues focus:bg-white focus:outline-none focus:ring-2 focus:ring-bluelight/50 focus:border-bluelight transition-all"
+                      placeholder="e.g., my-awesome-link"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-[1.4em] font-semibold text-shortblack mb-2">
+                    Password Protection
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-5 h-5 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="w-full text-[1.5em] pl-12 pr-5 py-3 rounded-xl border border-gray-200 bg-blues focus:bg-white focus:outline-none focus:ring-2 focus:ring-bluelight/50 focus:border-bluelight transition-all"
+                      placeholder={t("setPassword")}
+                    />
+                  </div>
+                </div>
+
+                {/* Expired Date */}
+                <div>
+                  <label className="block text-[1.4em] font-semibold text-shortblack mb-2">
+                    {t("setExpiry")}
+                  </label>
+                  <div className="relative">
+                    <Calendar className="w-5 h-5 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="datetime-local"
+                      name="expiresAt"
+                      value={formData.expiresAt}
+                      onChange={handleChange}
+                      className="w-full text-[1.5em] pl-12 pr-5 py-3 rounded-xl border border-gray-200 bg-blues focus:bg-white focus:outline-none focus:ring-2 focus:ring-bluelight/50 focus:border-bluelight transition-all"
+                      min={getMinDateTimeLocal()}
+                    />
+                  </div>
+                </div>
+
+                {/* Dropdown Ads Level */}
+                <div className="relative " ref={adLevelRef}>
+                  {" "}
+                  {/* pb-20 biar ada ruang buat dropdown */}
+                  <label className="block text-[1.4em] font-semibold text-shortblack mb-2">
+                    {t("adsLevel")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsAdLevelDropdownOpen(!isAdLevelDropdownOpen)
+                    }
+                    className="w-full text-[1.5em] px-5 py-3 rounded-xl border border-gray-200 bg-white flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-bluelight/50 hover:border-bluelight transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Megaphone className="w-5 h-5 text-bluelight" />
+                      <span
+                        className={
+                          formData.adsLevel === "level1"
+                            ? "text-shortblack"
+                            : "text-shortblack font-medium"
+                        }
+                      >
+                        {adLevels.find((l) => l.key === formData.adsLevel)
+                          ?.label || t("adsLevel")}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-grays transition-transform duration-300 ${
+                        isAdLevelDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {isAdLevelDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute bottom-15 left-0 right-0 mt-2 bg-white rounded-xl shadow-xl z-50 border border-gray-100"
+                      >
+                        <div className="custom-scrollbar-minimal p-2">
+                          {adLevels.map((level) => (
+                            <button
+                              key={level.key}
+                              type="button"
+                              onClick={() => handleAdLevelChange(level.key)}
+                              className={`flex items-center w-full text-left text-[1.4em] px-4 py-3 rounded-lg transition-colors ${
+                                formData.adsLevel === level.key
+                                  ? "bg-blue-dashboard text-bluelight font-semibold"
+                                  : "text-shortblack hover:bg-blues"
+                              }`}
+                            >
+                              {formData.adsLevel === level.key && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-bluelight mr-3" />
+                              )}
+                              {level.label}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Footer / Submit Button */}
+              <div className="pt-4 mt-auto border-t border-gray-100 flex-shrink-0">
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="w-full bg-bluelight text-white text-[1.6em] font-semibold py-4 rounded-xl mt-2 
+                           hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
+                           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none flex items-center justify-center gap-3"
+                >
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

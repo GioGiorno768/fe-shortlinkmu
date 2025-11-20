@@ -9,8 +9,10 @@ import {
   Loader2,
   OctagonAlert, // Icon buat loading
 } from "lucide-react";
+import { useAlert } from "@/hooks/useAlert";
 
 export default function ShortLink() {
+  const { showAlert } = useAlert();
   const [urlInput, setUrlInput] = useState("");
   const [shortLink, setShortLink] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -72,10 +74,12 @@ export default function ShortLink() {
   const handleCopy = () => {
     if (!shortLink) return;
 
-    navigator.clipboard.writeText(`https://${shortLink}`); // Kita tambahin https://
+    navigator.clipboard.writeText(`https://${shortLink}`);
     setIsCopied(true);
 
-    // Reset ikon copy setelah 2 detik
+    // Tambahin alert sukses copy (opsional, karena udah ada icon check)
+    showAlert("Link telah disalin ke clipboard!", "success", "Copied!");
+
     setTimeout(() => {
       setIsCopied(false);
     }, 2000);
@@ -96,9 +100,16 @@ export default function ShortLink() {
         console.error("Gagal share:", err);
       }
     } else {
-      // Fallback kalo browser gak support (misal: copy link)
+      // Fallback kalo browser gak support
       handleCopy();
-      alert("Link disalin! (Browser Anda tidak mendukung fitur share)");
+      // alert("Link disalin! (Browser Anda tidak mendukung fitur share)"); <-- HAPUS
+
+      // GANTI JADI
+      showAlert(
+        "Browser Anda tidak mendukung fitur share. Link telah disalin.",
+        "info",
+        "Info"
+      );
     }
   };
 

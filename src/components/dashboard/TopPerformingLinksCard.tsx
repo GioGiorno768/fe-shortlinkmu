@@ -1,4 +1,3 @@
-// src/components/dashboard/TopPerformingLinksCard.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -7,46 +6,28 @@ import {
   Link as LinkIcon,
   MoreHorizontal,
   ChevronDown,
-  ChevronUp,
   Edit,
-  EyeOff, // Ganti "Hide" pake icon
+  EyeOff,
   Loader2,
-  Lock,
-  Calendar,
-  X, // Icon buat nutup modal
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link } from "@/i18n/routing"; // Pastiin pake Link dari i18n
-import type { TopLinkItem, EditableLinkData } from "@/types/type"; // Impor tipe data
+import { Link } from "@/i18n/routing";
+import type { TopLinkItem, EditableLinkData } from "@/types/type";
+import EditLinkModal from "./EditLinkModal"; // <-- Pastiin path import ini bener
+import { useAlert } from "@/hooks/useAlert";
 
 // ========================================================
 // === DESAIN API (MOCK/DUMMY) ===
 // ========================================================
-// Nanti lu ganti fungsi ini pake API call beneran
 async function fetchTopPerformingLinks(
   sortBy: "latest" | "longest"
 ): Promise<TopLinkItem[]> {
   console.log(`MANGGIL API: /api/links/top-performing?sort=${sortBy}`);
-  /* // --- CONTOH API CALL BENERAN ---
-  // const token = localStorage.getItem("authToken");
-  // const response = await fetch(
-  //   `${process.env.NEXT_PUBLIC_API_URL}/api/links/top-performing?sort=${sortBy}`,
-  //   {
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       // 'Authorization': `Bearer ${token}`
-  //     },
-  //   }
-  // );
-  // if (!response.ok) {
-  //   throw new Error("Gagal memuat data link");
-  // }
-  // const data: TopLinkItem[] = await response.json();
-  // return data;
-  */
 
-  // --- DATA DUMMY (HAPUS NANTI) ---
-  await new Promise((resolve) => setTimeout(resolve, 800)); // Simulasi loading
+  // Simulasi loading
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  // Mock Data (Pastiin ada 'adsLevel')
   const mockLinks: TopLinkItem[] = [
     {
       id: "1",
@@ -56,6 +37,8 @@ async function fetchTopPerformingLinks(
       totalEarnings: 22.95,
       cpm: 4.5,
       alias: "asu12",
+      adsLevel: "level3",
+      passwordProtected: false,
     },
     {
       id: "2",
@@ -64,6 +47,8 @@ async function fetchTopPerformingLinks(
       totalViews: 4200,
       totalEarnings: 18.9,
       cpm: 4.5,
+      adsLevel: "level1",
+      passwordProtected: false,
     },
     {
       id: "3",
@@ -72,6 +57,8 @@ async function fetchTopPerformingLinks(
       totalViews: 3500,
       totalEarnings: 15.75,
       cpm: 4.5,
+      adsLevel: "noAds",
+      passwordProtected: false,
     },
     {
       id: "4",
@@ -81,7 +68,9 @@ async function fetchTopPerformingLinks(
       totalEarnings: 12.6,
       cpm: 4.5,
       password: "123",
-      expiresAt: "2025-12-31",
+      expiresAt: "2025-12-31T23:59:00Z",
+      adsLevel: "level2",
+      passwordProtected: true,
     },
     {
       id: "5",
@@ -90,21 +79,22 @@ async function fetchTopPerformingLinks(
       totalViews: 1500,
       totalEarnings: 6.75,
       cpm: 4.5,
+      adsLevel: "level4",
+      passwordProtected: false,
     },
   ];
 
   if (sortBy === "longest") {
-    return mockLinks.reverse(); // Balik urutannya kalo "longest"
+    return mockLinks.reverse();
   }
   return mockLinks;
-  // --- AKHIR DATA DUMMY ---
 }
-// ========================================================
 
 export default function TopPerformingLinksCard() {
   const t = useTranslations("Dashboard");
+  const { showAlert } = useAlert();
 
-  // State utama
+  // State Data
   const [isLoading, setIsLoading] = useState(true);
   const [links, setLinks] = useState<TopLinkItem[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -112,21 +102,19 @@ export default function TopPerformingLinksCard() {
   // State UI
   const [sortBy, setSortBy] = useState<"latest" | "longest">("latest");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [openAccordionId, setOpenAccordionId] = useState<string | null>("1"); // Default buka yg pertama
+  const [openAccordionId, setOpenAccordionId] = useState<string | null>("1");
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   // State Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLink, setSelectedLink] = useState<TopLinkItem | null>(null);
-  const [formData, setFormData] = useState<EditableLinkData>({ alias: "" });
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Refs buat klik di luar (dropdown)
+  // Refs
   const sortRef = useRef<HTMLDivElement>(null);
   const actionMenuRef = useRef<HTMLDivElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
 
-  // Efek: Fetch data pas komponen load atau sortBy berubah
+  // Fetch Data
   useEffect(() => {
     async function loadLinks() {
       try {
@@ -143,29 +131,17 @@ export default function TopPerformingLinksCard() {
     loadLinks();
   }, [sortBy]);
 
-  // Efek: Nutup dropdown & modal pas klik di luar
+  // Handle Click Outside (Dropdowns)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // Nutup dropdown sort
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setIsSortOpen(false);
       }
-      // Nutup dropdown action (kebab menu)
       if (
         actionMenuRef.current &&
         !actionMenuRef.current.contains(event.target as Node)
       ) {
         setOpenActionMenuId(null);
-      }
-      // Nutup modal
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
-        // Cek kalo yg diklik itu backdrop
-        if ((event.target as HTMLElement).id === "modal-backdrop") {
-          closeModal();
-        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -175,6 +151,7 @@ export default function TopPerformingLinksCard() {
   }, []);
 
   // --- Handlers ---
+
   const handleSortChange = (value: "latest" | "longest") => {
     setSortBy(value);
     setIsSortOpen(false);
@@ -182,132 +159,75 @@ export default function TopPerformingLinksCard() {
 
   const handleAccordionToggle = (id: string) => {
     setOpenAccordionId(openAccordionId === id ? null : id);
-    setOpenActionMenuId(null); // Tutup action menu kalo accordion diklik
+    setOpenActionMenuId(null);
   };
 
   const handleActionMenuToggle = (id: string) => {
     setOpenActionMenuId(openActionMenuId === id ? null : id);
   };
 
-  // Helper buat ngedapetin format YYYY-MM-DDThh:mm (waktu LOKAL)
-  const getMinDateTimeLocal = () => {
-    const localDate = new Date();
-    localDate.setMinutes(
-      localDate.getMinutes() - localDate.getTimezoneOffset()
+  const handleHideLink = async (id: string) => {
+    setOpenActionMenuId(null);
+    // alert(`Link ${id} disembunyikan (simulasi)`); <-- HAPUS
+
+    // GANTI JADI INI
+    showAlert(
+      "Link berhasil disembunyikan dari list.",
+      "success",
+      "Link Hidden"
     );
-    return localDate.toISOString().slice(0, 16);
   };
 
-  // --- Modal Handlers ---
+  // --- Modal Logic ---
+
   const openModal = (link: TopLinkItem) => {
     setSelectedLink(link);
-    // --- UBAH BLOK INI ---
-    // Helper buat format tanggal dari API ke input datetime-local
-    let expiryValue = "";
-    if (link.expiresAt) {
-      // 1. Buat Date object (ini otomatis pake timezone LOKAL user)
-      const localDate = new Date(link.expiresAt);
-      // 2. Offset manual biar bener
-      localDate.setMinutes(
-        localDate.getMinutes() - localDate.getTimezoneOffset()
-      );
-      // 3. Format ke "YYYY-MM-DDThh:mm"
-      expiryValue = localDate.toISOString().slice(0, 16);
-    }
-
-    setFormData({
-      alias: link.alias || link.shortUrl.split("/").pop() || "",
-      password: link.password || "",
-      expiresAt: expiryValue, // <-- Pake value yang udah diformat
-    });
-    // --- AKHIR PERUBAHAN ---
     setIsModalOpen(true);
-    setOpenActionMenuId(null); // Tutup menu kebab
+    setOpenActionMenuId(null);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setIsUpdating(false);
-    // Kasih jeda dikit biar animasi exit modalnya alus
-    setTimeout(() => {
-      setSelectedLink(null);
-    }, 300);
-  };
-
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleModalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleUpdateLink = async (formData: EditableLinkData) => {
     if (!selectedLink) return;
-
     setIsUpdating(true);
-    console.log(`API CALL: Update link ${selectedLink.id}`, formData);
 
-    /* // --- CONTOH API UPDATE BENERAN ---
-    // try {
-    //   const response = await fetch(`/api/links/${selectedLink.id}`, {
-    //     method: "PUT",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(formData),
-    //   });
-    //   if (!response.ok) throw new Error("Gagal update link");
-    //   
-    //   // Update data di state links (biar UI-nya update)
-    //   setLinks(links.map(l => l.id === selectedLink.id ? {...l, ...formData} : l));
-    //   closeModal();
-    // } catch (err) {
-    //   console.error(err);
-    //   alert("Gagal menyimpan perubahan");
-    // } finally {
-    //   setIsUpdating(false);
-    // }
-    */
+    console.log("Updating link (TopPerforming):", selectedLink.id, formData);
 
-    // --- SIMULASI UPDATE ---
+    // Simulasi API Call (Delay)
     await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Update state lokal biar UI langsung berubah
     setLinks(
       links.map((l) =>
         l.id === selectedLink.id
           ? {
               ...l,
               ...formData,
-              shortUrl: `short.link/${formData.alias}`, // Update shortUrl juga
+              shortUrl: `short.link/${formData.alias}`,
             }
           : l
       )
     );
-    setIsUpdating(false);
-    closeModal();
-    // --- AKHIR SIMULASI ---
-  };
 
-  const handleHideLink = async (id: string) => {
-    console.log(`API CALL: Hide link ${id}`);
-    setOpenActionMenuId(null); // Tutup menu
-    // Logika API buat hide link...
-    // Setelah sukses, mungkin lu mau filter link-nya dari state:
-    // setLinks(links.filter(l => l.id !== id));
-    alert(`Link ${id} disembunyikan (simulasi)`);
+    setIsUpdating(false);
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedLink(null), 300);
   };
 
   return (
     <>
-      {/* ======================= */}
-      {/* === CARD UTAMA === */}
-      {/* ======================= */}
+      {/* Wrapper Card */}
       <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
-        {/* Header (Title + Dropdown Sort) */}
+        {/* Header Card */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
             {t("topPerformingLinks")}
           </h3>
 
+          {/* Sort Dropdown */}
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setIsSortOpen(!isSortOpen)}
-              className={` flex items-center gap-2 text-[1.4em] font-medium text-grays hover:text-bluelight transition-colors`}
+              className="flex items-center gap-2 text-[1.4em] font-medium text-grays hover:text-bluelight transition-colors"
             >
               <span>{sortBy === "latest" ? t("latest") : "Longest"}</span>
               <ChevronDown
@@ -350,7 +270,7 @@ export default function TopPerformingLinksCard() {
           </div>
         </div>
 
-        {/* Konten (List Link) */}
+        {/* List Links */}
         <div className="flex-1 relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -362,14 +282,9 @@ export default function TopPerformingLinksCard() {
             </div>
           ) : (
             <div
-              onWheel={(e) => {
-                // Stop scroll dari bocor ke parent (halaman)
-                e.stopPropagation();
-              }}
+              onWheel={(e) => e.stopPropagation()}
               className="h-[300px] overflow-y-auto pr-2 space-y-2 overscroll-contain custom-scrollbar-minimal"
             >
-              {" "}
-              {/* pr-2 buat ngasih jarak ke scrollbar */}
               {links.map((link) => (
                 <div
                   key={link.id}
@@ -377,7 +292,7 @@ export default function TopPerformingLinksCard() {
                     openAccordionId === link.id ? "bg-blues" : "bg-white"
                   }`}
                 >
-                  {/* === Link Item (Accordion Trigger) === */}
+                  {/* Link Item Header (Accordion Trigger) */}
                   <div
                     className="flex items-center justify-between p-4 cursor-pointer"
                     onClick={() => handleAccordionToggle(link.id)}
@@ -397,11 +312,11 @@ export default function TopPerformingLinksCard() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {/* === Kebab Menu (Action) === */}
+                      {/* Kebab Menu (Action) */}
                       <div className="relative" ref={actionMenuRef}>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation(); // Biar accordion gak ikutan nutup
+                            e.stopPropagation();
                             handleActionMenuToggle(link.id);
                           }}
                           className={`p-1 rounded-full hover:text-bluelight text-grays ${
@@ -410,7 +325,7 @@ export default function TopPerformingLinksCard() {
                               : ""
                           }`}
                         >
-                          <MoreHorizontal className="w-5 h-5 " />
+                          <MoreHorizontal className="w-5 h-5" />
                         </button>
                         <AnimatePresence>
                           {openActionMenuId === link.id && (
@@ -440,7 +355,6 @@ export default function TopPerformingLinksCard() {
                         </AnimatePresence>
                       </div>
 
-                      {/* === Chevron Accordion === */}
                       <ChevronDown
                         className={`w-5 h-5 transition-transform rounded-full ${
                           openAccordionId === link.id
@@ -451,7 +365,7 @@ export default function TopPerformingLinksCard() {
                     </div>
                   </div>
 
-                  {/* === Accordion Content === */}
+                  {/* Accordion Content */}
                   <AnimatePresence>
                     {openAccordionId === link.id && (
                       <motion.div
@@ -462,7 +376,6 @@ export default function TopPerformingLinksCard() {
                       >
                         <div className="px-6 pb-4 pt-2 border-t border-bluelight/20">
                           <div className="flex items-center justify-between">
-                            {/* Info Detail */}
                             <div className="space-y-1 text-[1.4em]">
                               <p className="text-grays">
                                 Valid Views:{" "}
@@ -483,9 +396,8 @@ export default function TopPerformingLinksCard() {
                                 </span>
                               </p>
                             </div>
-                            {/* Tombol Detail */}
                             <Link
-                              href={`/analytics/${link.id}`} // Asumsi rute detail
+                              href={`/analytics/${link.id}`}
                               className="text-[1.4em] font-medium bg-white text-bluelight px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50"
                             >
                               Detail
@@ -502,137 +414,39 @@ export default function TopPerformingLinksCard() {
         </div>
       </div>
 
-      {/* ======================= */}
-      {/* === MODAL EDIT === */}
-      {/* ======================= */}
-      <AnimatePresence>
-        {isModalOpen && selectedLink && (
-          <motion.div
-            id="modal-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/30 z-40 flex items-center justify-center p-4"
-          >
-            <motion.div
-              ref={modalRef}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 relative"
-            >
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 p-1 rounded-full text-grays hover:bg-blues"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <form onSubmit={handleModalSubmit}>
-                {/* Header Modal */}
-                <div className="flex items-start gap-3 mb-6">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-dashboard rounded-lg flex items-center justify-center">
-                    <Edit className="w-5 h-5 text-bluelight" />
-                  </div>
-                  <div>
-                    <h3 className="text-[1.8em] font-semibold text-shortblack">
-                      {selectedLink.shortUrl}
-                    </h3>
-                    <p className="text-[1.4em] text-grays line-clamp-1 w-[95%]">
-                      {selectedLink.originalUrl}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Form Inputs */}
-                <div className="space-y-4">
-                  {/* Alias */}
-                  <div>
-                    <label
-                      htmlFor="alias"
-                      className="block text-[1.4em] font-medium text-shortblack mb-1"
-                    >
-                      Set alias url here
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        id="alias"
-                        name="alias"
-                        value={formData.alias}
-                        onChange={handleFormChange}
-                        className="w-full text-[1.6em] px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-bluelight"
-                        placeholder="cth: link-keren-saya"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label
-                      htmlFor="password"
-                      className="block text-[1.4em] font-medium text-shortblack mb-1"
-                    >
-                      Enter password here
-                    </label>
-                    <div className="relative">
-                      <Lock className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleFormChange}
-                        className="w-full text-[1.6em] px-10 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-bluelight"
-                        placeholder="(Opsional)"
-                      />
-                    </div>
-                  </div>
-
-                  {/* === UBAH BLOK INI === */}
-                  {/* Expired Date */}
-                  <div>
-                    <label
-                      htmlFor="expiresAt"
-                      className="block text-[1.4em] font-medium text-shortblack mb-1"
-                    >
-                      {/* Kita pake terjemahan dari CreateShortlink */}
-                      {t("setExpiry")}
-                    </label>
-                    <div className="relative">
-                      <Calendar className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="datetime-local" // <-- 1. GANTI TYPE
-                        id="expiresAt"
-                        name="expiresAt"
-                        value={formData.expiresAt}
-                        onChange={handleFormChange}
-                        className="w-full text-[1.6em] px-10 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-bluelight"
-                        min={getMinDateTimeLocal()} // <-- 2. GANTI MIN
-                      />
-                    </div>
-                  </div>
-                  {/* === AKHIR PERUBAHAN === */}
-                </div>
-
-                {/* Tombol Submit Modal */}
-                <button
-                  type="submit"
-                  disabled={isUpdating}
-                  className="w-full bg-bluelight text-white text-[1.6em] font-semibold py-3 rounded-xl mt-6 disabled:opacity-50 flex items-center justify-center"
-                >
-                  {isUpdating ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    "Save Changes"
-                  )}
-                </button>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Modal Component */}
+      <EditLinkModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setTimeout(() => setSelectedLink(null), 300);
+        }}
+        onSubmit={handleUpdateLink}
+        initialData={
+          selectedLink
+            ? {
+                alias:
+                  selectedLink.alias ||
+                  selectedLink.shortUrl.split("/").pop() ||
+                  "",
+                password: selectedLink.password,
+                // Konversi ISO string ke format datetime-local (YYYY-MM-DDTHH:mm)
+                expiresAt: selectedLink.expiresAt
+                  ? new Date(
+                      new Date(selectedLink.expiresAt).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
+                      .toISOString()
+                      .slice(0, 16)
+                  : "",
+                adsLevel: selectedLink.adsLevel || "level1",
+              }
+            : null
+        }
+        isUpdating={isUpdating}
+        shortUrlDisplay={selectedLink?.shortUrl}
+        originalUrlDisplay={selectedLink?.originalUrl}
+      />
     </>
   );
 }

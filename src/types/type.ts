@@ -4,6 +4,7 @@ export type NavItem = {
   href?: string;
   children?: NavItem[];
 };
+export type AdLevel = "noAds" | "level1" | "level2" | "level3" | "level4";
 
 // Tipe data untuk list link di card
 export type TopLinkItem = {
@@ -16,6 +17,8 @@ export type TopLinkItem = {
   alias?: string; // Buat di modal edit
   password?: string; // Buat di modal edit
   expiresAt?: string; // Buat di modal edit (format ISO date string)
+  adsLevel?: AdLevel;
+  passwordProtected: boolean;
 };
 
 // Tipe data untuk form di modal
@@ -23,6 +26,7 @@ export type EditableLinkData = {
   alias: string;
   password?: string;
   expiresAt?: string; // Bisa pake string (date) atau Date object
+  adsLevel: AdLevel;
 };
 
 export type UserLevel =
@@ -62,8 +66,6 @@ export interface ReferrerStat {
   percentage: number; // 0-100
 }
 
-export type AdLevel = "noAds" | "level1" | "level2" | "level3" | "level4";
-
 export interface CreateLinkFormData {
   url: string;
   alias?: string;
@@ -76,4 +78,95 @@ export interface CreateLinkFormData {
 export interface GeneratedLinkData {
   shortUrl: string; // cth: short.link/taik112
   originalUrl: string; // cth: https://kevinragil.vercel.app
+}
+
+export interface AdFeature {
+  label: string; // cth: "Popunder"
+  value: string | boolean; // cth: "1 per 24h" atau true
+  included: boolean; // Buat nampilin icon Check atau Silang
+}
+
+export interface AdLevelConfig {
+  id: string;
+  name: string; // Low, Medium, High, Aggressive
+  slug: string; // low, medium, high, aggressive
+  description: string;
+  cpmRate: string; // cth: "$3.50"
+  revenueShare: number; // cth: 50 (persen)
+  isPopular?: boolean; // Buat highlight card
+  demoUrl: string; // Link redirect ke demo
+  features: AdFeature[];
+  colorTheme: string; // Buat styling border/badge (green, blue, orange, red)
+}
+
+export interface ReferralStats {
+  totalEarnings: number;
+  totalReferred: number;
+  activeReferred: number;
+  commissionRate: number; // dalam persen (misal 20)
+}
+
+export interface ReferredUser {
+  id: string;
+  name: string; // cth: "Udin Petot"
+  emailHidden: string; // cth: "ud***@gmail.com"
+  dateJoined: string;
+  totalEarningsForMe: number; // Berapa yang dihasilkan user ini buat kita
+  status: "active" | "inactive";
+}
+
+export interface WithdrawalStats {
+  availableBalance: number;
+  pendingWithdrawn: number;
+  totalWithdrawn: number;
+}
+
+export interface PaymentMethod {
+  provider: string; // cth: "PayPal", "Bank Transfer"
+  accountName: string; // cth: "Kevin Ragil"
+  accountNumber: string; // cth: "1234567890" (masked)
+}
+
+export interface Transaction {
+  id: string;
+  date: string;
+  amount: number;
+  method: string; // cth: "PayPal"
+  account: string; // cth: "kevin***@gmail.com"
+  status: "pending" | "approved" | "completed" | "rejected" | "cancelled";
+  txId?: string; // ID referensi transfer
+}
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  phone: string;
+  avatarUrl: string;
+  username: string;
+}
+
+export interface SecuritySettings {
+  twoFactorEnabled: boolean;
+  lastPasswordChange: string; // tgl terakhir ganti
+}
+
+export interface NotificationSettings {
+  emailLogin: boolean;
+  emailWithdrawal: boolean;
+  emailMarketing: boolean;
+}
+
+// ... tipe data lain
+
+export type ActivityType = "login" | "security" | "link" | "payment" | "system";
+
+export interface ActivityLog {
+  id: string;
+  type: ActivityType;
+  title: string; // cth: "Login Berhasil"
+  description: string; // cth: "Login dari Chrome di Windows (192.168.1.1)"
+  timestamp: string; // ISO Date
+  ipAddress?: string;
+  device?: string;
+  status: "success" | "warning" | "failed";
 }

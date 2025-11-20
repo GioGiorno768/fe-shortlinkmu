@@ -22,25 +22,29 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
+import EditLinkModal from "./EditLinkModal";
+import type { AdLevel, EditableLinkData } from "@/types/type";
+import { useAlert } from "@/hooks/useAlert";
 
-// 1. Tipe data untuk link (pastikan sama dengan backend Laravel lu)
+// Interface Shortlink
 interface Shortlink {
   id: string;
   title: string;
-  shortUrl: string; // Cth: short.link/w1W0K12
+  shortUrl: string;
   originalUrl: string;
-  dateCreated: string; // Format ISO 8601 (cth: "2025-10-11T20:25:00Z") biar bisa di-sort
-  dateExpired?: string; // Format ISO 8601
+  dateCreated: string;
+  dateExpired?: string;
   validViews: number;
   totalEarning: number;
   totalClicks: number;
   averageCPM: number;
-  adsLevel: string;
+  adsLevel: AdLevel;
   passwordProtected: boolean;
+  password?: string; // Pastikan ini ada buat diisi ke input
   status: "active" | "disabled";
 }
 
-// 2. Tipe data untuk filter
+// Tipe Filter & Sort
 type FilterByType =
   | "date"
   | "topLinks"
@@ -52,35 +56,45 @@ type FilterByType =
   | "linkDisabled"
   | "linkPassword";
 
-// 3. Tipe data untuk sort
 type SortByType = "highest" | "lowest";
 
 export default function LinkList() {
   const t = useTranslations("Dashboard");
+  const { showAlert } = useAlert();
 
-  // State untuk data
+  // State Data
   const [links, setLinks] = useState<Shortlink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State untuk UI
+  // State UI
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<FilterByType>("date");
-  const [sortBy, setSortBy] = useState<SortByType>("highest"); // Default 'highest'
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null); // 'filter', 'sort', 'link-ID'
-  const [expandedLink, setExpandedLink] = useState<string | null>(null); // 'link-ID'
+  const [sortBy, setSortBy] = useState<SortByType>("highest");
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [expandedLink, setExpandedLink] = useState<string | null>(null);
 
-  // State untuk pagination
+  // 1. STATE BARU: Buat ngelacak visibilitas password per link ID
+  const [visiblePasswords, setVisiblePasswords] = useState<
+    Record<string, boolean>
+  >({});
+
+  // State Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalLinks, setTotalLinks] = useState(0);
-  const linksPerPage = 10; // Max 10 list per halaman
+  const linksPerPage = 10;
 
-  // Refs untuk nutup dropdown
+  // State Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedLink, setSelectedLink] = useState<Shortlink | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Refs
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const actionDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Helper untuk format tanggal
+  // Helper Formats
   const formatLinkDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "2-digit",
@@ -92,58 +106,25 @@ export default function LinkList() {
     });
   };
 
-  // Helper untuk format angka
   const formatNumber = (num: number) => num.toLocaleString("en-US");
   const formatCurrency = (num: number) =>
     "$" + num.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
-  // ========================================================
-  // === DESAIN API (MOCK/DUMMY) ===
-  // ========================================================
-  // Nanti lu ganti fungsi ini pake API call beneran ke Laravel
+  // 2. HANDLER BARU: Toggle password visibility
+  const togglePasswordVisibility = (id: string) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+  // Fetch Data (Mock)
   useEffect(() => {
     const fetchLinks = async () => {
       setIsLoading(true);
       setError(null);
 
-      // Kumpulin parameter buat dikirim ke API
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        per_page: linksPerPage.toString(),
-        search: searchTerm,
-        filter_by: filterBy,
-        sort_by: sortBy,
-      });
-
-      console.log(`MANGGIL API: /api/links?${params.toString()}`);
-
       try {
-        /* // --- CONTOH API CALL BENERAN (GET) ---
-        // const token = localStorage.getItem("authToken");
-        // const response = await fetch(
-        //   `${process.env.NEXT_PUBLIC_API_URL}/api/links?${params.toString()}`,
-        //   {
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //       'Authorization': `Bearer ${token}`
-        //     },
-        //   }
-        // );
-        // if (!response.ok) {
-        //   throw new Error("Gagal memuat data link");
-        // }
-        // // Asumsi Laravel ngembaliin data pagination kayak gini:
-        // const data = await response.json(); 
-        // // data = {
-        // //   "data": [ ...links... ],
-        // //   "meta": { "total": 100, "current_page": 1, ... }
-        // // }
-        // setLinks(data.data);
-        // setTotalLinks(data.meta.total);
-        // setCurrentPage(data.meta.current_page);
-        */
-
-        // --- DATA DUMMY (HAPUS NANTI) ---
         await new Promise((resolve) => setTimeout(resolve, 500));
         const mockData: Shortlink[] = [
           {
@@ -158,7 +139,8 @@ export default function LinkList() {
             totalClicks: 22001,
             averageCPM: 10.0,
             passwordProtected: true,
-            adsLevel: "Medium",
+            password: "rahasia123", // Password dummy
+            adsLevel: "level3",
             status: "active",
           },
           {
@@ -173,40 +155,11 @@ export default function LinkList() {
             totalClicks: 15001,
             averageCPM: 9.0,
             passwordProtected: false,
-            adsLevel: "Low",
+            password: "", // Gak ada password
+            adsLevel: "level1",
             status: "active",
           },
-          {
-            id: "3",
-            title: "Link Shadow Fight Mod",
-            shortUrl: "short.link/Muly01n",
-            originalUrl: "https://example.com/shadow-fight-v2",
-            dateCreated: "2025-10-09T20:25:00Z",
-            dateExpired: undefined,
-            validViews: 800,
-            totalEarning: 5.6,
-            totalClicks: 8001,
-            averageCPM: 7.0,
-            passwordProtected: false,
-            adsLevel: "Low",
-            status: "active",
-          },
-          {
-            id: "4",
-            title: "Another Cool Link",
-            shortUrl: "short.link/B4hi1l",
-            originalUrl: "https://another-cool-link.com",
-            dateCreated: "2025-10-09T10:25:00Z",
-            dateExpired: undefined,
-            validViews: 500,
-            totalEarning: 3.0,
-            totalClicks: 5001,
-            averageCPM: 6.0,
-            passwordProtected: false,
-            adsLevel: "Low",
-            status: "disabled", // Contoh link disabled
-          },
-          // Ini data dummy tambahan buat pagination
+          // ... generate data dummy lainnya ...
           ...Array(16)
             .fill(null)
             .map((_, i) => ({
@@ -223,17 +176,17 @@ export default function LinkList() {
               totalClicks: Math.floor(Math.random() * 20000),
               averageCPM: Math.floor(Math.random() * 10),
               passwordProtected: i % 4 === 0,
-              adsLevel: ["Low", "Medium", "High", "Agressive"][
-                Math.floor(Math.random() * 3)
-              ],
-              // INI FIX BUAT ERROR TYPESCRIPT
+              password: i % 4 === 0 ? "pass1234" : "",
+              adsLevel: ["noAds", "level1", "level2", "level3", "level4"][
+                Math.floor(Math.random() * 5)
+              ] as AdLevel,
               status: (i % 5 === 0 ? "disabled" : "active") as
                 | "active"
                 | "disabled",
             })),
         ];
 
-        // Simulasi filter & search (HARUSNYA INI DI BACKEND)
+        // Filter & Sort Logic (Sama kayak sebelumnya)
         const filtered = mockData
           .filter((link) => {
             const s = searchTerm.toLowerCase();
@@ -251,7 +204,6 @@ export default function LinkList() {
             return true;
           });
 
-        // Simulasi sort (HARUSNYA INI DI BACKEND)
         filtered.sort((a, b) => {
           let fieldA: number | Date, fieldB: number | Date;
           switch (filterBy) {
@@ -271,10 +223,9 @@ export default function LinkList() {
               ];
           }
           if (sortBy === "lowest") return fieldA > fieldB ? 1 : -1;
-          return fieldA < fieldB ? 1 : -1; // Default 'highest'
+          return fieldA < fieldB ? 1 : -1;
         });
 
-        // Simulasi pagination (HARUSNYA INI DI BACKEND)
         setTotalLinks(filtered.length);
         setLinks(
           filtered.slice(
@@ -282,7 +233,6 @@ export default function LinkList() {
             currentPage * linksPerPage
           )
         );
-        // --- AKHIR DATA DUMMY ---
       } catch (err: any) {
         setError(err.message || "Gagal memuat link");
       } finally {
@@ -290,30 +240,32 @@ export default function LinkList() {
       }
     };
 
-    // Kita kasih debounce dikit buat search
     const searchTimeout = setTimeout(() => {
       fetchLinks();
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => clearTimeout(searchTimeout);
-  }, [currentPage, searchTerm, filterBy, sortBy]); // Fetch ulang kalo state ini berubah
+  }, [currentPage, searchTerm, filterBy, sortBy]);
 
-  // Efek untuk nutup dropdown pas klik di luar
+  // Outside Click Handler (Sama kayak sebelumnya)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Cek apakah klik di luar 3 dropdown
       const isOutsideFilter =
         filterDropdownRef.current &&
         !filterDropdownRef.current.contains(event.target as Node);
       const isOutsideSort =
         sortDropdownRef.current &&
         !sortDropdownRef.current.contains(event.target as Node);
-      const isOutsideAction =
-        actionDropdownRef.current &&
-        !actionDropdownRef.current.contains(event.target as Node);
 
-      // Kalo klik di luar semua, tutup dropdown
-      if (isOutsideFilter || isOutsideSort || isOutsideAction) {
+      if (isOutsideFilter && isOutsideSort) {
+        if (openDropdown === "filter" || openDropdown === "sort") {
+          setOpenDropdown(null);
+        }
+      }
+      if (
+        openDropdown?.startsWith("link-") &&
+        !(event.target as Element).closest("button")
+      ) {
         setOpenDropdown(null);
       }
     };
@@ -321,9 +273,9 @@ export default function LinkList() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [openDropdown]); // Cukup jalan sekali
+  }, [openDropdown]);
 
-  // --- Handlers ---
+  // --- HANDLERS LAIN (Sama) ---
   const handleToggleDropdown = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
@@ -331,35 +283,68 @@ export default function LinkList() {
   const handleFilterChange = (value: FilterByType) => {
     setFilterBy(value);
     setOpenDropdown(null);
-    setCurrentPage(1); // Reset ke halaman 1
-
-    // Tampilkan/sembunyikan dropdown sort
+    setCurrentPage(1);
     if (!["validViews", "totalEarning", "avgCPM"].includes(value)) {
-      setSortBy("highest"); // Reset ke 'highest'
+      setSortBy("highest");
     }
   };
 
   const handleSortChange = (value: SortByType) => {
     setSortBy(value);
     setOpenDropdown(null);
-    setCurrentPage(1); // Reset ke halaman 1
+    setCurrentPage(1);
   };
 
   const handleAccordionToggle = (id: string) => {
     setExpandedLink(expandedLink === id ? null : id);
-    setOpenDropdown(null); // Tutup dropdown aksi
+    setOpenDropdown(null);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo(0, 0); // Scroll ke atas
+    window.scrollTo(0, 0);
   };
 
-  // --- Aksi Link (Edit/Disable) ---
+  // --- GANTI BAGIAN INI ---
   const handleEditLink = (linkId: string) => {
-    alert(`EDIT link ${linkId} (Nanti buka modal edit)`);
-    setOpenDropdown(null);
-    // Di sini lu bisa panggil modal edit
+    const linkToEdit = links.find((l) => l.id === linkId);
+    if (linkToEdit) {
+      setSelectedLink(linkToEdit);
+      setIsModalOpen(true);
+      setOpenDropdown(null);
+    } else {
+      // Contoh alert error kalau link ga ketemu (opsional)
+      showAlert("Link not found!", "error");
+    }
+  };
+
+  const handleUpdateLink = async (formData: EditableLinkData) => {
+    if (!selectedLink) return;
+    setIsUpdating(true);
+
+    // Simulasi Update
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    setLinks(
+      links.map((l) =>
+        l.id === selectedLink.id
+          ? {
+              ...l,
+              shortUrl: `short.link/${formData.alias}`,
+              adsLevel: formData.adsLevel,
+              password: formData.password,
+              passwordProtected: !!formData.password,
+              dateExpired: formData.expiresAt
+                ? new Date(formData.expiresAt).toISOString()
+                : undefined,
+            }
+          : l
+      )
+    );
+
+    setIsUpdating(false);
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedLink(null), 300);
   };
 
   const handleDisableLink = async (
@@ -367,35 +352,29 @@ export default function LinkList() {
     currentStatus: "active" | "disabled"
   ) => {
     const newStatus = currentStatus === "active" ? "disabled" : "active";
-    alert(`API CALL: Ubah status link ${linkId} jadi ${newStatus}`);
+
+    // GANTI ALERT DISINI
+    // alert(`API CALL: Ubah status link ${linkId} jadi ${newStatus}`);
+
+    // Simulasi update state
+    setLinks(
+      links.map((l) => (l.id === linkId ? { ...l, status: newStatus } : l))
+    );
     setOpenDropdown(null);
 
-    /* // --- CONTOH API CALL (PATCH) ---
-    // try {
-    //   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/links/${linkId}/status`, {
-    //     method: 'PATCH',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //       'Authorization': `Bearer ${token}`
-    //     },
-    //     body: JSON.stringify({ status: newStatus })
-    //   });
-    //   if (!response.ok) throw new Error('Gagal update status');
-    //   
-    //   // Update state di frontend
-    //   setLinks(links.map(l => l.id === linkId ? { ...l, status: newStatus } : l));
-    // } catch (err) {
-    //   console.error(err);
-    //   alert('Gagal update status link');
-    // }
-    */
+    // Tampilkan Alert Keren
+    showAlert(
+      `Link berhasil diubah menjadi ${newStatus}.`,
+      newStatus === "active" ? "success" : "warning",
+      "Status Updated"
+    );
   };
 
-  // Variabel render
   const totalPages = Math.ceil(totalLinks / linksPerPage);
   const showSortDropdown = ["validViews", "totalEarning", "avgCPM"].includes(
     filterBy
   );
+
   const filterOptions: { key: FilterByType; label: string }[] = [
     { key: "date", label: "By Date" },
     { key: "topLinks", label: "By Top Links" },
@@ -409,10 +388,9 @@ export default function LinkList() {
   ];
 
   return (
-    <div className=" rounded-xl mt-6 text-[10px]">
-      {/* === HEADER LIST === */}
+    <div className="rounded-xl mt-6 text-[10px]">
+      {/* === HEADER (Sama seperti sebelumnya) === */}
       <div className="flex flex-col bg-white md:flex-row items-center justify-between gap-4 mb-6 shadow-sm shadow-slate-500/50 p-6 rounded-xl">
-        {/* Search Input */}
         <div className="relative w-full md:max-w-xs">
           <Search
             className="w-5 h-5 text-grays absolute left-4 top-1/2 -translate-y-1/2"
@@ -423,16 +401,14 @@ export default function LinkList() {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset page pas ngetik
+              setCurrentPage(1);
             }}
             placeholder="Search..."
             className="w-full text-[1.6em] px-12 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight bg-blues"
           />
         </div>
 
-        {/* Filter Buttons */}
         <div className="flex items-center gap-3 w-full md:w-auto">
-          {/* Dropdown Sort (Muncul kondisional) */}
           <AnimatePresence>
             {showSortDropdown && (
               <motion.div
@@ -465,14 +441,12 @@ export default function LinkList() {
                       className="absolute top-full right-0 mt-2 p-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-100"
                     >
                       <button
-                        type="button"
                         onClick={() => handleSortChange("highest")}
                         className="block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
                       >
                         Highest
                       </button>
                       <button
-                        type="button"
                         onClick={() => handleSortChange("lowest")}
                         className="block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
                       >
@@ -485,7 +459,6 @@ export default function LinkList() {
             )}
           </AnimatePresence>
 
-          {/* Dropdown Filter */}
           <div ref={filterDropdownRef} className="relative w-full md:w-auto">
             <button
               type="button"
@@ -503,8 +476,7 @@ export default function LinkList() {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
-                  onWheel={(e) => e.stopPropagation()}
-                  className="absolute top-full right-0 mt-2 p-2 w-56 bg-white rounded-lg shadow-lg z-20 border border-gray-100 max-h-60 overflow-y-auto"
+                  className="absolute top-full right-0 mt-2 p-2 w-56 bg-white rounded-lg shadow-lg z-20 border border-gray-100 max-h-60 overflow-y-auto custom-scrollbar-minimal"
                 >
                   {filterOptions.map((opt) => (
                     <button
@@ -535,9 +507,7 @@ export default function LinkList() {
         ) : error ? (
           <p className="text-center text-redshortlink py-8">{error}</p>
         ) : links.length === 0 ? (
-          <p className="text-center text-grays py-8">
-            No links found matching your criteria.
-          </p>
+          <p className="text-center text-grays py-8">No links found.</p>
         ) : (
           links.map((link) => (
             <div
@@ -548,13 +518,13 @@ export default function LinkList() {
                 expandedLink === link.id && "shadow-lg"
               )}
             >
-              {/* Header Item Link */}
+              {/* Header Item */}
               <div
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAccordionToggle(link.id);
                 }}
-                className="flex items-center justify-between p-6"
+                className="flex items-center justify-between p-6 cursor-pointer"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <div
@@ -582,17 +552,15 @@ export default function LinkList() {
                       href={link.shortUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[1.6em] font-semibold text-shortblack hover:underline truncate line-clamp-1"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[1.6em] font-semibold text-shortblack hover:underline truncate line-clamp-1 block"
                     >
                       {link.shortUrl}
                     </a>
                   </div>
                 </div>
-
-                {/* Tombol Aksi & Collapse */}
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  {/* Dropdown Aksi (Edit/Disable) */}
-                  <div ref={actionDropdownRef} className="relative">
+                  <div className="relative">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -614,20 +582,23 @@ export default function LinkList() {
                         >
                           <button
                             type="button"
-                            onClick={() => handleEditLink(link.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditLink(link.id);
+                            }}
                             className="flex items-center gap-2 w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
                           >
-                            <Pencil className="w-4 h-4" />
-                            <span>Edit</span>
+                            <Pencil className="w-4 h-4" /> <span>Edit</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
-                              handleDisableLink(link.id, link.status)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDisableLink(link.id, link.status);
+                            }}
                             className="flex items-center gap-2 w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
                           >
-                            <EyeOff className="w-4 h-4" />
+                            <EyeOff className="w-4 h-4" />{" "}
                             <span>
                               {link.status === "active" ? "Disable" : "Enable"}
                             </span>
@@ -636,11 +607,12 @@ export default function LinkList() {
                       )}
                     </AnimatePresence>
                   </div>
-
-                  {/* Tombol Collapse */}
                   <button
                     type="button"
-                    onClick={() => handleAccordionToggle(link.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAccordionToggle(link.id);
+                    }}
                     className="p-2 rounded-full text-grays hover:bg-blue-dashboard transition-colors"
                   >
                     <ChevronDown
@@ -653,7 +625,7 @@ export default function LinkList() {
                 </div>
               </div>
 
-              {/* Konten Collapse (Info Detail) */}
+              {/* Detail Collapse */}
               <AnimatePresence>
                 {expandedLink === link.id && (
                   <motion.div
@@ -663,19 +635,18 @@ export default function LinkList() {
                     className="overflow-hidden"
                   >
                     <div className="p-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
-                      {/* Destination Link */}
+                      {/* Destination */}
                       <div className="flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-bluelight flex-shrink-0" />
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-[1.2em] font-medium text-grays">
                             Destination Link
                           </p>
                           <a
                             href={link.originalUrl}
                             target="_blank"
-                            title={link.originalUrl}
                             rel="noopener noreferrer"
-                            className="text-[1.4em] font-medium text-shortblack hover:underline line-clamp-1 w-[80%]"
+                            className="text-[1.4em] font-medium text-shortblack hover:underline truncate block"
                           >
                             {link.originalUrl}
                           </a>
@@ -697,18 +668,41 @@ export default function LinkList() {
                         </div>
                       </div>
 
-                      {/* Password */}
+                      {/* 3. MODIFIKASI BAGIAN PASSWORD: JADI INPUT + TOGGLE */}
                       <div className="flex items-center gap-3">
                         <Lock className="w-5 h-5 text-bluelight flex-shrink-0" />
-                        <div>
-                          <p className="text-[1.2em] font-medium text-grays">
+                        <div className="w-full">
+                          <p className="text-[1.2em] font-medium text-grays mb-1">
                             Password
                           </p>
-                          <p className="text-[1.4em] font-medium text-shortblack">
-                            {link.passwordProtected
-                              ? "********"
-                              : "No password"}
-                          </p>
+                          <div className="relative w-full max-w-[150px]">
+                            <input
+                              type={
+                                visiblePasswords[link.id] ? "text" : "password"
+                              }
+                              value={link.password || ""}
+                              readOnly
+                              className="w-full text-[1.4em] font-medium text-shortblack bg-blues border border-gray-200 rounded-md px-3 py-1 pr-10 focus:outline-none"
+                              placeholder={
+                                link.passwordProtected ? "********" : "No Pass"
+                              }
+                            />
+                            {/* Tombol Mata */}
+                            {link.passwordProtected && (
+                              <button
+                                onClick={() =>
+                                  togglePasswordVisibility(link.id)
+                                }
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-grays hover:text-bluelight transition-colors"
+                              >
+                                {visiblePasswords[link.id] ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -719,7 +713,7 @@ export default function LinkList() {
                           <p className="text-[1.2em] font-medium text-grays">
                             Ads Level
                           </p>
-                          <p className="text-[1.4em] font-medium text-shortblack">
+                          <p className="text-[1.4em] font-medium text-shortblack capitalize">
                             {link.adsLevel}
                           </p>
                         </div>
@@ -751,9 +745,9 @@ export default function LinkList() {
                         </div>
                       </div>
 
-                      {/* Total Click */}
+                      {/* Total Clicks */}
                       <div className="flex items-center gap-3">
-                        <Wallet className="w-5 h-5 text-bluelight flex-shrink-0" />
+                        <BarChart className="w-5 h-5 text-bluelight flex-shrink-0" />
                         <div>
                           <p className="text-[1.2em] font-medium text-grays">
                             Total Clicks
@@ -766,7 +760,7 @@ export default function LinkList() {
 
                       {/* Average CPM */}
                       <div className="flex items-center gap-3">
-                        <BarChart className="w-5 h-5 text-bluelight flex-shrink-0" />
+                        <DollarSign className="w-5 h-5 text-bluelight flex-shrink-0" />
                         <div>
                           <p className="text-[1.2em] font-medium text-grays">
                             Average CPM
@@ -785,10 +779,9 @@ export default function LinkList() {
         )}
       </div>
 
-      {/* === PAGINATION === */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center items-center flex-wrap gap-2 mt-8">
-          {/* Tombol Previous */}
           <button
             type="button"
             onClick={() => handlePageChange(currentPage - 1)}
@@ -797,8 +790,6 @@ export default function LinkList() {
           >
             Previous
           </button>
-
-          {/* Tombol Halaman */}
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
             <button
               key={page}
@@ -814,8 +805,6 @@ export default function LinkList() {
               {page}
             </button>
           ))}
-
-          {/* Tombol Next */}
           <button
             type="button"
             onClick={() => handlePageChange(currentPage + 1)}
@@ -826,6 +815,36 @@ export default function LinkList() {
           </button>
         </div>
       )}
+
+      {/* Modal Edit */}
+      <EditLinkModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setTimeout(() => setSelectedLink(null), 300);
+        }}
+        onSubmit={handleUpdateLink}
+        initialData={
+          selectedLink
+            ? {
+                alias: selectedLink.shortUrl.split("/").pop() || "",
+                password: selectedLink.password,
+                expiresAt: selectedLink.dateExpired
+                  ? new Date(
+                      new Date(selectedLink.dateExpired).getTime() -
+                        new Date().getTimezoneOffset() * 60000
+                    )
+                      .toISOString()
+                      .slice(0, 16)
+                  : "",
+                adsLevel: selectedLink.adsLevel,
+              }
+            : null
+        }
+        isUpdating={isUpdating}
+        shortUrlDisplay={selectedLink?.shortUrl}
+        originalUrlDisplay={selectedLink?.originalUrl}
+      />
     </div>
   );
 }
