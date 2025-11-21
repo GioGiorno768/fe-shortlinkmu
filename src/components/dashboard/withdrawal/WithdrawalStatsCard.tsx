@@ -1,23 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { Wallet, Clock, CheckCircle, ArrowRight, Loader2 } from "lucide-react";
-import { useAlert } from "@/hooks/useAlert";
+import { Wallet, Clock, CheckCircle, ArrowRight } from "lucide-react";
 import type { WithdrawalStats } from "@/types/type";
 
 interface WithdrawalStatsCardProps {
   stats: WithdrawalStats | null;
-  onRequest: () => void; // Callback buat parent
-  isProcessing: boolean;
+  onOpenModal: () => void; // <--- GANTI NAMA BIAR JELAS
 }
 
 export default function WithdrawalStatsCard({
   stats,
-  onRequest,
-  isProcessing,
+  onOpenModal,
 }: WithdrawalStatsCardProps) {
-  const formatCurrency = (val: number) => `$${val.toFixed(4)}`; // 4 desimal buat presisi
+  const formatCurrency = (val: number) => `$${val.toFixed(4)}`;
 
   return (
     <motion.div
@@ -29,7 +25,6 @@ export default function WithdrawalStatsCard({
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
-        {/* Bagian Saldo Utama */}
         <div className="space-y-2">
           <div className="flex items-center gap-3 text-grays">
             <div className="p-2 bg-green-50 rounded-lg text-green-600">
@@ -41,34 +36,29 @@ export default function WithdrawalStatsCard({
             {formatCurrency(stats?.availableBalance || 0)}
           </h1>
           <p className="text-[1.4em] text-grays">
-            Minimum payout amount is <span className="font-bold">$5.00</span>
+            Minimum payout amount is <span className="font-bold">$2.00</span>
           </p>
         </div>
 
-        {/* Tombol Request */}
         <div className="w-full md:w-auto">
           <button
-            onClick={onRequest}
-            disabled={isProcessing || (stats?.availableBalance || 0) < 5.0}
+            onClick={onOpenModal} // <--- PANGGIL MODAL
+            // Validasi saldo < 2 dollar tetap di sini biar tombolnya mati kalau saldo dikit
+            disabled={(stats?.availableBalance || 0) < 2.0}
             className="w-full md:w-auto bg-bluelight text-white px-8 py-4 rounded-2xl font-bold text-[1.6em] 
                      hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-1 transition-all duration-300
                      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none
                      flex items-center justify-center gap-3"
           >
-            {isProcessing ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <span className="hugeicons--money-send-circle w-6 h-6 bg-white" />
-            )}
-            <span>{isProcessing ? "Processing..." : "Request Payout"}</span>
+            <span className="hugeicons--money-send-circle w-6 h-6 bg-white" />
+            <span>Request Payout</span>
           </button>
         </div>
       </div>
 
-      {/* Divider */}
       <div className="h-px bg-gray-100 my-8" />
 
-      {/* Stats Kecil di Bawah */}
+      {/* ... (Bagian bawah sama aja) ... */}
       <div className="grid grid-cols-2 gap-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-orange-50 rounded-xl text-orange-500">

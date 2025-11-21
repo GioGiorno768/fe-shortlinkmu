@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useAlert } from "@/hooks/useAlert";
 import { Loader2, User, Lock, CreditCard, Bell } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useSearchParams } from "next/navigation"; // <-- 1. IMPORT INI
 import clsx from "clsx";
 
-// Import Types & Components
 import type {
   UserProfile,
   SecuritySettings,
@@ -18,13 +18,12 @@ import SecuritySection from "@/components/dashboard/settings/SecuritySection";
 import PaymentSection from "@/components/dashboard/settings/PaymentSection";
 import NotificationSection from "@/components/dashboard/settings/NotificationSection";
 
-// ========================================================
-// === API MOCK ===
-// ========================================================
+// ... (Fungsi fetchUserSettings SAMA AJA) ...
 async function fetchUserSettings() {
   console.log("MANGGIL API: /api/user/settings/all");
   await new Promise((r) => setTimeout(r, 800));
   return {
+    // ... (data dummy sama)
     profile: {
       name: "Kevin Ragil",
       email: "kevinragil768@gmail.com",
@@ -51,8 +50,19 @@ async function fetchUserSettings() {
 
 export default function SettingsPage() {
   const { showAlert } = useAlert();
+  const searchParams = useSearchParams(); // <-- 2. AMBIL SEARCH PARAMS
+
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
+
+  // 3. LOGIC PENENTUAN TAB AWAL
+  // Cek apakah ada param 'tab' di URL, kalau ada dan valid pake itu, kalau nggak default 'profile'
+  const initialTab = searchParams.get("tab");
+  const validTabs = ["profile", "security", "payment", "notifications"];
+
+  const [activeTab, setActiveTab] = useState(
+    validTabs.includes(initialTab || "") ? initialTab! : "profile"
+  );
+
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
@@ -69,6 +79,8 @@ export default function SettingsPage() {
     };
     loadData();
   }, [showAlert]);
+
+  // ... (SISANYA SAMA PERSIS) ...
 
   const tabs = [
     { id: "profile", label: "Profile", icon: User },
@@ -92,13 +104,13 @@ export default function SettingsPage() {
       </h1>
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
-        {/* SIDEBAR TABS (Desktop) / SCROLL TABS (Mobile) */}
+        {/* SIDEBAR TABS */}
         <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-3xl p-4 shadow-sm border border-gray-100 z-20 sticky top-[15em]">
           <div className="flex lg:flex-col gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => setActiveTab(tab.id)} // <-- Ini cuma ganti state lokal
                 className={clsx(
                   "flex items-center sm:justify-baseline justify-center gap-4 sm:px-6 px-4 py-4 rounded-2xl transition-all whitespace-nowrap text-[1.4em] font-medium w-full",
                   activeTab === tab.id

@@ -29,40 +29,44 @@ interface SidebarProps {
   isMobileOpen: boolean;
   onClose: () => void;
   toggleSidebar: () => void;
+  menuItems: NavItem[]; // <--- TERIMA PROPS INI
+  role?: "member" | "admin"; // Optional buat styling
 }
 
-export const getMenuItems = (t: (key: string) => string): NavItem[] => [
-  { icon: LayoutDashboard, label: t("title"), href: "/dashboard" },
-  { icon: Megaphone, label: t("adsInfo"), href: "/ads-info" },
-  {
-    icon: Link2,
-    label: t("myLinks"),
-    children: [
-      { icon: PlusSquare, label: t("createLink"), href: "/new-link" },
-      { icon: Link2, label: t("subs4unlock"), href: "https://subs4unlock.id" },
-    ],
-  },
-  { icon: ChartSpline, label: t("analytics"), href: "/analytics" },
-  { icon: UserPlus2, label: t("referral"), href: "/referral" },
-  { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
-  { icon: History, label: t("history"), href: "/history" },
-];
+// export const getMenuItems = (t: (key: string) => string): NavItem[] => [
+//   { icon: LayoutDashboard, label: t("title"), href: "/dashboard" },
+//   { icon: Megaphone, label: t("adsInfo"), href: "/ads-info" },
+//   {
+//     icon: Link2,
+//     label: t("myLinks"),
+//     children: [
+//       { icon: PlusSquare, label: t("createLink"), href: "/new-link" },
+//       { icon: Link2, label: t("subs4unlock"), href: "https://subs4unlock.id" },
+//     ],
+//   },
+//   { icon: ChartSpline, label: t("analytics"), href: "/analytics" },
+//   { icon: UserPlus2, label: t("referral"), href: "/referral" },
+//   { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
+//   { icon: History, label: t("history"), href: "/history" },
+// ];
 
 export default function Sidebar({
   isCollapsed,
   isMobileOpen,
   onClose,
   toggleSidebar,
+  menuItems, // <--- PAKE INI
+  role = "member",
 }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard");
-  const menuItems = getMenuItems(t);
+  // const menuItems = getMenuItems(t);
 
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const userPopupRef = useRef<HTMLDivElement>(null);
 
   const userMenuItems = [
-    { icon: User, label: t("myProfile"), href: "/profile" },
+    // { icon: User, label: t("myProfile"), href: "/profile" },
     { icon: Settings, label: t("settings"), href: "/settings" },
     { icon: LogOut, label: t("logOut"), href: "/logout" },
   ];

@@ -29,7 +29,7 @@ export default function ReferralStatsGrid({ stats }: ReferralStatsGridProps) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-1 md:grid-cols-3 gap-6"
+      className="grid grid-cols-1 md:grid-cols-3 gap-6 font-figtree"
     >
       {/* Earnings */}
       <motion.div
@@ -41,8 +41,10 @@ export default function ReferralStatsGrid({ stats }: ReferralStatsGridProps) {
         </div>
         <div>
           <p className="text-[1.4em] text-grays">Pendapatan Referral</p>
-          <h3 className="text-[2.8em] font-bold text-shortblack">
-            {formatCurrency(stats?.totalEarnings || 0)}
+          <h3 className="text-[2.8em] font-bold text-shortblack ">
+            <span className="font-manrope">
+              {formatCurrency(stats?.totalEarnings || 0)}
+            </span>
           </h3>
         </div>
       </motion.div>
@@ -57,8 +59,9 @@ export default function ReferralStatsGrid({ stats }: ReferralStatsGridProps) {
         </div>
         <div>
           <p className="text-[1.4em] text-grays">Total Diundang</p>
-          <h3 className="text-[2.8em] font-bold text-shortblack">
-            {stats?.totalReferred || 0} User
+          <h3 className="text-[2.8em] font-bold text-shortblack ">
+            <span className="font-manrope">{stats?.totalReferred || 0} </span>
+            User
           </h3>
         </div>
       </motion.div>
@@ -73,8 +76,9 @@ export default function ReferralStatsGrid({ stats }: ReferralStatsGridProps) {
         </div>
         <div>
           <p className="text-[1.4em] text-grays">User Aktif</p>
-          <h3 className="text-[2.8em] font-bold text-shortblack">
-            {stats?.activeReferred || 0} User
+          <h3 className="text-[2.8em] font-bold text-shortblack ">
+            <span className="font-manrope">{stats?.activeReferred || 0} </span>{" "}
+            User
           </h3>
         </div>
       </motion.div>

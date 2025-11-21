@@ -1,4 +1,3 @@
-// src/middleware.ts
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +7,7 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Bypass untuk API routes dan static files
+  // 1. Bypass API & Static
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -17,16 +16,23 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Handle i18n routing
+  // 2. PROTEKSI HALAMAN ADMIN
+  // Cek apakah URL mengandung "/admin"
+  // (Logic aslinya nanti lu ganti pake cek Session/Token user)
+  const isAdminPath = pathname.includes("/admin");
+  const isUserAdmin = false; // <--- GANTI INI DENGAN LOGIC AUTH LU NANTI (misal: checkCookie)
+
+  if (isAdminPath && !isUserAdmin) {
+    // Kalau bukan admin coba masuk, tendang ke login atau 404
+    const url = request.nextUrl.clone();
+    url.pathname = "/en/login"; // Atau halaman 'unauthorized'
+    return NextResponse.redirect(url);
+  }
+
+  // 3. Lanjut ke i18n Handler
   return intlMiddleware(request);
 }
 
 export const config = {
-  matcher: [
-    // Match semua path KECUALI yang di bawah
-    "/((?!api|_next/static|_next/image|.*\\..*).*)",
-
-    // Pastikan root path juga di-handle
-    "/",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|.*\\..*).*)", "/"],
 };

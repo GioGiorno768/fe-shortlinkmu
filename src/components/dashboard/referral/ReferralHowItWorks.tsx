@@ -29,7 +29,7 @@ export default function ReferralHowItWorks({
   ];
 
   return (
-    <div className="py-8">
+    <div className="py-8 font-figtree">
       <h2 className="text-[2.2em] font-bold text-shortblack mb-8 text-center">
         Cara Kerja Referral
       </h2>

@@ -24,8 +24,10 @@ export default function WithdrawalMethodCard({
           <CreditCard className="w-6 h-6 text-bluelight" />
           Payment Method
         </h3>
+
+        {/* --- UBAH LINK DI SINI --- */}
         <Link
-          href="/settings" // Link ke halaman setting buat ganti metode
+          href="/settings?tab=payment" // <-- Tambah ?tab=payment
           className="p-2 text-grays hover:text-bluelight hover:bg-blues rounded-lg transition-colors"
           title="Change Method"
         >
@@ -72,8 +74,10 @@ export default function WithdrawalMethodCard({
                 Please set up your payment details before requesting a payout.
               </p>
             </div>
+
+            {/* --- UBAH LINK DI SINI JUGA --- */}
             <Link
-              href="/settings"
+              href="/settings?tab=payment" // <-- Tambah ?tab=payment
               className="inline-block bg-orange-500 text-white px-6 py-2 rounded-xl font-semibold text-[1.4em] hover:bg-orange-600 transition-colors"
             >
               Setup Now

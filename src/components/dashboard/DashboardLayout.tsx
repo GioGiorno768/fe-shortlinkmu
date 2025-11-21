@@ -1,21 +1,31 @@
-// src/components/DashboardLayout.tsx
+// src/components/dashboard/DashboardLayout.tsx
 "use client";
 
 import { useState } from "react";
 import Sidebar from "./sidebar/Sidebar";
 import Header from "./Header";
-import { Link, usePathname } from "@/i18n/routing";
 import Breadcrumb from "./Breadcrumb";
 import DashboardFooter from "./DashboardFooter";
+import { usePathname } from "@/i18n/routing";
+
+// --- TAMBAHKAN IMPORT INI ---
+import { useTranslations } from "next-intl";
+import { getMemberMenu, getAdminMenu } from "@/lib/menus";
 
 export default function DashboardLayout({
   children,
+  role = "member", // Default ke member
 }: {
   children: React.ReactNode;
+  role?: "member" | "admin"; // Kita terima string role aja, bukan object menu
 }) {
+  const t = useTranslations("Dashboard"); // Hook translate jalan di sini
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const pathname = usePathname();
+
+  // --- LOGIKA MENU PINDAH KE SINI ---
+  // Client Component boleh render komponen Ikon
+  const menuItems = role === "admin" ? getAdminMenu() : getMemberMenu(t);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -36,6 +46,8 @@ export default function DashboardLayout({
         isMobileOpen={isMobileOpen}
         onClose={closeMobileSidebar}
         toggleSidebar={toggleSidebar}
+        menuItems={menuItems} // <-- Menu dikirim dari Client ke Client (AMAN)
+        role={role}
       />
       <Header
         isCollapsed={isCollapsed}
@@ -54,7 +66,7 @@ export default function DashboardLayout({
         <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50">
           <Breadcrumb />
         </div>
-        
+
         {children}
 
         <DashboardFooter />

@@ -42,9 +42,9 @@ export default function ReferralTable({ users }: ReferralTableProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden font-figtree">
       <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 className="text-[1.8em] font-bold text-shortblack">Daftar Teman</h3>
+        <h3 className="text-[1.8em] font-semibold text-shortblack">Daftar Teman</h3>
 
         {/* Search Bar */}
         <div className="relative w-full sm:w-auto">
