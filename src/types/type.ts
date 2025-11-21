@@ -170,3 +170,14 @@ export interface ActivityLog {
   device?: string;
   status: "success" | "warning" | "failed";
 }
+
+export type NotificationType = "info" | "warning" | "success" | "alert";
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  timestamp: string; // ISO String
+}

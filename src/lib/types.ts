@@ -4,3 +4,4 @@ export type options = {
   hour12: boolean;
   timeZone: string;
 };
+

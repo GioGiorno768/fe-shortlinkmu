@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 "use client";
 
 import { usePathname, useRouter } from "@/i18n/routing";
@@ -12,7 +11,9 @@ import {
   MoonStar,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
+// Import komponen notifikasi
+import NotificationDropdown from "./NotificationDropdown";
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -27,16 +28,36 @@ export default function Header({
 }: HeaderProps) {
   const [isDark, setIsDark] = useState(true);
   const t = useTranslations("Dashboard");
-  const locale = useLocale(); // 'en' atau 'id'
+  const locale = useLocale();
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
+
+  // --- STATE NOTIFIKASI ---
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const notifRef = useRef<HTMLDivElement>(null); // Ref buat deteksi klik luar
 
   const switchLanguage = (nextLocale: "en" | "id") => {
     startTransition(() => {
       router.replace(pathname, { locale: nextLocale });
     });
   };
+
+  // --- EFEK KLIK LUAR (CLOSE DROPDOWN) ---
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        notifRef.current &&
+        !notifRef.current.contains(event.target as Node)
+      ) {
+        setIsNotifOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [notifRef]);
 
   const head = [
     { name: t("balance"), icon: "solar--wallet-linear", value: "$880,210" },
@@ -47,6 +68,7 @@ export default function Header({
     },
     { name: t("cpm"), icon: "icon-park-outline--click-tap", value: "$5,000" },
   ];
+
   return (
     <nav
       className={`
@@ -58,10 +80,9 @@ export default function Header({
         font-figtree bg-slate-50
       `}
     >
-      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[2em]  text-[10px] bg-white">
+      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[2em] text-[10px] bg-white">
         {/* Left Section */}
         <div className="flex items-center gap-4">
-          {/* Mobile menu button */}
           <button
             onClick={openMobileSidebar}
             className="hover:text-slate-600 rounded-lg transition-colors w-[3.5em] ml-[1em] h-[3.5en] flex justify-center items-center custom:hidden"
@@ -69,7 +90,6 @@ export default function Header({
             <span className="solar--hamburger-menu-broken w-[3em] h-[3em] bg-shortblack " />
           </button>
 
-          {/* Cash Info */}
           <div className="sm:flex hidden cursor-default ">
             {head.map((item, index) => (
               <div
@@ -103,7 +123,6 @@ export default function Header({
 
         {/* Right Section */}
         <div className="flex items-center gap-1 custom:gap-[2em]">
-          {/* bahasa */}
           <div className="custom:flex hidden items-center bg-blue-dashboard rounded-full p-[0.5em] border border-bluelight/10">
             <button
               onClick={() => switchLanguage("en")}
@@ -129,7 +148,6 @@ export default function Header({
             </button>
           </div>
 
-          {/* Theme Toggle */}
           <button
             onClick={() => setIsDark(!isDark)}
             className="custom:w-[5em] custom:h-[5em] w-[4em] h-[4em] flex justify-center items-center rounded-full custom:hover:-translate-y-1 transition-all duration-300 ease-in-out"
@@ -141,11 +159,24 @@ export default function Header({
             )}
           </button>
 
-          {/* Notifications */}
-          <button className="p-2 custom:hover:-translate-y-1 translition-all duration-300 ease-in-out relative">
-            <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
-            <span className="absolute top-2 right-3 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          {/* --- NOTIFICATIONS (UPDATED) --- */}
+          <div className="relative" ref={notifRef}>
+            <button
+              onClick={() => setIsNotifOpen(!isNotifOpen)}
+              className="p-2 custom:hover:-translate-y-1 translition-all duration-300 ease-in-out relative"
+            >
+              <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
+              {/* Dot Merah (Indikator Belum Baca) */}
+              <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+
+            {/* Component Dropdown */}
+            <NotificationDropdown
+              isOpen={isNotifOpen}
+              onClose={() => setIsNotifOpen(false)}
+            />
+          </div>
+          {/* ------------------------------- */}
         </div>
       </div>
     </nav>

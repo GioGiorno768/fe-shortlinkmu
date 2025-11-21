@@ -19,7 +19,7 @@ export default function WithdrawalStatsCard({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl p-8 shadow-sm shadow-slate-500/20 border border-gray-100 relative overflow-hidden"
+      className="bg-white rounded-3xl p-8 shadow-sm h-full shadow-slate-500/20 border border-gray-100 relative overflow-hidden"
     >
       {/* Dekorasi Background */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
