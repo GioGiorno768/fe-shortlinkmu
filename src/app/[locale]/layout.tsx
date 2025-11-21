@@ -38,9 +38,13 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  // 👇 UBAH DI SINI: Tambahin Promise<...>
+  params: Promise<{ locale: string }>;
 }) {
+  // 👇 UBAH DI SINI: Await params-nya dulu
   const { locale } = await params;
+
+  // Validasi locale
   if (!routing.locales.includes(locale as any)) {
     notFound();
   }
@@ -49,6 +53,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className="scroll-smooth">
+      {/* ... (Isi body sama aja) ... */}
       <body
         className={`${figtree.className} ${manrope.className} ${geist.className} antialiased`}
       >
@@ -57,7 +62,7 @@ export default async function RootLayout({
             <Suspense fallback={null}>
               <TopLoadingBar />
             </Suspense>
-            <GlobalAlert /> {/* <--- 2. PASANG DISINI */}
+            <GlobalAlert />
             {children}
           </LenisScrollProvider>
         </NextIntlClientProvider>
