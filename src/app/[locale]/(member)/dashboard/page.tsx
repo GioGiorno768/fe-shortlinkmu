@@ -15,6 +15,8 @@ import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 import TopPerformingLinksCard from "@/components/dashboard/TopPerformingLinksCard";
 import TopTrafficCard from "@/components/dashboard/TopTrafficCard";
 import ReferralCard from "@/components/dashboard/ReferralCard";
+import MilestoneCard from "@/components/dashboard/MilestoneCard";
+import DashboardSlider from "@/components/dashboard/DashboardSlider";
 
 export default function DashboardPage() {
   const pathname = usePathname();
@@ -28,16 +30,16 @@ export default function DashboardPage() {
       label: t("totalEarnings"),
       apiEndpoint: "/api/stats/earnings",
     },
-    {
-      icon: MousePointerClick,
-      color: [
-        "text-darkpurple-dashboard",
-        "bg-lightpurple-dashboard",
-        "border-darkpurple-dashboard",
-      ],
-      label: t("totalClicks"),
-      apiEndpoint: "/api/stats/clicks",
-    },
+    // {
+    //   icon: MousePointerClick,
+    //   color: [
+    //     "text-darkpurple-dashboard",
+    //     "bg-lightpurple-dashboard",
+    //     "border-darkpurple-dashboard",
+    //   ],
+    //   label: t("totalClicks"),
+    //   apiEndpoint: "/api/stats/clicks",
+    // },
     {
       icon: Eye,
       color: [
@@ -56,7 +58,7 @@ export default function DashboardPage() {
       {/* UBAH GRID: 3 kartu pertama + 1 kartu achievement */}
       <div className="grid grid-cols-1 md:grid-cols-2 custom:grid-cols-4 gap-6 mb-8">
         {/* Render 3 kartu pertama */}
-        {statsCards.map((card) => (
+        {/* {statsCards.map((card) => (
           <StatsCard
             key={card.label}
             icon={card.icon}
@@ -64,12 +66,20 @@ export default function DashboardPage() {
             label={card.label}
             apiEndpoint={card.apiEndpoint}
           />
-        ))}
+        ))} */}
+        {/* Card 3 (SLIDER): Lebar 2 Kolom */}
+        <div className="col-span-1 md:col-span-2 xl:col-span-2 h-full min-h-[200px]">
+          <DashboardSlider />
+        </div>
+
+        <div className="col-span-1 md:col-span-2 lg:col-span-2 h-full">
+          <MilestoneCard />
+        </div>
 
         {/* TAMBAHKAN KARTU ACHIEVEMENT DI SINI */}
-        <div >
+        {/* <div >
           <AchievementCard />
-        </div>
+        </div> */}
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
@@ -95,12 +105,10 @@ export default function DashboardPage() {
           <TopTrafficCard />
         </div>
 
-
         {/* Referral */}
         <div>
           <ReferralCard />
         </div>
-
       </div>
     </div>
   );

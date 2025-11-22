@@ -181,3 +181,22 @@ export interface NotificationItem {
   isRead: boolean;
   timestamp: string; // ISO String
 }
+
+export interface LevelConfig {
+  no: number;
+  id: UserLevel;
+  name: string;
+  minEarnings: number; // <--- GANTI INI (Dulu minViews)
+  cpmBonus: number;
+  benefits: string[];
+  iconColor: string;
+  bgColor: string;
+  borderColor: string;
+}
+
+export interface UserLevelProgress {
+  currentLevel: UserLevel;
+  currentEarnings: number; // <--- GANTI INI
+  nextLevelEarnings: number; // <--- GANTI INI
+  progressPercent: number;
+}

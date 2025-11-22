@@ -10,6 +10,7 @@ import {
   ShieldAlert,
   Users,
   Settings,
+  Crown,
 } from "lucide-react";
 
 // Menu untuk MEMBER
@@ -29,6 +30,9 @@ export const getMemberMenu = (t: any) => [
     ],
   },
   { icon: ChartSpline, label: t("analytics"), href: "/analytics" },
+  // --- TAMBAHIN INI ---
+  { icon: Crown, label: "Levels", href: "/levels" },
+  // (Bisa tambahin key 'levels' di en.json/id.json kalo mau translate)
   { icon: UserPlus2, label: t("referral"), href: "/referral" },
   { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
   { icon: History, label: t("history"), href: "/history" },
