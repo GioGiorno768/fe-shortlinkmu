@@ -46,11 +46,11 @@ export default function GlobalAlert() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -50, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-md px-4 pointer-events-none flex justify-center"
+          className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] font-figtree  text-[10px] w-full max-w-md px-4 pointer-events-none flex justify-center"
         >
           <div
             className={`
-              pointer-events-auto flex items-start gap-4 p-4 rounded-lg shadow-2xl 
+              pointer-events-auto flex items-center gap-4 p-4 rounded-lg shadow-2xl 
               ${config.bgColor} ${config.borderColor} border border-gray-100 w-full
             `}
           >
@@ -58,12 +58,12 @@ export default function GlobalAlert() {
             <div className="flex-1 min-w-0">
               {title && (
                 <h3
-                  className={`text-[1.4em] font-bold mb-1 ${config.titleColor}`}
+                  className={`text-[1.6em] font-bold mb-1 ${config.titleColor}`}
                 >
                   {title}
                 </h3>
               )}
-              <p className="text-[1.4em] text-gray-600 leading-snug">
+              <p className="text-[1.6em] text-gray-600 leading-snug">
                 {message}
               </p>
             </div>

@@ -257,7 +257,7 @@ export default function LinkList() {
         sortDropdownRef.current &&
         !sortDropdownRef.current.contains(event.target as Node);
 
-      if (isOutsideFilter && isOutsideSort) {
+      if (isOutsideFilter || isOutsideSort) {
         if (openDropdown === "filter" || openDropdown === "sort") {
           setOpenDropdown(null);
         }
@@ -476,6 +476,7 @@ export default function LinkList() {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -5 }}
+                  onWheel={(e) => e.stopPropagation()}
                   className="absolute top-full right-0 mt-2 p-2 w-56 bg-white rounded-lg shadow-lg z-20 border border-gray-100 max-h-60 overflow-y-auto custom-scrollbar-minimal"
                 >
                   {filterOptions.map((opt) => (

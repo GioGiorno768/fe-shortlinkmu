@@ -106,7 +106,7 @@ export default function SettingsPage() {
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* SIDEBAR TABS */}
         <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-3xl p-4 shadow-sm border border-gray-100 z-20 sticky top-[15em]">
-          <div className="flex lg:flex-col gap-2">
+          <div className="grid lg:grid-cols-1 grid-cols-2 gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -119,7 +119,7 @@ export default function SettingsPage() {
                 )}
               >
                 <tab.icon className="w-5 h-5" />
-                <span className="sm:inline-block hidden">{tab.label}</span>
+                {tab.label}
               </button>
             ))}
           </div>

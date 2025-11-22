@@ -176,7 +176,7 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute right-[-6em] sm:right-0 top-[5em] w-[300px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col"
+          className="absolute right-[-1em] sm:right-0 top-[7em] w-[300px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col"
           // Penting: Kasih tinggi fix atau max-height biar transisi smooth
           style={{ height: "500px", maxHeight: "80vh" }}
         >
