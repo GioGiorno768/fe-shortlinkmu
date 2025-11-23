@@ -63,7 +63,7 @@ export default function DashboardLayout({
           min-h-screen
         `}
       >
-        <div className="bg-white w-full py-[1em] lg:px-[2.5em] px-[1.5em] mb-[1.5em] rounded-xl shadow-sm shadow-slate-500/50">
+        <div className="w-full py-[1em] lg:px-[1.5em] px-[1.5em] mb-[.5em] rounded-xl">
           <Breadcrumb />
         </div>
 

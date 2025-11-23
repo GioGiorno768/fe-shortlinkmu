@@ -1,4 +1,3 @@
-// src/components/dashboard/Breadcrumb.tsx
 "use client";
 
 import { Link, usePathname } from "@/i18n/routing";
@@ -6,27 +5,19 @@ import { useTranslations } from "next-intl";
 import {
   Home,
   ChevronRight,
-  LayoutDashboard,
   PlusSquare,
-  ChartSpline,
-  UserPlus2,
-  BanknoteArrowDown,
-  History,
   User,
   Settings,
-  Link2,
 } from "lucide-react";
 import type { NavItem } from "@/types/type";
-// --- 1. UBAH IMPORT INI ---
+// 👇 GANTI IMPORT INI (Ambil dari lib/menus)
 import { getMemberMenu, getAdminMenu } from "@/lib/menus";
 
 export default function Breadcrumb() {
   const t = useTranslations("Dashboard");
   const pathname = usePathname();
 
-  // --- 2. GABUNGIN MENU ---
-  // Kita gabungin menu Member dan Admin biar Breadcrumb bisa kasih nama
-  // entah user lagi di halaman member atau halaman admin.
+  // 👇 GABUNGIN MENU (Biar breadcrumb kenal halaman Admin & Member)
   const menuItems = [...getMemberMenu(t), ...getAdminMenu()];
 
   const breadcrumbNameMap: {
@@ -42,6 +33,7 @@ export default function Breadcrumb() {
         }
       }
       if (item.children) {
+        // Manual check buat parent label
         if (item.label === t("myLinks")) {
           breadcrumbNameMap["my-links"] = {
             label: item.label,
@@ -55,12 +47,10 @@ export default function Breadcrumb() {
 
   flattenMenuItems(menuItems);
 
-  // Mapping manual tambahan
+  // Mapping Manual Tambahan
   breadcrumbNameMap["new-link"] = { label: t("createLink"), icon: PlusSquare };
   breadcrumbNameMap["profile"] = { label: t("myProfile"), icon: User };
   breadcrumbNameMap["settings"] = { label: t("settings"), icon: Settings };
-  // Tambahan buat Admin (optional)
-  breadcrumbNameMap["users"] = { label: "Users", icon: User };
 
   const pathSegments = pathname.split("/").filter(Boolean);
   const currentSegment = pathSegments[pathSegments.length - 1] || "dashboard";
@@ -96,16 +86,14 @@ export default function Breadcrumb() {
             const Icon = pageInfo?.icon || ChevronRight;
             const label = pageInfo?.label || segment;
 
-            // Jangan render segmen 'id', 'en', 'member', atau 'admin' di breadcrumb text
-            // biar ga aneh kelihatannya (misal: Home > Admin > Dashboard)
+            // Hide system segments
             if (["id", "en", "member", "admin"].includes(segment)) return null;
 
             return (
               <li key={segment} className="flex items-center gap-2">
                 <ChevronRight className="w-[1em] h-[1em] text-grays" />
-
                 {isLast ? (
-                  <span className="flex items-center gap-2 text-gray-text ">
+                  <span className="flex items-center gap-2 text-gray-text">
                     {pageInfo && <Icon className="w-[1em] h-[1em]" />}
                     <span>{label}</span>
                   </span>

@@ -7,6 +7,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  XCircle,
 } from "lucide-react";
 import clsx from "clsx";
 import type { Transaction } from "@/types/type";
@@ -14,10 +15,12 @@ import { motion } from "framer-motion";
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  onCancel: (id: string) => void;
 }
 
 export default function TransactionTable({
   transactions,
+  onCancel,
 }: TransactionTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -109,7 +112,7 @@ export default function TransactionTable({
               <th className="px-8 py-5">Method</th>
               <th className="px-8 py-5">Amount</th>
               <th className="px-8 py-5 text-center">Status</th>
-              <th className="px-8 py-5 text-right">Detail</th>
+              <th className="px-8 py-5 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -147,11 +150,28 @@ export default function TransactionTable({
                     </span>
                   </td>
                   <td className="px-8 py-5 text-right">
-                    {tx.txId && (
-                      <button className="text-bluelight hover:text-blue-700 transition-colors p-2 rounded-lg hover:bg-blue-50">
-                        <ExternalLink className="w-5 h-5" />
-                      </button>
-                    )}
+                    <div className="flex items-center justify-end gap-2">
+                      {/* TOMBOL DETAIL (External Link) */}
+                      {tx.txId && (
+                        <button
+                          className="text-bluelight hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
+                          title="Lihat Bukti"
+                        >
+                          <ExternalLink className="w-5 h-5" />
+                        </button>
+                      )}
+
+                      {/* TOMBOL CANCEL (Hanya muncul kalau PENDING) */}
+                      {tx.status === "pending" && (
+                        <button
+                          onClick={() => onCancel(tx.id)}
+                          className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                          title="Batalkan Request"
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

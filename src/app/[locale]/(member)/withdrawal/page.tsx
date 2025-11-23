@@ -11,6 +11,13 @@ import TransactionTable from "@/components/dashboard/withdrawal/TransactionTable
 // 1. IMPORT MODAL
 import WithdrawalRequestModal from "@/components/dashboard/withdrawal/WithdrawalRequestModal";
 
+// Tambah Mock API Cancel
+async function cancelWithdrawalAPI(id: string) {
+  console.log(`MANGGIL API: POST /api/withdrawal/cancel/${id}`);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return { success: true };
+}
+
 // ... (Fungsi API Mock fetch stats, method, transaction SAMA AJA, gak perlu diubah) ...
 // ... COPY PASTE FUNGSI FETCH DARI KODINGAN SEBELUMNYA ...
 async function fetchWithdrawalStats(): Promise<WithdrawalStats> {
@@ -77,6 +84,43 @@ export default function WithdrawalPage() {
   const [stats, setStats] = useState<WithdrawalStats | null>(null);
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // --- HANDLER CANCEL ---
+  const handleCancelRequest = async (id: string) => {
+    // 1. Cari transaksi yang mau di-cancel
+    const txToCancel = transactions.find((t) => t.id === id);
+    if (!txToCancel) return;
+
+    // 2. Konfirmasi
+    if (
+      !confirm(
+        "Yakin ingin membatalkan penarikan ini? Saldo akan dikembalikan."
+      )
+    )
+      return;
+
+    try {
+      // 3. Panggil API
+      await cancelWithdrawalAPI(id);
+      showAlert("Permintaan penarikan dibatalkan.", "info");
+
+      // 4. Update UI (Balikin Saldo)
+      if (stats) {
+        setStats({
+          ...stats,
+          availableBalance: stats.availableBalance + txToCancel.amount, // Balikin saldo
+          pendingWithdrawn: stats.pendingWithdrawn - txToCancel.amount, // Kurangi pending
+        });
+      }
+
+      // 5. Update Status di Tabel jadi 'cancelled'
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, status: "cancelled" } : t))
+      );
+    } catch (error) {
+      showAlert("Gagal membatalkan.", "error");
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -152,7 +196,10 @@ export default function WithdrawalPage() {
         </div>
       </div>
 
-      <TransactionTable transactions={transactions} />
+      <TransactionTable
+        onCancel={handleCancelRequest}
+        transactions={transactions}
+      />
 
       {/* 4. RENDER MODAL */}
       <WithdrawalRequestModal
