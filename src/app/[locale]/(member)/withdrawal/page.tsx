@@ -184,14 +184,14 @@ export default function WithdrawalPage() {
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree space-y-8 pb-10">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3">
           <WithdrawalStatsCard
             stats={stats}
             onOpenModal={() => setIsModalOpen(true)} // Buka modal
           />
         </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-2">
           <WithdrawalMethodCard method={method} />
         </div>
       </div>

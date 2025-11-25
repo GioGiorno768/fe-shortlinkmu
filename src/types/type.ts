@@ -200,3 +200,12 @@ export interface UserLevelProgress {
   nextLevelEarnings: number; // <--- GANTI INI
   progressPercent: number;
 }
+
+export interface SavedPaymentMethod {
+  id: string; // ID unik dari database (uuid/id)
+  provider: string; // DANA, PayPal, BCA, dll
+  accountName: string; // Nama pemilik
+  accountNumber: string; // Nomor rekening/HP/Email
+  isDefault: boolean; // Penanda kalo ini metode utama
+  category: "wallet" | "bank" | "crypto"; // Opsional, buat grouping icon
+}

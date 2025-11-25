@@ -49,7 +49,7 @@ async function fetchStats(endpoint: string, range: TimeRange) {
       case "perYear":
         return { value: "$45,231", subtitleKey: "perYear" };
     }
-  } else if (endpoint.includes("clicks")) {
+  } else if (endpoint.includes("referral")) {
     // Asumsi default-nya "clicks"
     switch (range) {
       case "perWeek":

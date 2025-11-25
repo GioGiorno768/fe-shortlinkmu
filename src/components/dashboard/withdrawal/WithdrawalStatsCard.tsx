@@ -1,12 +1,21 @@
+// src/components/dashboard/withdrawal/WithdrawalStatsCard.tsx
 "use client";
 
 import { motion } from "framer-motion";
-import { Wallet, Clock, CheckCircle, ArrowRight } from "lucide-react";
+import {
+  Wallet,
+  Clock,
+  CheckCircle,
+  ArrowRight,
+  TrendingUp,
+  AlertTriangle,
+  Wallet2,
+} from "lucide-react";
 import type { WithdrawalStats } from "@/types/type";
 
 interface WithdrawalStatsCardProps {
   stats: WithdrawalStats | null;
-  onOpenModal: () => void; // <--- GANTI NAMA BIAR JELAS
+  onOpenModal: () => void;
 }
 
 export default function WithdrawalStatsCard({
@@ -19,71 +28,102 @@ export default function WithdrawalStatsCard({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl p-8 shadow-sm h-full shadow-slate-500/20 border border-gray-100 relative overflow-hidden"
+      className="bg-white rounded-3xl shadow-sm shadow-slate-500/20 border border-gray-100 h-full flex flex-col relative overflow-hidden"
     >
-      {/* Dekorasi Background */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 flex flex-col md:flex-row gap-8 justify-between items-start md:items-center">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3 text-grays">
-            <div className="p-2 bg-green-50 rounded-lg text-green-600">
-              <Wallet className="w-6 h-6" />
-            </div>
-            <span className="text-[1.6em] font-medium">Available Balance</span>
-          </div>
-          <h1 className="text-[4em] font-bold text-bluelight leading-tight">
-            {formatCurrency(stats?.availableBalance || 0)}
-          </h1>
-          <p className="text-[1.4em] text-grays">
-            Minimum payout amount is <span className="font-bold">$2.00</span>
+      {/* Header Section (Judul & Tombol) */}
+      <div className="p-8 pb-4 flex justify-between items-start z-10">
+        <div>
+          <h2 className="text-[1.8em] font-bold text-shortblack flex items-center gap-2">
+            <Wallet className="w-6 h-6 text-bluelight" />
+            Finance Overview
+          </h2>
+          <p className="text-[1.3em] text-grays mt-1">
+            Manage your earnings and payouts.
           </p>
         </div>
 
-        <div className="w-full md:w-auto">
+        {/* Tombol Request Payout ditaruh di atas biar gampang dijangkau */}
+        <button
+          onClick={onOpenModal}
+          disabled={(stats?.availableBalance || 0) < 2.0}
+          className="hidden bg-bluelight text-white px-6 py-3 rounded-xl font-bold text-[1.4em] 
+                   hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
+                   disabled:opacity-50 disabled:cursor-not-allowed md:flex items-center gap-2 shadow-blue-200 shadow-md"
+        >
+          <span>Request Payout</span>
+          <ArrowRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Main Balance Section ( Tengah - Flex Grow biar ngisi ruang kosong ) */}
+      <div className="px-8  flex-1 flex flex-col justify-center z-10">
+        <div className="bg-white rounded-2xl gap-8 flex flex-col md:flex-row justify-between items-center p-6 shadow-sm shadow-slate-400/50 relative overflow-hidden">
+          {/* Dekorasi blob kecil */}
+          <div className="w-24 h-24 md:order-2 bg-blue-50 rounded-full flex items-center mr-4 justify-center border border-blue-100 shadow-inner">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-bluelight">
+              <Wallet2 className="w-8 h-8" />
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-[1.4em] font-medium text-grays mb-1 flex items-center gap-2">
+              Available Balance
+              <span className="bg-green-100 text-green-700 text-[0.8em] px-2 py-0.5 rounded-md font-bold flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" /> Ready
+              </span>
+            </p>
+            <h1 className="text-[4.5em] font-bold text-bluelight tracking-tight leading-none my-2">
+              {formatCurrency(stats?.availableBalance || 0)}
+            </h1>
+            <p className="text-[1.3em] text-grays opacity-80">
+              Minimum payout threshold:{" "}
+              <span className="font-semibold text-shortblack">$2.00</span>
+            </p>
+          </div>
+          {/* Tombol Request Payout ditaruh di atas biar gampang dijangkau */}
           <button
-            onClick={onOpenModal} // <--- PANGGIL MODAL
-            // Validasi saldo < 2 dollar tetap di sini biar tombolnya mati kalau saldo dikit
+            onClick={onOpenModal}
             disabled={(stats?.availableBalance || 0) < 2.0}
-            className="w-full md:w-auto bg-bluelight text-white px-8 py-4 rounded-2xl font-bold text-[1.6em] 
-                     hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-1 transition-all duration-300
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none
-                     flex items-center justify-center gap-3"
+            className="md:hidden lg:hidden bg-bluelight text-white px-6 py-3 rounded-xl font-bold text-[1.4em] 
+                   hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
+                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-blue-200 shadow-md"
           >
-            <span className="hugeicons--money-send-circle w-6 h-6 bg-white" />
             <span>Request Payout</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      <div className="h-px bg-gray-100 my-8" />
-
-      {/* ... (Bagian bawah sama aja) ... */}
-      <div className="grid grid-cols-2 gap-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-orange-50 rounded-xl text-orange-500">
-            <Clock className="w-6 h-6" />
+      {/* Footer Stats Grid (Bawah) */}
+      <div className="mt-auto p-8 z-10">
+        <div className="flex flex-col md:flex-row justify-between gap-8">
+          {/* Pending */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 flex-shrink-0 border border-orange-100">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[1.2em] text-grays uppercase font-semibold tracking-wider mb-0.5">
+                Pending
+              </p>
+              <p className="text-[1.8em] font-bold text-shortblack leading-none">
+                {formatCurrency(stats?.pendingWithdrawn || 0)}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-[1.2em] text-grays uppercase font-semibold tracking-wider">
-              Pending
-            </p>
-            <p className="text-[2em] font-bold text-shortblack">
-              {formatCurrency(stats?.pendingWithdrawn || 0)}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-50 rounded-xl text-bluelight">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-[1.2em] text-grays uppercase font-semibold tracking-wider">
-              Total Withdrawn
-            </p>
-            <p className="text-[2em] font-bold text-shortblack">
-              {formatCurrency(stats?.totalWithdrawn || 0)}
-            </p>
+          <div className="w-[0.15em] bg-blue-100 rounded-full"></div>
+          {/* Total Withdrawn */}
+          <div className="flex items-center gap-4 pr-10">
+            <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 flex-shrink-0 border border-green-100">
+              <CheckCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[1.2em] text-grays uppercase font-semibold tracking-wider mb-0.5">
+                Withdrawn
+              </p>
+              <p className="text-[1.8em] font-bold text-shortblack leading-none">
+                {formatCurrency(stats?.totalWithdrawn || 0)}
+              </p>
+            </div>
           </div>
         </div>
       </div>

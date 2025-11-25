@@ -11,7 +11,13 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "flagcdn.com",
       },
+      // 👇 INI YANG BENER BROK (Hapus yang 'avatar-placeholder' tadi)
+      {
+        protocol: "https",
+        hostname: "avatar.iran.liara.run",
+      },
     ],
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 };
 

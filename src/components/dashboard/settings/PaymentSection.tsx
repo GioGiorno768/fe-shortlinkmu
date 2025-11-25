@@ -1,3 +1,4 @@
+// src/components/dashboard/settings/PaymentSection.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -5,18 +6,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Save,
   Loader2,
-  Smartphone, // Icon buat E-Wallet
-  Landmark, // Icon buat Bank
-  Bitcoin, // Icon buat Crypto
+  Smartphone,
+  Landmark,
+  Bitcoin,
   ChevronDown,
   User,
+  Plus,
+  Trash2,
+  Star,
+  CheckCircle,
 } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
-import type { PaymentMethod } from "@/types/type";
 import clsx from "clsx";
+// Import tipe baru tadi
+import type { SavedPaymentMethod } from "@/types/type";
 
-// --- 1. KONFIGURASI PROVIDER (GAMPANG DI-MAINTAIN) ---
-// Di sini lu atur semua logic label, placeholder, dan opsinya.
+// --- KONFIGURASI PROVIDER (SAMA KEK KEMAREN) ---
 const PAYMENT_CONFIG = {
   wallet: {
     label: "Digital Wallet",
@@ -138,188 +143,372 @@ const PAYMENT_CONFIG = {
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
-interface PaymentSectionProps {
-  initialData: PaymentMethod | null;
-}
+// --- MOCK DATA AWAL (Nanti diganti API Fetch) ---
+const MOCK_SAVED_METHODS: SavedPaymentMethod[] = [
+  {
+    id: "pm-1",
+    provider: "PayPal",
+    accountName: "Kevin Ragil",
+    accountNumber: "kevin@example.com",
+    isDefault: true,
+    category: "wallet",
+  },
+  {
+    id: "pm-2",
+    provider: "BCA",
+    accountName: "Kevin Ragil",
+    accountNumber: "82137123",
+    isDefault: false,
+    category: "bank",
+  },
+];
 
-export default function PaymentSection({ initialData }: PaymentSectionProps) {
+export default function PaymentSection() {
   const { showAlert } = useAlert();
-  const [isLoading, setIsLoading] = useState(false);
 
-  // State Kategori Utama (Wallet / Bank / Crypto)
+  // State Data
+  const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>([]);
+  const [isLoadingList, setIsLoadingList] = useState(true);
+
+  // State Loading Action
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null); // Buat loading per card (set default/delete)
+  const [isSubmitting, setIsSubmitting] = useState(false); // Buat loading form add
+
+  // State Form
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
-
-  // State Sub-Metode (Dana / BCA / USDT)
-  // Default ambil dari initialData, atau default ke item pertama dari kategori aktif
-  const [selectedMethodId, setSelectedMethodId] = useState("");
-
-  // State Form Values
+  const [selectedMethodId, setSelectedMethodId] = useState(
+    PAYMENT_CONFIG.wallet.methods[0].id
+  );
   const [details, setDetails] = useState({
-    accountName: initialData?.accountName || "",
-    accountNumber: initialData?.accountNumber || "",
+    accountName: "",
+    accountNumber: "",
   });
 
-  // --- EFFECT: DETEKSI INITIAL DATA ---
-  // Kalau user udah punya data sebelumnya, kita harus tau dia masuk kategori mana
+  // --- 1. LOAD DATA SAAT PERTAMA BUKA ---
   useEffect(() => {
-    if (initialData?.provider) {
-      // Cari provider ini ada di kategori mana
-      let foundCategory: CategoryKey = "wallet"; // default fallback
+    const fetchMethods = async () => {
+      setIsLoadingList(true);
 
-      for (const [catKey, config] of Object.entries(PAYMENT_CONFIG)) {
-        const found = config.methods.find((m) => m.id === initialData.provider);
-        if (found) {
-          foundCategory = catKey as CategoryKey;
-          break;
-        }
-      }
+      // ============================================================
+      // [SETUP API] GET: Ambil daftar metode pembayaran user
+      // Endpoint: GET /api/user/payment-methods
+      // Response: Array of SavedPaymentMethod
+      // ============================================================
+      console.log("MANGGIL API: GET /api/user/payment-methods");
 
-      setActiveCategory(foundCategory);
-      setSelectedMethodId(initialData.provider);
-    } else {
-      // Kalau data kosong, set default ke DANA (item pertama wallet)
-      setSelectedMethodId(PAYMENT_CONFIG.wallet.methods[0].id);
+      await new Promise((r) => setTimeout(r, 800)); // Simulasi delay
+      setSavedMethods(MOCK_SAVED_METHODS);
+      setIsLoadingList(false);
+    };
+
+    fetchMethods();
+  }, []);
+
+  // --- 2. HANDLER TAMBAH METODE BARU ---
+  const handleAddMethod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    // Payload
+    const newMethodPayload = {
+      provider: selectedMethodId,
+      accountName: details.accountName,
+      accountNumber: details.accountNumber,
+      category: activeCategory,
+    };
+
+    // ============================================================
+    // [SETUP API] POST: Simpan metode pembayaran baru
+    // Endpoint: POST /api/user/payment-methods
+    // Body: { provider, accountName, accountNumber, category }
+    // Response: Object SavedPaymentMethod yang baru dibuat (termasuk ID)
+    // ============================================================
+    console.log(
+      "MANGGIL API: POST /api/user/payment-methods",
+      newMethodPayload
+    );
+
+    try {
+      await new Promise((r) => setTimeout(r, 1000)); // Simulasi
+
+      // Simulasi response sukses dari backend
+      const newMethodMock: SavedPaymentMethod = {
+        id: `pm-${Date.now()}`,
+        ...newMethodPayload,
+        isDefault: savedMethods.length === 0, // Kalo belum ada data, otomatis jadi default
+      } as SavedPaymentMethod;
+
+      setSavedMethods([...savedMethods, newMethodMock]);
+
+      // Reset Form
+      setDetails({ accountName: "", accountNumber: "" });
+      showAlert("Metode pembayaran berhasil ditambahkan!", "success");
+    } catch (err) {
+      showAlert("Gagal menambah metode pembayaran.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [initialData]);
+  };
 
-  // --- HANDLER GANTI KATEGORI ---
+  // --- 3. HANDLER SET DEFAULT ---
+  const handleSetDefault = async (id: string) => {
+    setActionLoadingId(id);
+
+    // ============================================================
+    // [SETUP API] PATCH: Set metode jadi default
+    // Endpoint: PATCH /api/user/payment-methods/{id}/set-default
+    // Note: Backend harus otomatis set isDefault=false ke metode lain milik user ini
+    // ============================================================
+    console.log(
+      `MANGGIL API: PATCH /api/user/payment-methods/${id}/set-default`
+    );
+
+    try {
+      await new Promise((r) => setTimeout(r, 800)); // Simulasi
+
+      // Update state lokal
+      setSavedMethods((prev) =>
+        prev.map((m) => ({
+          ...m,
+          isDefault: m.id === id, // Set true yg dipilih, false yg lain
+        }))
+      );
+      showAlert("Metode pembayaran utama diperbarui.", "success");
+    } catch (err) {
+      showAlert("Gagal mengatur default.", "error");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // --- 4. HANDLER DELETE ---
+  const handleDelete = async (id: string) => {
+    if (!confirm("Yakin ingin menghapus metode pembayaran ini?")) return;
+
+    setActionLoadingId(id);
+
+    // ============================================================
+    // [SETUP API] DELETE: Hapus metode pembayaran
+    // Endpoint: DELETE /api/user/payment-methods/{id}
+    // Note: Validasi di backend jangan boleh hapus kalau statusnya Default (opsional)
+    // ============================================================
+    console.log(`MANGGIL API: DELETE /api/user/payment-methods/${id}`);
+
+    try {
+      await new Promise((r) => setTimeout(r, 800)); // Simulasi
+
+      setSavedMethods((prev) => prev.filter((m) => m.id !== id));
+      showAlert("Metode pembayaran dihapus.", "info");
+    } catch (err) {
+      showAlert("Gagal menghapus data.", "error");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // --- LOGIC FORM DROPDOWN ---
   const handleCategoryChange = (category: CategoryKey) => {
     setActiveCategory(category);
-    // Reset sub-metode ke item pertama di kategori baru
     setSelectedMethodId(PAYMENT_CONFIG[category].methods[0].id);
-    // Optional: Reset nomor rekening biar ga nyangkut, tapi nama biarin
     setDetails((prev) => ({ ...prev, accountNumber: "" }));
   };
 
-  // Ambil config metode yang lagi dipilih sekarang buat nentuin label/placeholder
   const currentCategoryConfig = PAYMENT_CONFIG[activeCategory];
   const currentMethodConfig =
     currentCategoryConfig.methods.find((m) => m.id === selectedMethodId) ||
     currentCategoryConfig.methods[0];
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // Payload yang dikirim ke backend
-    const payload = {
-      provider: selectedMethodId, // Kirim ID spesifik (misal "DANA", "BCA")
-      accountName: details.accountName,
-      accountNumber: details.accountNumber,
-    };
-
-    console.log("MANGGIL API: PUT /api/user/payment-method", payload);
-
-    try {
-      await new Promise((r) => setTimeout(r, 1200));
-      showAlert(
-        `Metode pembayaran ${selectedMethodId} berhasil disimpan!`,
-        "success"
-      );
-    } catch (err) {
-      showAlert("Gagal menyimpan data.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
-    >
-      <h2 className="text-[2em] font-bold text-shortblack mb-8">
-        Withdrawal Method
-      </h2>
+    <div className="space-y-8">
+      {/* === BAGIAN 1: LIST KARTU PEMBAYARAN === */}
+      <div className="space-y-4">
+        <h2 className="text-[2em] font-bold text-shortblack">Saved Methods</h2>
 
-      <form onSubmit={handleSave} className="space-y-8 max-w-3xl">
-        {/* 1. PILIH KATEGORI UTAMA */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
-            const config = PAYMENT_CONFIG[key];
-            const isActive = activeCategory === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => handleCategoryChange(key)}
-                className={clsx(
-                  "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all duration-200",
-                  isActive
-                    ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20 ring-offset-2"
-                    : "border-gray-100 bg-white text-grays hover:border-blue-200 hover:bg-slate-50"
-                )}
-              >
-                <config.icon
-                  className={clsx("w-8 h-8", isActive && "animate-bounce")}
+        {isLoadingList ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
+          </div>
+        ) : savedMethods.length === 0 ? (
+          <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-3xl text-grays">
+            <p className="text-[1.4em]">
+              Belum ada metode pembayaran yang disimpan.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AnimatePresence>
+              {savedMethods.map((method) => (
+                <motion.div
+                  key={method.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className={clsx(
+                    "relative p-6 rounded-3xl border-2 transition-all duration-300 shadow-sm",
+                    method.isDefault
+                      ? "border-bluelight bg-white"
+                      : "border-gray-100 bg-white hover:border-blue-200"
+                  )}
+                >
+                  {/* Label Default */}
+                  {method.isDefault && (
+                    <div className="absolute top-0 right-0 bg-bluelight text-white text-[1.1em] px-4 py-1 rounded-bl-2xl rounded-tr-2xl font-bold flex items-center gap-1 shadow-sm">
+                      <Star className="w-3 h-3 fill-current" /> Default
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="p-3 rounded-2xl bg-blues text-bluelight">
+                      {/* Logic Icon Sederhana */}
+                      {method.category === "bank" ? (
+                        <Landmark className="w-6 h-6" />
+                      ) : method.category === "crypto" ? (
+                        <Bitcoin className="w-6 h-6" />
+                      ) : (
+                        <Smartphone className="w-6 h-6" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[1.6em] font-bold text-shortblack">
+                        {method.provider}
+                      </h3>
+                      <p className="text-[1.4em] text-grays truncate">
+                        {method.accountName}
+                      </p>
+                      <p className="text-[1.3em] font-mono text-shortblack mt-1 break-all">
+                        {method.accountNumber}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/50">
+                    {!method.isDefault && (
+                      <button
+                        onClick={() => handleSetDefault(method.id)}
+                        disabled={actionLoadingId === method.id}
+                        className="text-[1.3em] font-semibold text-bluelight hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {actionLoadingId === method.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        Set Default
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => handleDelete(method.id)}
+                      disabled={actionLoadingId === method.id}
+                      className="text-[1.3em] font-semibold text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {actionLoadingId === method.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                      Delete
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+      </div>
+
+      <div className="h-px bg-gray-200 my-8" />
+
+      {/* === BAGIAN 2: FORM TAMBAH BARU === */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
+      >
+        <h2 className="text-[2em] font-bold text-shortblack mb-8 flex items-center gap-3">
+          <Plus className="w-6 h-6 text-bluelight" />
+          Add New Method
+        </h2>
+
+        <form onSubmit={handleAddMethod} className="space-y-8 max-w-3xl">
+          {/* 1. PILIH KATEGORI UTAMA */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
+              const config = PAYMENT_CONFIG[key];
+              const isActive = activeCategory === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleCategoryChange(key)}
+                  className={clsx(
+                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all duration-200",
+                    isActive
+                      ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20 ring-offset-2"
+                      : "border-gray-100 bg-white text-grays hover:border-blue-200 hover:bg-slate-50"
+                  )}
+                >
+                  <config.icon
+                    className={clsx("w-8 h-8", isActive && "animate-bounce")}
+                  />
+                  <span className="text-[1.4em] font-bold">{config.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 2. AREA INPUT */}
+          <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6 relative overflow-hidden">
+            {/* Dropdown Sub-Metode */}
+            <div className="space-y-2 relative z-10">
+              <label className="text-[1.4em] font-bold text-shortblack">
+                Select Provider
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedMethodId}
+                  onChange={(e) => setSelectedMethodId(e.target.value)}
+                  className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer hover:border-bluelight transition-colors"
+                >
+                  {currentCategoryConfig.methods.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-grays pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="h-px bg-blue-200/50 my-4"></div>
+
+            {/* Input Account Name */}
+            <div className="space-y-2 relative z-10">
+              <label className="text-[1.4em] font-medium text-grays">
+                Account Name (Holder)
+              </label>
+              <div className="relative">
+                <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
+                <input
+                  type="text"
+                  value={details.accountName}
+                  onChange={(e) =>
+                    setDetails({ ...details, accountName: e.target.value })
+                  }
+                  className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/50 text-[1.5em] bg-white/80 focus:bg-white transition-colors"
+                  placeholder="e.g. Kevin Ragil"
+                  required
                 />
-                <span className="text-[1.4em] font-bold">{config.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 2. AREA DINAMIS (DROPDOWN & INPUT) */}
-        <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6 relative overflow-hidden">
-          {/* Dekorasi Background */}
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/40 rounded-full blur-3xl pointer-events-none"></div>
-
-          {/* --- DROPDOWN SUB-METODE --- */}
-          <div className="space-y-2 relative z-10">
-            <label className="text-[1.4em] font-bold text-shortblack flex items-center gap-2">
-              Select {currentCategoryConfig.label}
-            </label>
-            <div className="relative">
-              <select
-                value={selectedMethodId}
-                onChange={(e) => setSelectedMethodId(e.target.value)}
-                className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer hover:border-bluelight transition-colors"
-              >
-                {currentCategoryConfig.methods.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              {/* Custom Chevron Icon */}
-              <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-grays pointer-events-none" />
+              </div>
             </div>
-          </div>
 
-          <div className="h-px bg-blue-200/50 my-4"></div>
-
-          {/* --- INPUT ACCOUNT NAME (SELALU ADA) --- */}
-          <div className="space-y-2 relative z-10">
-            <label className="text-[1.4em] font-medium text-grays">
-              Account Name (Holder)
-            </label>
-            <div className="relative">
-              <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
-              <input
-                type="text"
-                value={details.accountName}
-                onChange={(e) =>
-                  setDetails({ ...details, accountName: e.target.value })
-                }
-                className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/50 text-[1.5em] bg-white/80 focus:bg-white transition-colors"
-                placeholder="e.g. Kevin Ragil"
-                required
-              />
-            </div>
-          </div>
-
-          {/* --- INPUT DINAMIS (NOMOR/EMAIL/WALLET) --- */}
-          <div className="space-y-2 relative z-10">
-            <label className="text-[1.4em] font-medium text-grays">
-              {currentMethodConfig.inputLabel}
-            </label>
-            <motion.div
-              key={currentMethodConfig.id} // Biar ada animasi pas ganti metode
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2 }}
-            >
+            {/* Input Account Number */}
+            <div className="space-y-2 relative z-10">
+              <label className="text-[1.4em] font-medium text-grays">
+                {currentMethodConfig.inputLabel}
+              </label>
               <input
                 type={currentMethodConfig.inputType}
                 value={details.accountNumber}
@@ -330,25 +519,25 @@ export default function PaymentSection({ initialData }: PaymentSectionProps) {
                 placeholder={currentMethodConfig.placeholder}
                 required
               />
-            </motion.div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex justify-end pt-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200 hover:-translate-y-1"
-          >
-            {isLoading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <Save className="w-6 h-6" />
-            )}
-            Save Information
-          </button>
-        </div>
-      </form>
-    </motion.div>
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200 hover:-translate-y-1"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <Save className="w-6 h-6" />
+              )}
+              Save Method
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
   );
 }

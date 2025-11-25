@@ -8,7 +8,9 @@ import {
   BanknoteArrowUp,
   MousePointerClick,
   Eye,
-  DollarSign, // Kita pake ikon dollar buat CPM
+  DollarSign,
+  UserPlus,
+  UserPlus2, // Kita pake ikon dollar buat CPM
 } from "lucide-react";
 import TopCountriesCard from "@/components/dashboard/TopCountriesCard";
 import TopReferrersCard from "@/components/dashboard/TopReferrersCard";
@@ -31,16 +33,6 @@ export default function AnalyticsPage() {
       apiEndpoint: "/api/stats/earnings", // <-- Pastiin endpoint ini ada
     },
     {
-      icon: MousePointerClick,
-      color: [
-        "text-darkpurple-dashboard",
-        "bg-lightpurple-dashboard",
-        "border-darkpurple-dashboard",
-      ],
-      label: t("totalClicks"),
-      apiEndpoint: "/api/stats/clicks", // <-- Pastiin endpoint ini ada
-    },
-    {
       icon: Eye,
       color: [
         "text-darkgreen-dashboard",
@@ -49,6 +41,16 @@ export default function AnalyticsPage() {
       ],
       label: t("totalViews"),
       apiEndpoint: "/api/stats/totalViews", // <-- Pastiin endpoint ini ada
+    },
+    {
+      icon: UserPlus2,
+      color: [
+        "text-darkgreen-dashboard",
+        "bg-lightgreen-dashboard",
+        "border-darkgreen-dashboard",
+      ],
+      label: t("referral"),
+      apiEndpoint: "/api/stats/referral", // <-- Pastiin endpoint ini ada
     },
     // Ini card baru yang kita tambahin
     {
