@@ -148,6 +148,7 @@ export interface UserProfile {
 export interface SecuritySettings {
   twoFactorEnabled: boolean;
   lastPasswordChange: string; // tgl terakhir ganti
+  isSocialLogin: boolean; // <--- TAMBAHIN INI BROK
 }
 
 export interface NotificationSettings {

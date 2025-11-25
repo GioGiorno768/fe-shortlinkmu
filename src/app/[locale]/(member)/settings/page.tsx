@@ -12,6 +12,7 @@ import type {
   SecuritySettings,
   PaymentMethod,
   NotificationSettings,
+  SavedPaymentMethod,
 } from "@/types/type";
 import ProfileSection from "@/components/dashboard/settings/ProfileSection";
 import SecuritySection from "@/components/dashboard/settings/SecuritySection";
@@ -34,12 +35,26 @@ async function fetchUserSettings() {
     security: {
       twoFactorEnabled: false,
       lastPasswordChange: "2025-10-01",
+      isSocialLogin: false, // <--- SET 'true' KALAU MAU SIMULASI USER GOOGLE
     } as SecuritySettings,
-    payment: {
-      provider: "PayPal",
-      accountName: "Kevin Ragil",
-      accountNumber: "kevin***@gmail.com",
-    } as PaymentMethod,
+    paymentMethods: [
+      {
+        id: "pm-1",
+        provider: "PayPal",
+        accountName: "Kevin Ragil",
+        accountNumber: "kevin@example.com",
+        isDefault: true,
+        category: "wallet",
+      },
+      {
+        id: "pm-2",
+        provider: "BCA",
+        accountName: "Kevin Ragil",
+        accountNumber: "82137123",
+        isDefault: false,
+        category: "bank",
+      },
+    ] as SavedPaymentMethod[], // <-- Casting ke tipe baru
     notifications: {
       emailLogin: true,
       emailWithdrawal: true,
@@ -141,8 +156,9 @@ export default function SettingsPage() {
               {activeTab === "security" && (
                 <SecuritySection initialData={data?.security} />
               )}
+              {/* 👇 PASSING DATA LEWAT PROPS */}
               {activeTab === "payment" && (
-                <PaymentSection initialData={data?.payment} />
+                <PaymentSection initialMethods={data?.paymentMethods || []} />
               )}
               {activeTab === "notifications" && (
                 <NotificationSection initialData={data?.notifications} />

@@ -1,62 +1,81 @@
+// src/components/dashboard/NotificationDropdown.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
-  Info,
   AlertTriangle,
   CheckCircle,
-  X,
   Check,
   Megaphone,
   ShieldAlert,
   ArrowLeft,
   Trash2,
+  Filter, // Icon Filter
+  ChevronDown,
+  Link2,
+  Wallet,
+  User,
+  Calendar,
 } from "lucide-react";
 import clsx from "clsx";
 import type { NotificationItem } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
 
-// --- MOCK API ---
-async function fetchNotifications(): Promise<NotificationItem[]> {
+// --- EXTEND TIPE DATA LOKAL (Biar ada category) ---
+interface ExtendedNotificationItem extends NotificationItem {
+  category: "link" | "payment" | "account" | "event" | "system";
+}
+
+// --- MOCK API (Update Data dengan Kategori) ---
+async function fetchNotifications(): Promise<ExtendedNotificationItem[]> {
   await new Promise((resolve) => setTimeout(resolve, 500));
   return [
     {
       id: "1",
       type: "warning",
+      category: "system",
       title: "Maintenance Scheduled",
-      message:
-        "Sistem akan maintenance pada jam 02:00 - 04:00 WIB untuk peningkatan performa server. Selama waktu ini, dashboard mungkin tidak dapat diakses, namun link Anda akan tetap bekerja normal. Harap bersiap.",
+      message: "Sistem akan maintenance pada jam 02:00 - 04:00 WIB.",
       isRead: false,
       timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     },
     {
       id: "2",
       type: "success",
+      category: "payment",
       title: "Payout Approved",
-      message:
-        "Penarikan dana sebesar $15.50 telah berhasil dikirim ke PayPal Anda. Silakan cek email atau akun PayPal Anda untuk konfirmasi penerimaan dana.",
+      message: "Penarikan dana $15.50 berhasil dikirim ke PayPal.",
       isRead: false,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
     },
     {
       id: "3",
       type: "info",
+      category: "event",
       title: "Event Double CPM!",
-      message:
-        "Nikmati kenaikan CPM 20% khusus weekend ini! Promo berlaku untuk semua negara traffic. Gas traffic sekarang sebelum event berakhir hari Minggu jam 23:59.",
+      message: "Nikmati kenaikan CPM 20% khusus weekend ini!",
       isRead: true,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     },
     {
       id: "4",
       type: "alert",
-      title: "Percobaan Login Mencurigakan",
-      message:
-        "Kami mendeteksi login dari IP tidak dikenal (192.168.X.X - Russia). Jika ini bukan Anda, segera ganti password dan aktifkan 2FA di menu Settings.",
+      category: "account",
+      title: "Login Mencurigakan",
+      message: "Login dari IP tidak dikenal (Russia). Segera cek akun.",
       isRead: true,
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    },
+    {
+      id: "5",
+      type: "info",
+      category: "link",
+      title: "Link Populer",
+      message: "Link 'short.link/xyz' tembus 1000 view hari ini!",
+      isRead: false,
+      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
     },
   ];
 }
@@ -66,26 +85,55 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
+// Opsi Filter
+const FILTER_OPTIONS = [
+  { id: "all", label: "Semua", icon: null },
+  { id: "link", label: "Link", icon: Link2 },
+  { id: "payment", label: "Pembayaran", icon: Wallet },
+  { id: "account", label: "Akun", icon: User },
+  { id: "event", label: "Event", icon: Calendar },
+];
+
 export default function NotificationDropdown({
   isOpen,
   onClose,
 }: NotificationDropdownProps) {
   const { showAlert } = useAlert();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notifications, setNotifications] = useState<
+    ExtendedNotificationItem[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // State untuk Detail View
-  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(
-    null
-  );
+  // State Filter
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
+
+  const [selectedNotif, setSelectedNotif] =
+    useState<ExtendedNotificationItem | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadData();
-      // Reset ke list view pas dibuka ulang
       setSelectedNotif(null);
+      setActiveFilter("all"); // Reset filter pas dibuka
+      setIsFilterOpen(false);
     }
   }, [isOpen]);
+
+  // Tutup dropdown filter kalau klik di luar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -99,21 +147,19 @@ export default function NotificationDropdown({
     }
   };
 
-  // Handler Klik Item (Masuk ke Detail & Tandai Baca)
-  const handleItemClick = (notif: NotificationItem) => {
-    // Tandai sudah dibaca di state lokal
+  // Logic Filtering
+  const filteredNotifications = notifications.filter((n) => {
+    if (activeFilter === "all") return true;
+    return n.category === activeFilter;
+  });
+
+  const handleItemClick = (notif: ExtendedNotificationItem) => {
     if (!notif.isRead) {
       setNotifications((prev) =>
         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
       );
     }
-    // Set notif aktif buat nampilin detail
     setSelectedNotif(notif);
-  };
-
-  // Handler Back ke List
-  const handleBack = () => {
-    setSelectedNotif(null);
   };
 
   const handleMarkAllRead = () => {
@@ -123,10 +169,11 @@ export default function NotificationDropdown({
 
   const handleDelete = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    if (selectedNotif?.id === id) setSelectedNotif(null); // Balik ke list kalau yg dihapus lagi dibuka
+    if (selectedNotif?.id === id) setSelectedNotif(null);
     showAlert("Notifikasi dihapus.", "info");
   };
 
+  // Helper UI (Sama kayak sebelumnya + Icon Kategori)
   const getIcon = (type: string) => {
     switch (type) {
       case "warning":
@@ -156,17 +203,15 @@ export default function NotificationDropdown({
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return "Baru saja";
-    if (diffInSeconds < 3600)
-      return `${Math.floor(diffInSeconds / 60)} menit lalu`;
-    if (diffInSeconds < 86400)
-      return `${Math.floor(diffInSeconds / 3600)} jam lalu`;
-    return `${Math.floor(diffInSeconds / 86400)} hari lalu`;
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return "Baru saja";
+    if (diff < 3600) return `${Math.floor(diff / 60)}m lalu`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}j lalu`;
+    return `${Math.floor(diff / 86400)}h lalu`;
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const activeLabel = FILTER_OPTIONS.find((f) => f.id === activeFilter)?.label;
 
   return (
     <AnimatePresence>
@@ -176,15 +221,12 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute right-[-1em] sm:right-0 top-[7em] w-[300px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col"
-          // Penting: Kasih tinggi fix atau max-height biar transisi smooth
-          style={{ height: "500px", maxHeight: "80vh" }}
+          className="absolute right-[-1em] sm:right-0 top-[7em] w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col"
+          style={{ height: "550px", maxHeight: "80vh" }}
         >
           <AnimatePresence mode="popLayout" initial={false}>
             {selectedNotif ? (
-              /* ========================== */
-              /* === DETAIL VIEW (SLIDE) === */
-              /* ========================== */
+              /* === DETAIL VIEW === */
               <motion.div
                 key="detail"
                 initial={{ x: "100%", opacity: 0 }}
@@ -193,11 +235,10 @@ export default function NotificationDropdown({
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="absolute inset-0 flex flex-col bg-white h-full"
               >
-                {/* Header Detail */}
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4 bg-white flex-shrink-0">
                   <button
-                    onClick={handleBack}
-                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-grays transition-colors"
+                    onClick={() => setSelectedNotif(null)}
+                    className="p-2 -ml-2 rounded-full hover:bg-slate-100 text-grays"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
@@ -205,8 +246,6 @@ export default function NotificationDropdown({
                     Detail
                   </h3>
                 </div>
-
-                {/* Content Detail */}
                 <div className="p-8 overflow-y-auto custom-scrollbar-minimal flex-1">
                   <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -222,7 +261,6 @@ export default function NotificationDropdown({
                         {formatTime(selectedNotif.timestamp)}
                       </span>
                     </div>
-
                     <div>
                       <h2 className="text-[2em] font-bold text-shortblack mb-4 leading-tight">
                         {selectedNotif.title}
@@ -233,28 +271,23 @@ export default function NotificationDropdown({
                     </div>
                   </div>
                 </div>
-
-                {/* Footer Detail */}
                 <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
                   <button
                     onClick={() => handleDelete(selectedNotif.id)}
-                    className="text-[1.3em] font-medium text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    className="text-[1.3em] font-medium text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg flex items-center gap-2"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    Hapus
+                    <Trash2 className="w-4 h-4" /> Hapus
                   </button>
                   <button
-                    onClick={handleBack}
-                    className="text-[1.3em] font-semibold text-shortblack bg-white border border-gray-200 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    onClick={() => setSelectedNotif(null)}
+                    className="text-[1.3em] font-semibold text-shortblack bg-white border border-gray-200 px-6 py-2 rounded-lg hover:bg-gray-50"
                   >
                     Kembali
                   </button>
                 </div>
               </motion.div>
             ) : (
-              /* ========================== */
-              /* === LIST VIEW (DEFAULT) === */
-              /* ========================== */
+              /* === LIST VIEW === */
               <motion.div
                 key="list"
                 initial={{ x: "-20%", opacity: 0 }}
@@ -263,48 +296,121 @@ export default function NotificationDropdown({
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="absolute inset-0 flex flex-col bg-white h-full"
               >
-                {/* Header List */}
-                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white flex-shrink-0">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-[1.6em] font-bold text-shortblack">
-                      Notifications
-                    </h3>
+                {/* HEADER UTAMA */}
+                <div className="px-6 pt-5 pb-2 bg-white flex-shrink-0 z-20">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-[1.8em] font-bold text-shortblack">
+                        Notifications
+                      </h3>
+                      {unreadCount > 0 && (
+                        <span className="bg-red-500 text-white text-[1.1em] font-bold px-2 py-0.5 rounded-full">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </div>
                     {unreadCount > 0 && (
-                      <span className="bg-red-500 text-white text-[1.1em] font-bold px-2 py-0.5 rounded-full">
-                        {unreadCount}
-                      </span>
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-[1.2em] font-medium text-bluelight hover:underline flex items-center gap-1"
+                      >
+                        <Check className="w-3 h-3" /> Mark read
+                      </button>
                     )}
                   </div>
-                  {unreadCount > 0 && (
+
+                  {/* --- FILTER DROPDOWN BARU --- */}
+                  <div className="relative pb-2" ref={filterRef}>
                     <button
-                      onClick={handleMarkAllRead}
-                      className="text-[1.2em] font-medium text-bluelight hover:underline flex items-center gap-1"
+                      onClick={() => setIsFilterOpen(!isFilterOpen)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blues rounded-xl text-[1.3em] font-medium text-shortblack hover:bg-blue-100 transition-colors w-full justify-between border border-blue-200/50"
                     >
-                      <Check className="w-3 h-3" />
-                      Mark read
+                      <div className="flex items-center gap-2">
+                        <Filter className="w-4 h-4 text-bluelight" />
+                        <span className="text-grays">Filter:</span>
+                        <span className="font-bold text-bluelight">
+                          {activeLabel}
+                        </span>
+                      </div>
+                      <ChevronDown
+                        className={`w-4 h-4 text-grays transition-transform ${
+                          isFilterOpen ? "rotate-180" : ""
+                        }`}
+                      />
                     </button>
-                  )}
+
+                    <AnimatePresence>
+                      {isFilterOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg shadow-slate-200 border border-gray-100 p-2 z-30"
+                        >
+                          {FILTER_OPTIONS.map((option) => (
+                            <button
+                              key={option.id}
+                              onClick={() => {
+                                setActiveFilter(option.id);
+                                setIsFilterOpen(false);
+                              }}
+                              className={clsx(
+                                "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-[1.3em] transition-colors text-left",
+                                activeFilter === option.id
+                                  ? "bg-blue-50 text-bluelight font-semibold"
+                                  : "text-shortblack hover:bg-gray-50"
+                              )}
+                            >
+                              {option.icon && (
+                                <option.icon className="w-4 h-4" />
+                              )}
+                              <span className={!option.icon ? "ml-7" : ""}>
+                                {option.label}
+                              </span>
+                              {activeFilter === option.id && (
+                                <Check className="w-4 h-4 ml-auto" />
+                              )}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  {/* --------------------------- */}
                 </div>
 
-                {/* Content List */}
+                <div className="h-px bg-gray-100 w-full"></div>
+
+                {/* CONTENT LIST */}
                 <div
                   onWheel={(e) => e.stopPropagation()}
-                  className="overflow-y-auto custom-scrollbar-minimal flex-1"
+                  className="overflow-y-auto custom-scrollbar-minimal flex-1 bg-white"
                 >
                   {isLoading ? (
                     <div className="p-8 text-center text-grays text-[1.4em]">
                       Loading...
                     </div>
-                  ) : notifications.length === 0 ? (
+                  ) : filteredNotifications.length === 0 ? (
                     <div className="p-8 text-center flex flex-col items-center gap-3 mt-10">
-                      <Bell className="w-12 h-12 text-gray-200" />
+                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
+                        <Filter className="w-8 h-8 text-gray-300" />
+                      </div>
                       <p className="text-grays text-[1.4em]">
-                        Tidak ada notifikasi baru.
+                        Tidak ada notifikasi untuk kategori <b>{activeLabel}</b>
+                        .
                       </p>
+                      {activeFilter !== "all" && (
+                        <button
+                          onClick={() => setActiveFilter("all")}
+                          className="text-bluelight font-semibold text-[1.3em] hover:underline"
+                        >
+                          Lihat Semua
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-50">
-                      {notifications.map((item) => (
+                      {filteredNotifications.map((item) => (
                         <div
                           key={item.id}
                           className={clsx(
@@ -320,12 +426,10 @@ export default function NotificationDropdown({
                                 getBgColor(item.type)
                               )}
                             >
-                              {/* Icon di list lebih kecil dikit */}
                               <div className="scale-75">
                                 {getIcon(item.type)}
                               </div>
                             </div>
-
                             <div className="flex-1 min-w-0">
                               <div className="flex justify-between items-start mb-1">
                                 <h4
@@ -345,9 +449,14 @@ export default function NotificationDropdown({
                               <p className="text-[1.3em] text-grays leading-snug mb-2 line-clamp-2">
                                 {item.message}
                               </p>
-                              <p className="text-[1.1em] text-gray-400 font-medium">
-                                {formatTime(item.timestamp)}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[1em] font-bold px-2 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-wide">
+                                  {item.category}
+                                </span>
+                                <span className="text-[1.1em] text-gray-400 font-medium">
+                                  {formatTime(item.timestamp)}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -356,7 +465,7 @@ export default function NotificationDropdown({
                   )}
                 </div>
 
-                {/* Footer List */}
+                {/* FOOTER */}
                 <div className="p-3 bg-slate-50 border-t border-gray-100 text-center flex-shrink-0">
                   <button
                     onClick={onClose}

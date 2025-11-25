@@ -76,13 +76,13 @@ export default function Header({
         left-0
         ${isCollapsed ? "custom:left-20" : "custom:left-64"}
         transition-all duration-300 ease-in-out z-30
-        px-4 custom:px-8 pt-6
+        px-4 custom:px-8 sm:pt-6 pt-3
         font-figtree bg-slate-50
       `}
     >
-      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between px-[1em] lg:px-[4em] py-[2em] text-[10px] bg-white">
+      <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between md:px-[2em] px-[1em] lg:px-[4em] py-[1em] md:py-[2em] text-[10px] bg-white">
         {/* Left Section */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-10">
           <button
             onClick={openMobileSidebar}
             className="hover:text-slate-600 rounded-lg transition-colors w-[3.5em] ml-[1em] h-[3.5en] flex justify-center items-center custom:hidden"
@@ -153,9 +153,9 @@ export default function Header({
             className="custom:w-[5em] custom:h-[5em] w-[4em] h-[4em] flex justify-center items-center rounded-full custom:hover:-translate-y-1 transition-all duration-300 ease-in-out"
           >
             {isDark ? (
-              <span className="solar--moon-stars-broken custom:w-[2.8em] custom:h-[2.8em] w-[1.8em] h-[1.8em] bg-bluelight " />
+              <span className="solar--moon-stars-broken custom:w-[2.8em] custom:h-[2.8em] w-[2.5em] h-[2.5em] bg-bluelight " />
             ) : (
-              <span className="solar--sun-broken custom:w-[3em] custom:h-[3em] w-[2em] h-[2em] bg-bluelight " />
+              <span className="solar--sun-broken custom:w-[3em] custom:h-[3em] w-[3em] h-[3em] bg-bluelight " />
             )}
           </button>
 

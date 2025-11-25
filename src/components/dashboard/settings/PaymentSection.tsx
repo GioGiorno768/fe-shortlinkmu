@@ -1,7 +1,7 @@
 // src/components/dashboard/settings/PaymentSection.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react"; // Hapus useEffect karena gak perlu fetch awal
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Save,
@@ -18,10 +18,9 @@ import {
 } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
 import clsx from "clsx";
-// Import tipe baru tadi
 import type { SavedPaymentMethod } from "@/types/type";
 
-// --- KONFIGURASI PROVIDER (SAMA KEK KEMAREN) ---
+// --- KONFIGURASI PROVIDER (TETAP SAMA) ---
 const PAYMENT_CONFIG = {
   wallet: {
     label: "Digital Wallet",
@@ -143,36 +142,23 @@ const PAYMENT_CONFIG = {
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
-// --- MOCK DATA AWAL (Nanti diganti API Fetch) ---
-const MOCK_SAVED_METHODS: SavedPaymentMethod[] = [
-  {
-    id: "pm-1",
-    provider: "PayPal",
-    accountName: "Kevin Ragil",
-    accountNumber: "kevin@example.com",
-    isDefault: true,
-    category: "wallet",
-  },
-  {
-    id: "pm-2",
-    provider: "BCA",
-    accountName: "Kevin Ragil",
-    accountNumber: "82137123",
-    isDefault: false,
-    category: "bank",
-  },
-];
+// 👇 UBAH PROPS DISINI
+interface PaymentSectionProps {
+  initialMethods: SavedPaymentMethod[];
+}
 
-export default function PaymentSection() {
+export default function PaymentSection({
+  initialMethods,
+}: PaymentSectionProps) {
   const { showAlert } = useAlert();
 
-  // State Data
-  const [savedMethods, setSavedMethods] = useState<SavedPaymentMethod[]>([]);
-  const [isLoadingList, setIsLoadingList] = useState(true);
+  // State Data (Langsung diisi dari props)
+  const [savedMethods, setSavedMethods] =
+    useState<SavedPaymentMethod[]>(initialMethods);
 
   // State Loading Action
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null); // Buat loading per card (set default/delete)
-  const [isSubmitting, setIsSubmitting] = useState(false); // Buat loading form add
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State Form
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
@@ -184,32 +170,11 @@ export default function PaymentSection() {
     accountNumber: "",
   });
 
-  // --- 1. LOAD DATA SAAT PERTAMA BUKA ---
-  useEffect(() => {
-    const fetchMethods = async () => {
-      setIsLoadingList(true);
-
-      // ============================================================
-      // [SETUP API] GET: Ambil daftar metode pembayaran user
-      // Endpoint: GET /api/user/payment-methods
-      // Response: Array of SavedPaymentMethod
-      // ============================================================
-      console.log("MANGGIL API: GET /api/user/payment-methods");
-
-      await new Promise((r) => setTimeout(r, 800)); // Simulasi delay
-      setSavedMethods(MOCK_SAVED_METHODS);
-      setIsLoadingList(false);
-    };
-
-    fetchMethods();
-  }, []);
-
   // --- 2. HANDLER TAMBAH METODE BARU ---
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Payload
     const newMethodPayload = {
       provider: selectedMethodId,
       accountName: details.accountName,
@@ -217,12 +182,7 @@ export default function PaymentSection() {
       category: activeCategory,
     };
 
-    // ============================================================
-    // [SETUP API] POST: Simpan metode pembayaran baru
-    // Endpoint: POST /api/user/payment-methods
-    // Body: { provider, accountName, accountNumber, category }
-    // Response: Object SavedPaymentMethod yang baru dibuat (termasuk ID)
-    // ============================================================
+    // [API Call] POST /api/user/payment-methods
     console.log(
       "MANGGIL API: POST /api/user/payment-methods",
       newMethodPayload
@@ -231,16 +191,13 @@ export default function PaymentSection() {
     try {
       await new Promise((r) => setTimeout(r, 1000)); // Simulasi
 
-      // Simulasi response sukses dari backend
       const newMethodMock: SavedPaymentMethod = {
         id: `pm-${Date.now()}`,
         ...newMethodPayload,
-        isDefault: savedMethods.length === 0, // Kalo belum ada data, otomatis jadi default
+        isDefault: savedMethods.length === 0,
       } as SavedPaymentMethod;
 
       setSavedMethods([...savedMethods, newMethodMock]);
-
-      // Reset Form
       setDetails({ accountName: "", accountNumber: "" });
       showAlert("Metode pembayaran berhasil ditambahkan!", "success");
     } catch (err) {
@@ -254,11 +211,7 @@ export default function PaymentSection() {
   const handleSetDefault = async (id: string) => {
     setActionLoadingId(id);
 
-    // ============================================================
-    // [SETUP API] PATCH: Set metode jadi default
-    // Endpoint: PATCH /api/user/payment-methods/{id}/set-default
-    // Note: Backend harus otomatis set isDefault=false ke metode lain milik user ini
-    // ============================================================
+    // [API Call] PATCH /api/user/payment-methods/{id}/set-default
     console.log(
       `MANGGIL API: PATCH /api/user/payment-methods/${id}/set-default`
     );
@@ -266,11 +219,10 @@ export default function PaymentSection() {
     try {
       await new Promise((r) => setTimeout(r, 800)); // Simulasi
 
-      // Update state lokal
       setSavedMethods((prev) =>
         prev.map((m) => ({
           ...m,
-          isDefault: m.id === id, // Set true yg dipilih, false yg lain
+          isDefault: m.id === id,
         }))
       );
       showAlert("Metode pembayaran utama diperbarui.", "success");
@@ -287,11 +239,7 @@ export default function PaymentSection() {
 
     setActionLoadingId(id);
 
-    // ============================================================
-    // [SETUP API] DELETE: Hapus metode pembayaran
-    // Endpoint: DELETE /api/user/payment-methods/{id}
-    // Note: Validasi di backend jangan boleh hapus kalau statusnya Default (opsional)
-    // ============================================================
+    // [API Call] DELETE /api/user/payment-methods/{id}
     console.log(`MANGGIL API: DELETE /api/user/payment-methods/${id}`);
 
     try {
@@ -306,7 +254,6 @@ export default function PaymentSection() {
     }
   };
 
-  // --- LOGIC FORM DROPDOWN ---
   const handleCategoryChange = (category: CategoryKey) => {
     setActiveCategory(category);
     setSelectedMethodId(PAYMENT_CONFIG[category].methods[0].id);
@@ -320,15 +267,12 @@ export default function PaymentSection() {
 
   return (
     <div className="space-y-8">
-      {/* === BAGIAN 1: LIST KARTU PEMBAYARAN === */}
+      {/* === LIST KARTU PEMBAYARAN === */}
       <div className="space-y-4">
         <h2 className="text-[2em] font-bold text-shortblack">Saved Methods</h2>
 
-        {isLoadingList ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
-          </div>
-        ) : savedMethods.length === 0 ? (
+        {/* Gak perlu loading state disini karena data udah dateng dari props */}
+        {savedMethods.length === 0 ? (
           <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-3xl text-grays">
             <p className="text-[1.4em]">
               Belum ada metode pembayaran yang disimpan.
@@ -347,11 +291,10 @@ export default function PaymentSection() {
                   className={clsx(
                     "relative p-6 rounded-3xl border-2 transition-all duration-300 shadow-sm",
                     method.isDefault
-                      ? "border-bluelight bg-white"
+                      ? "border-bluelight bg-blue-50/30"
                       : "border-gray-100 bg-white hover:border-blue-200"
                   )}
                 >
-                  {/* Label Default */}
                   {method.isDefault && (
                     <div className="absolute top-0 right-0 bg-bluelight text-white text-[1.1em] px-4 py-1 rounded-bl-2xl rounded-tr-2xl font-bold flex items-center gap-1 shadow-sm">
                       <Star className="w-3 h-3 fill-current" /> Default
@@ -360,7 +303,6 @@ export default function PaymentSection() {
 
                   <div className="flex items-start gap-4 mb-4">
                     <div className="p-3 rounded-2xl bg-blues text-bluelight">
-                      {/* Logic Icon Sederhana */}
                       {method.category === "bank" ? (
                         <Landmark className="w-6 h-6" />
                       ) : method.category === "crypto" ? (
@@ -382,7 +324,6 @@ export default function PaymentSection() {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/50">
                     {!method.isDefault && (
                       <button
@@ -421,7 +362,7 @@ export default function PaymentSection() {
 
       <div className="h-px bg-gray-200 my-8" />
 
-      {/* === BAGIAN 2: FORM TAMBAH BARU === */}
+      {/* === FORM TAMBAH BARU (TETAP SAMA) === */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -433,7 +374,7 @@ export default function PaymentSection() {
         </h2>
 
         <form onSubmit={handleAddMethod} className="space-y-8 max-w-3xl">
-          {/* 1. PILIH KATEGORI UTAMA */}
+          {/* ... (Bagian Form sama persis kayak kode sebelumnya) ... */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
               const config = PAYMENT_CONFIG[key];
@@ -459,9 +400,7 @@ export default function PaymentSection() {
             })}
           </div>
 
-          {/* 2. AREA INPUT */}
           <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6 relative overflow-hidden">
-            {/* Dropdown Sub-Metode */}
             <div className="space-y-2 relative z-10">
               <label className="text-[1.4em] font-bold text-shortblack">
                 Select Provider
@@ -484,7 +423,6 @@ export default function PaymentSection() {
 
             <div className="h-px bg-blue-200/50 my-4"></div>
 
-            {/* Input Account Name */}
             <div className="space-y-2 relative z-10">
               <label className="text-[1.4em] font-medium text-grays">
                 Account Name (Holder)
@@ -504,7 +442,6 @@ export default function PaymentSection() {
               </div>
             </div>
 
-            {/* Input Account Number */}
             <div className="space-y-2 relative z-10">
               <label className="text-[1.4em] font-medium text-grays">
                 {currentMethodConfig.inputLabel}

@@ -4,7 +4,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import { Loader2, OctagonAlert, ChevronDown } from "lucide-react";
+import { Loader2, OctagonAlert, ChevronDown, ChevronRight, ArrowRight, ArrowRightIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/routing";
 
 // WAJIB: Import dinamis buat ApexCharts
 const Chart = dynamic(() => import("react-apexcharts"), {
@@ -32,7 +34,7 @@ interface AnalyticsData {
 // --- FUNGSI API SETUP (GANTI INI NANTI) ---
 async function fetchAnalyticsData(
   range: TimeRange,
-  stat: StatType,
+  stat: StatType
 ): Promise<AnalyticsData> {
   console.log(`MANGGIL API: /api/analytics?range=${range}&stat=${stat}`);
 
@@ -78,7 +80,6 @@ async function fetchAnalyticsData(
   // === AKHIR DARI SETUP API BENERAN ===
   // ======================================================
 
-
   // ======================================================
   // === INI DATA DUMMY (HAPUS NANTI) ===
   // ======================================================
@@ -109,10 +110,22 @@ async function fetchAnalyticsData(
         },
       ],
       categories: [
-        "Wk1", "Wk2", "Wk3", "Wk4", "Wk5", "Wk6", "Wk7", "Wk8", "Wk9", "Wk10", "Wk11", "Wk12"
+        "Wk1",
+        "Wk2",
+        "Wk3",
+        "Wk4",
+        "Wk5",
+        "Wk6",
+        "Wk7",
+        "Wk8",
+        "Wk9",
+        "Wk10",
+        "Wk11",
+        "Wk12",
       ],
     };
-  } else { // perYear
+  } else {
+    // perYear
     data = {
       series: [
         {
@@ -121,16 +134,26 @@ async function fetchAnalyticsData(
         },
       ],
       categories: [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
       ],
     };
   }
   // Data dummy buat tipe stat berbeda (biar keliatan ganti)
   if (stat === "totalEarnings") {
-    data.series[0].data = data.series[0].data.map(n => n / 10);
+    data.series[0].data = data.series[0].data.map((n) => n / 10);
   } else if (stat === "validClicks") {
-    data.series[0].data = data.series[0].data.map(n => n * 0.8);
+    data.series[0].data = data.series[0].data.map((n) => n * 0.8);
   }
   return data;
   // ======================================================
@@ -140,13 +163,14 @@ async function fetchAnalyticsData(
 
 export default function LinkAnalyticsCard() {
   const t = useTranslations("Dashboard");
+  const path = usePathname();
 
   // State buat data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // State buat dropdown
-  const [selectedRange, setSelectedRange] = useState<TimeRange>("perMonth");
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("perYear");
   const [selectedStat, setSelectedStat] = useState<StatType>("totalClicks");
   const [isRangeOpen, setIsRangeOpen] = useState(false);
   const [isStatOpen, setIsStatOpen] = useState(false);
@@ -155,8 +179,7 @@ export default function LinkAnalyticsCard() {
 
   // State buat chart
   const [chartSeries, setChartSeries] = useState<ApexAxisChartSeries>([]);
-  const [chartOptions, setChartOptions] =
-    useState<ApexCharts.ApexOptions>({});
+  const [chartOptions, setChartOptions] = useState<ApexCharts.ApexOptions>({});
 
   // Opsi dropdown
   const timeRanges: { key: TimeRange; label: string }[] = [
@@ -175,7 +198,7 @@ export default function LinkAnalyticsCard() {
     async function loadData() {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const data = await fetchAnalyticsData(selectedRange, selectedStat);
 
@@ -190,11 +213,13 @@ export default function LinkAnalyticsCard() {
           tooltip: {
             ...baseChartOptions.tooltip,
             x: {
-              format: rangeRef.current?.textContent === 'perMonth' ? 'Week' : undefined
-            }
-          }
+              format:
+                rangeRef.current?.textContent === "perMonth"
+                  ? "Week"
+                  : undefined,
+            },
+          },
         });
-
       } catch (err: any) {
         setError(err.message);
         setChartSeries([]); // Kosongin chart kalo error
@@ -269,7 +294,10 @@ export default function LinkAnalyticsCard() {
   // Efek buat nutup dropdown (copy-paste aja)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (rangeRef.current && !rangeRef.current.contains(event.target as Node)) {
+      if (
+        rangeRef.current &&
+        !rangeRef.current.contains(event.target as Node)
+      ) {
         setIsRangeOpen(false);
       }
       if (statRef.current && !statRef.current.contains(event.target as Node)) {
@@ -283,7 +311,7 @@ export default function LinkAnalyticsCard() {
   }, []);
 
   console.log(statOptions.find((o) => o.key === selectedStat)?.label);
-  
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full">
       {/* Header (Title + 2 Dropdown) */}
@@ -294,71 +322,91 @@ export default function LinkAnalyticsCard() {
 
         {/* Grup Dropdown */}
         <div className="flex items-center gap-2 z-10">
-          {/* Dropdown 1: Tipe Stat */}
-          <div className="relative" ref={statRef}>
-            <button
-              onClick={() => setIsStatOpen(!isStatOpen)}
-              className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300"
+          {path.includes("/dashboard") ? (
+            <Link
+              href="/analytics"
+              className="text-[1.4em] font-medium text-shortblack px-4 group hover:underline transition-all duration-300"
             >
-              {statOptions.find((o) => o.key === selectedStat)?.label}
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isStatOpen ? "rotate-180" : ""}`} />
-            </button>
-            <div
-              className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
-                isStatOpen ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-            >
-              {statOptions.map((opt) => (
+              <span>Detail</span>
+              <ArrowRightIcon className="w-4 h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+          ) : (
+            <>
+              {/* Dropdown 1: Tipe Stat */}
+              <div className="relative" ref={statRef}>
                 <button
-                  key={opt.key}
-                  onClick={() => {
-                    setSelectedStat(opt.key);
-                    setIsStatOpen(false);
-                  }}
-                  className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
-                    selectedStat === opt.key
-                      ? "text-bluelight font-semibold bg-blue-dashboard"
-                      : "text-shortblack hover:bg-blues"
+                  onClick={() => setIsStatOpen(!isStatOpen)}
+                  className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300"
+                >
+                  {statOptions.find((o) => o.key === selectedStat)?.label}
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isStatOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
+                    isStatOpen ? "opacity-100 visible" : "opacity-0 invisible"
                   }`}
                 >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
+                  {statOptions.map((opt) => (
+                    <button
+                      key={opt.key}
+                      onClick={() => {
+                        setSelectedStat(opt.key);
+                        setIsStatOpen(false);
+                      }}
+                      className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
+                        selectedStat === opt.key
+                          ? "text-bluelight font-semibold bg-blue-dashboard"
+                          : "text-shortblack hover:bg-blues"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          {/* Dropdown 2: Range Waktu */}
-          <div className="relative" ref={rangeRef}>
-            <button
-              onClick={() => setIsRangeOpen(!isRangeOpen)}
-              className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 "
-            >
-              {timeRanges.find((o) => o.key === selectedRange)?.label}
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isRangeOpen ? "rotate-180" : ""}`} />
-            </button>
-            <div
-              className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
-                isRangeOpen ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-            >
-              {timeRanges.map((range) => (
+              {/* Dropdown 2: Range Waktu */}
+              <div className="relative" ref={rangeRef}>
                 <button
-                  key={range.key}
-                  onClick={() => {
-                    setSelectedRange(range.key);
-                    setIsRangeOpen(false);
-                  }}
-                  className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
-                    selectedRange === range.key
-                      ? "text-bluelight font-semibold bg-blue-dashboard"
-                      : "text-shortblack hover:bg-blues"
+                  onClick={() => setIsRangeOpen(!isRangeOpen)}
+                  className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 "
+                >
+                  {timeRanges.find((o) => o.key === selectedRange)?.label}
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      isRangeOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 transition-all ${
+                    isRangeOpen ? "opacity-100 visible" : "opacity-0 invisible"
                   }`}
                 >
-                  {range.label}
-                </button>
-              ))}
-            </div>
-          </div>
+                  {timeRanges.map((range) => (
+                    <button
+                      key={range.key}
+                      onClick={() => {
+                        setSelectedRange(range.key);
+                        setIsRangeOpen(false);
+                      }}
+                      className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
+                        selectedRange === range.key
+                          ? "text-bluelight font-semibold bg-blue-dashboard"
+                          : "text-shortblack hover:bg-blues"
+                      }`}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

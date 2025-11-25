@@ -84,7 +84,7 @@ export default function MilestoneCard() {
       />
 
       {/* --- HEADER: Current Status --- */}
-      <div className="flex justify-between items-start relative z-10">
+      <div className="flex justify-between items-start relative z-10 ">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-green-50 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10">
             <data.icon
@@ -104,10 +104,20 @@ export default function MilestoneCard() {
         </div>
 
         {/* Badge Bonus CPM */}
-        <div className="text-right">
+        <div className="text-right hidden md:block">
           <div className="inline-flex items-center gap-2 bg-lightgreen-dashboard border border-darkgreen-dashboard px-3 py-1.5 rounded-full text-darkgreen-dashboard font-bold text-[1.2em]">
             <TrendingUp className="w-4 h-4" />
             <span>+{data.currentBonus}% CPM Bonus</span>
+          </div>
+        </div>
+
+        <div className="text-right md:hidden block">
+          <div className="flex justify-center flex-col items-center px-3 py-1.5 rounded-full text-darkgreen-dashboard font-bold text-[1.2em]">
+            <div className="text-[2.4em] flex items-center gap-2">
+              
+              <span>+{data.currentBonus}%</span>
+            </div>
+            <span className="flex">CPM Bonus</span>
           </div>
         </div>
       </div>
