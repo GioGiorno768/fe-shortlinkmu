@@ -1,9 +1,9 @@
 // src/components/dashboard/settings/PreferencesSection.tsx
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe,
   Coins,
@@ -11,17 +11,30 @@ import {
   Save,
   Loader2,
   ChevronDown,
-  // 👇 Icon baru buat privacy
   ShieldAlert,
   Cookie,
   KeyRound,
+  Check, // Icon Check buat indikator selected
 } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import clsx from "clsx";
-// 👇 Import tipe baru
+import Image from "next/image"; // Pake Image buat bendera
 import type { UserPreferences, PrivacySettings } from "@/types/type";
+
+// --- DATA STATIS (Config Bendera & Label) ---
+const CURRENCY_OPTIONS = [
+  { code: "USD", label: "US Dollar", countryCode: "us" },
+  { code: "IDR", label: "Indonesian Rupiah", countryCode: "id" },
+  { code: "MYR", label: "Malaysian Ringgit", countryCode: "my" },
+  { code: "SGD", label: "Singapore Dollar", countryCode: "sg" },
+];
+
+const LANGUAGE_OPTIONS = [
+  { code: "en", label: "English", countryCode: "us" }, // Pake US/GB terserah lu
+  { code: "id", label: "Indonesia", countryCode: "id" },
+];
 
 interface PreferencesSectionProps {
   initialData: UserPreferences | null;
@@ -39,12 +52,15 @@ export default function PreferencesSection({
   const [isPending, startTransition] = useTransition();
   const [isSaving, setIsSaving] = useState(false);
 
-  // State Form (Update struktur sesuai PrivacySettings)
+  // State buat Custom Dropdown Currency
+  const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
+  const currencyRef = useRef<HTMLDivElement>(null);
+
+  // State Form
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLocale as "en" | "id",
     currency: initialData?.currency || "USD",
     timezone: initialData?.timezone || "Asia/Jakarta",
-    // 👇 Default value baru
     privacy: initialData?.privacy || {
       loginAlert: true,
       cookieConsent: true,
@@ -58,6 +74,20 @@ export default function PreferencesSection({
       language: currentLocale as "en" | "id",
     }));
   }, [currentLocale]);
+
+  // Close dropdown currency pas klik luar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        currencyRef.current &&
+        !currencyRef.current.contains(event.target as Node)
+      ) {
+        setIsCurrencyOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLanguageChange = (lang: "en" | "id") => {
     setPreferences({ ...preferences, language: lang });
@@ -74,20 +104,15 @@ export default function PreferencesSection({
     );
   };
 
-  // 👇 Handler baru buat Privacy Toggle
   const handlePrivacyToggle = (key: keyof PrivacySettings) => {
     setPreferences((prev) => ({
       ...prev,
-      privacy: {
-        ...prev.privacy,
-        [key]: !prev.privacy[key],
-      },
+      privacy: { ...prev.privacy, [key]: !prev.privacy[key] },
     }));
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    // [SETUP API] PUT /api/user/preferences
     console.log("MANGGIL API: PUT /api/user/preferences", preferences);
     try {
       await new Promise((r) => setTimeout(r, 1000));
@@ -99,9 +124,14 @@ export default function PreferencesSection({
     }
   };
 
+  // Helper buat nyari object currency yang aktif
+  const activeCurrency =
+    CURRENCY_OPTIONS.find((c) => c.code === preferences.currency) ||
+    CURRENCY_OPTIONS[0];
+
   return (
     <div className="space-y-8 font-figtree">
-      {/* SECTION 1: GENERAL (Sama kayak sebelumnya) */}
+      {/* === GENERAL PREFERENCES === */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -113,60 +143,131 @@ export default function PreferencesSection({
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Language Picker */}
+          {/* 1. Language Picker (Button Group) */}
           <div className="space-y-3">
             <label className="text-[1.4em] font-medium text-grays">
               Display Language
             </label>
             <div className="flex gap-4">
-              {["en", "id"].map((lang) => (
+              {LANGUAGE_OPTIONS.map((lang) => (
                 <button
-                  key={lang}
-                  onClick={() => handleLanguageChange(lang as "en" | "id")}
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code as "en" | "id")}
                   disabled={isPending}
                   className={clsx(
-                    "flex-1 py-3 px-4 rounded-xl border-2 text-[1.4em] font-semibold transition-all",
-                    currentLocale === lang
+                    "flex-1 py-3 px-4 rounded-xl border-2 transition-all flex items-center justify-center gap-3 relative overflow-hidden",
+                    preferences.language === lang.code
                       ? "border-bluelight bg-blue-50 text-bluelight"
-                      : "border-gray-200 text-grays hover:border-blue-200"
+                      : "border-gray-200 text-grays hover:border-blue-200 hover:bg-slate-50"
                   )}
                 >
-                  {lang === "en" ? "🇬🇧 English" : "🇮🇩 Indonesia"}
+                  {/* Bendera */}
+                  <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                    <Image
+                      src={`https://flagcdn.com/${lang.countryCode}.svg`}
+                      alt={lang.label}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <span className="text-[1.4em] font-bold">{lang.label}</span>
+
+                  {/* Indikator Selected */}
+                  {preferences.language === lang.code && (
+                    <div className="absolute top-0 right-0 p-[2px] bg-bluelight rounded-bl-lg">
+                      <Check className="w-3 h-3 text-white" />
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Currency Picker */}
-          <div className="space-y-3">
+          {/* 2. Currency Picker (Custom Dropdown) */}
+          <div className="space-y-3" ref={currencyRef}>
             <label className="text-[1.4em] font-medium text-grays">
               Display Currency
             </label>
             <div className="relative">
-              <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
-              <select
-                value={preferences.currency}
-                onChange={(e) =>
-                  setPreferences({
-                    ...preferences,
-                    currency: e.target.value as any,
-                  })
-                }
-                className="w-full pl-12 pr-10 py-3 rounded-xl border border-gray-200 bg-white text-[1.5em] text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
+              <button
+                onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
+                className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 bg-white text-shortblack flex items-center gap-3 hover:border-bluelight transition-all focus:ring-2 focus:ring-bluelight/50"
               >
-                <option value="USD">🇺🇸 USD - US Dollar</option>
-                <option value="IDR">🇮🇩 IDR - Indonesian Rupiah</option>
-                <option value="MYR">🇲🇾 MYR - Malaysian Ringgit</option>
-                <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays pointer-events-none" />
+                <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                  <Image
+                    src={`https://flagcdn.com/${activeCurrency.countryCode}.svg`}
+                    alt={activeCurrency.code}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <span className="text-[1.5em] font-medium">
+                  {activeCurrency.code} - {activeCurrency.label}
+                </span>
+                <ChevronDown
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays transition-transform ${
+                    isCurrencyOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown List */}
+              <AnimatePresence>
+                {isCurrencyOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 5, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 5, scale: 0.98 }}
+                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-20 overflow-hidden p-1.5"
+                  >
+                    {CURRENCY_OPTIONS.map((curr) => (
+                      <button
+                        key={curr.code}
+                        onClick={() => {
+                          setPreferences({
+                            ...preferences,
+                            currency: curr.code as any,
+                          });
+                          setIsCurrencyOpen(false);
+                        }}
+                        className={clsx(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                          preferences.currency === curr.code
+                            ? "bg-blue-50 text-bluelight"
+                            : "text-shortblack hover:bg-gray-50"
+                        )}
+                      >
+                        <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                          <Image
+                            src={`https://flagcdn.com/${curr.countryCode}.svg`}
+                            alt={curr.label}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="text-[1.3em] font-bold leading-none">
+                            {curr.code}
+                          </span>
+                          <span className="text-[1.1em] opacity-70 leading-none mt-0.5">
+                            {curr.label}
+                          </span>
+                        </div>
+                        {preferences.currency === curr.code && (
+                          <Check className="w-4 h-4 ml-auto" />
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <p className="text-[1.2em] text-grays italic">
+            <p className="text-[1.2em] text-grays italic mt-1">
               *Kurs dikonversi otomatis berdasarkan rate harian.
             </p>
           </div>
 
-          {/* Timezone Picker */}
+          {/* Timezone Picker (Tetap Native Select - Karena listnya panjang bgt) */}
           <div className="space-y-3 md:col-span-2">
             <label className="text-[1.4em] font-medium text-grays">
               Timezone
@@ -178,7 +279,7 @@ export default function PreferencesSection({
                 onChange={(e) =>
                   setPreferences({ ...preferences, timezone: e.target.value })
                 }
-                className="w-full pl-12 pr-10 py-3 rounded-xl border border-gray-200 bg-white text-[1.5em] text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
+                className="w-full pl-12 pr-10 py-3 rounded-xl border border-gray-200 bg-white text-[1.5em] text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer hover:border-bluelight transition-colors"
               >
                 <option value="UTC">UTC (Universal Time)</option>
                 <option value="Asia/Jakarta">Asia/Jakarta (WIB)</option>
@@ -192,7 +293,7 @@ export default function PreferencesSection({
         </div>
       </motion.div>
 
-      {/* === SECTION 2: PRIVACY & SESSION (UPDATE BARU) === */}
+      {/* === PRIVACY & SESSION (Gak berubah) === */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -203,9 +304,7 @@ export default function PreferencesSection({
           <ShieldAlert className="w-6 h-6 text-bluelight" />
           Privacy & Session
         </h2>
-
         <div className="space-y-4">
-          {/* LIST TOGGLE BARU */}
           {[
             {
               key: "loginAlert",
@@ -272,7 +371,6 @@ export default function PreferencesSection({
         </div>
       </motion.div>
 
-      {/* SAVE BUTTON */}
       <div className="flex justify-end pt-4">
         <button
           onClick={handleSave}

@@ -3,45 +3,31 @@
 
 import { useTranslations } from "next-intl";
 import { useState, useEffect, useRef } from "react";
-import { Loader2, type LucideIcon } from "lucide-react"; // Import Loader2 buat loading
+import { Loader2, type LucideIcon } from "lucide-react";
+import clsx from "clsx";
 
 // Definisikan tipe untuk props
 interface StatsCardProps {
   icon: LucideIcon;
   color: Array<string>;
   label: string;
-  apiEndpoint: string; // Ini buat endpoint API (cth: "/api/stats/clicks")
+  apiEndpoint: string;
 }
 
-type TimeRange = "perWeek" | "perMonth" | "perYear";
+// 1. UPDATE TIPE DATA: Tambah "allTime"
+type TimeRange = "allTime" | "perWeek" | "perMonth" | "perYear";
 
-// --- INI FUNGSI API SETUP (MOCK/DUMMY) ---
-// Nanti lu tinggal ganti isi fungsi ini buat manggil API backend lu
+// --- FUNGSI API SETUP (MOCK) ---
 async function fetchStats(endpoint: string, range: TimeRange) {
-  // GANTI BAGIAN INI DENGAN API LU
   console.log(`MANGGIL API: ${endpoint}?range=${range}`);
 
-  // CONTOH PAKE FETCH BENERAN:
-  // const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}?range=${range}`, {
-  //   headers: {
-  //     // Mungkin butuh token auth
-  //     'Authorization': `Bearer ${token}`
-  //   }
-  // });
-  // const data = await response.json();
-  //
-  // // Pastikan data yang dikembalikan sesuai format
-  // return {
-  //   value: data.formattedValue, // cth: "$1,234"
-  //   subtitleKey: data.rangeKey   // cth: "perWeek"
-  // }
-
-  // Simulasi loading
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  // Data dummy sesuai permintaan lu
+  // 2. LOGIC DATA "allTime"
   if (endpoint.includes("earnings")) {
     switch (range) {
+      case "allTime":
+        return { value: "$1,540,205", subtitleKey: "allTime" }; // Total Gede
       case "perWeek":
         return { value: "$1,234", subtitleKey: "perWeek" };
       case "perMonth":
@@ -50,31 +36,43 @@ async function fetchStats(endpoint: string, range: TimeRange) {
         return { value: "$45,231", subtitleKey: "perYear" };
     }
   } else if (endpoint.includes("referral")) {
-    // Asumsi default-nya "clicks"
     switch (range) {
+      case "allTime":
+        return { value: "12,500", subtitleKey: "allTime" };
       case "perWeek":
-        return { value: "580", subtitleKey: "perWeek" };
+        return { value: "50", subtitleKey: "perWeek" };
       case "perMonth":
-        return { value: "600.345", subtitleKey: "perMonth" };
+        return { value: "240", subtitleKey: "perMonth" };
       case "perYear":
-        return { value: "28,190", subtitleKey: "perYear" };
+        return { value: "3,500", subtitleKey: "perYear" };
+    }
+  } else if (endpoint.includes("clicks") || endpoint.includes("totalClicks")) {
+    switch (range) {
+      case "allTime":
+        return { value: "5.2M", subtitleKey: "allTime" };
+      case "perWeek":
+        return { value: "120K", subtitleKey: "perWeek" };
+      case "perMonth":
+        return { value: "600K", subtitleKey: "perMonth" };
+      case "perYear":
+        return { value: "2.8M", subtitleKey: "perYear" };
     }
   } else {
-    // Asumsi default-nya "clicks"
+    // Default / Views / CPM
     switch (range) {
+      case "allTime":
+        return { value: "15.4M", subtitleKey: "allTime" };
       case "perWeek":
-        return { value: "500", subtitleKey: "perWeek" };
+        return { value: "500K", subtitleKey: "perWeek" };
       case "perMonth":
-        return { value: "600,000", subtitleKey: "perMonth" };
+        return { value: "2.5M", subtitleKey: "perMonth" };
       case "perYear":
-        return { value: "28,000", subtitleKey: "perYear" };
+        return { value: "10M", subtitleKey: "perYear" };
     }
   }
 
-  // Fallback
   return { value: "0", subtitleKey: "perMonth" };
 }
-// ---------------------------------------------
 
 export default function StatsCard({
   icon: Icon,
@@ -85,38 +83,37 @@ export default function StatsCard({
   const t = useTranslations("Dashboard");
   const [textColor, bgColor, borderColor] = color;
 
-  // State buat data yang tampil
   const [isLoading, setIsLoading] = useState(true);
   const [displayValue, setDisplayValue] = useState("...");
-  const [subtitle, setSubtitle] = useState(t("perMonth"));
 
-  // State buat dropdown
-  const [selectedRange, setSelectedRange] = useState<TimeRange>("perMonth");
+  // Default subtitle ambil dari translation key "allTime"
+  const [subtitle, setSubtitle] = useState(t("allTime"));
+
+  // Default Selected: "allTime"
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("allTime");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Opsi dropdown
+  // 3. LIST OPSI BARU (Semua Waktu di Paling Atas)
   const timeRanges: { key: TimeRange; label: string }[] = [
+    { key: "allTime", label: t("allTime") }, // <--- Paling Atas
     { key: "perWeek", label: t("perWeek") },
     { key: "perMonth", label: t("perMonth") },
     { key: "perYear", label: t("perYear") },
   ];
 
-  // Efek buat fetch data pas `selectedRange` berubah
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
-
       const data = await fetchStats(apiEndpoint, selectedRange);
-
       setDisplayValue(data.value);
-      setSubtitle(t(data.subtitleKey)); // Ambil subtitle dari translation
+      setSubtitle(t(data.subtitleKey));
       setIsLoading(false);
     }
     loadData();
   }, [selectedRange, apiEndpoint, t]);
 
-  // Efek buat nutup dropdown pas klik di luar
+  // Close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -127,12 +124,9 @@ export default function StatsCard({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownRef]);
 
-  // Handler pas milih range
   const handleRangeChange = (range: TimeRange) => {
     setSelectedRange(range);
     setIsDropdownOpen(false);
@@ -140,12 +134,13 @@ export default function StatsCard({
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-          {label} {/* Label dari props (cth: "Total Clicks") */}
+          {label}
         </p>
 
-        {/* Ini tombol dropdown-nya */}
+        {/* Tombol Dropdown (Hamburger Style Original) */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -166,7 +161,7 @@ export default function StatsCard({
                 onClick={() => handleRangeChange(range.key)}
                 className={`text-[1.4em] px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 text-start ${
                   selectedRange === range.key
-                    ? "text-bluelight font-semibold"
+                    ? "text-bluelight font-semibold bg-blue-dashboard"
                     : "text-shortblack"
                 }`}
               >
@@ -177,12 +172,10 @@ export default function StatsCard({
         </div>
       </div>
 
+      {/* Body: Value & Icon */}
       <div className="flex justify-between items-center">
         <div>
-          {/* Tampilan value (data) */}
           <div className="h-[6em] flex items-center">
-            {" "}
-            {/* Kasih tinggi biar ga lompat */}
             {isLoading ? (
               <Loader2 className="w-[3em] h-[3em] text-bluelight animate-spin" />
             ) : (
@@ -191,8 +184,10 @@ export default function StatsCard({
               </h3>
             )}
           </div>
+          {/* Subtitle bakal berubah sesuai pilihan: Total Semua Waktu / Minggu Ini / dll */}
           <p className="text-[1.4em] text-grays">Total {subtitle}</p>
         </div>
+
         <div
           className={`w-[5em] h-[5em] rounded-full flex justify-center items-center ${bgColor} border-2 ${borderColor}`}
         >

@@ -170,7 +170,7 @@ export default function LinkAnalyticsCard() {
   const [error, setError] = useState<string | null>(null);
 
   // State buat dropdown
-  const [selectedRange, setSelectedRange] = useState<TimeRange>("perYear");
+  const [selectedRange, setSelectedRange] = useState<TimeRange>("perWeek");
   const [selectedStat, setSelectedStat] = useState<StatType>("totalClicks");
   const [isRangeOpen, setIsRangeOpen] = useState(false);
   const [isStatOpen, setIsStatOpen] = useState(false);
@@ -313,7 +313,7 @@ export default function LinkAnalyticsCard() {
   console.log(statOptions.find((o) => o.key === selectedStat)?.label);
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full">
+    <div className="bg-white p-6 rounded-3xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full">
       {/* Header (Title + 2 Dropdown) */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">

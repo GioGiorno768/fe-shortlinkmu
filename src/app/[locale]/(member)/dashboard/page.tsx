@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div className="lg:text-[10px] text-[8px] font-figtree">
       {/* Stats Grid */}
       {/* UBAH GRID: 3 kartu pertama + 1 kartu achievement */}
-      <div className="grid grid-cols-1 md:grid-cols-2 custom:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Card 3 (SLIDER): Lebar 2 Kolom */}
         <div className="col-span-1 md:col-span-2 xl:col-span-2 h-full min-h-[200px]">
           <DashboardSlider />
@@ -39,7 +39,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}
-      <div className="grid grid-cols-1 custom:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Recent Activity */}
         {/* 2. GANTI "RECENT ACTIVITY" JADI KARTU BARU LU */}
         {/* KITA BUAT JADI 'lg:col-span-2' BIAR LEBAR SESUAI GAMBAR */}

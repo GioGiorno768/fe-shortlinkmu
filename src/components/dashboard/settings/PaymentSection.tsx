@@ -268,7 +268,7 @@ export default function PaymentSection({
   return (
     <div className="space-y-8">
       {/* === LIST KARTU PEMBAYARAN === */}
-      <div className="space-y-4">
+      <div className="space-y-4 p-8 bg-white rounded-3xl shadow-sm border border-gray-100">
         <h2 className="text-[2em] font-bold text-shortblack">Saved Methods</h2>
 
         {/* Gak perlu loading state disini karena data udah dateng dari props */}

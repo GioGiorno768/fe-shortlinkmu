@@ -1,14 +1,26 @@
+// src/app/LenisProvider.tsx
 "use client";
 
-// lenis-provider.tsx
-import { FC, useRef } from "react";
+import { FC, useEffect, useRef } from "react";
 import ReactLenis from "lenis/react";
+import { usePathname } from "next/navigation"; // 1. Import usePathname
 
 type LenisScrollProviderProps = {
   children: React.ReactNode;
 };
+
 const LenisScrollProvider: FC<LenisScrollProviderProps> = ({ children }) => {
-  const lenisRef = useRef(null);
+  const lenisRef = useRef<any>(null); // Pake any dulu biar aman ref-nya
+  const pathname = usePathname(); // 2. Ambil URL sekarang
+
+  // 3. Tambahin Effect ini: Jalan tiap kali ganti halaman
+  useEffect(() => {
+    if (lenisRef.current?.lenis) {
+      // Force scroll ke posisi 0 (paling atas) secara instan (tanpa animasi lambat)
+      lenisRef.current.lenis.scrollTo(0, { immediate: true });
+    }
+  }, [pathname]);
+
   return (
     <ReactLenis
       ref={lenisRef}
@@ -17,9 +29,9 @@ const LenisScrollProvider: FC<LenisScrollProviderProps> = ({ children }) => {
         lerp: 0.1,
         duration: 1.5,
         smoothWheel: true,
-        // smoothTouch: true, // ⚡ WAJIB buat Android/iOS
-        gestureOrientation: "vertical", // biar swipe kebaca
-        touchMultiplier: 2, // biar swipe lebih responsif
+        // smoothTouch: true,
+        gestureOrientation: "vertical",
+        touchMultiplier: 2,
       }}
     >
       {children}
