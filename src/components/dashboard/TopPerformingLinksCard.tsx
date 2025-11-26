@@ -284,6 +284,8 @@ export default function TopPerformingLinksCard() {
                       {/* Views Counter (Clean) */}
                     </div>
                   </div>
+                  
+                  {/* Button Detail Link */}
                   <div className="flex justify-end items-center gap-4">
                     <div className="flex justify-end items-center py-1 gap-4">
                       <Link
@@ -292,6 +294,7 @@ export default function TopPerformingLinksCard() {
                         className="text-bluelight hover:underline flex items-center gap-1 font-semibold text-[1.2em] group/link"
                       >
                         <ExternalLink className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" />
+                        <span>Detail</span>
                       </Link>
                     </div>
                     <ChevronDown
