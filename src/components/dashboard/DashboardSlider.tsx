@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Transition } from "framer-motion";
 import { Sparkles, Megaphone, Wallet, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import clsx from "clsx";
@@ -104,9 +104,14 @@ export default function DashboardSlider() {
       scale: 0.98,
     }),
   };
+  type TransitionConfig = {
+    x: Transition;
+    opacity: Transition;
+    scale: Transition;
+  };
 
   // PERFORMANCE FIX: Ganti 'spring' ke 'tween'
-  const transitionConfig = {
+  const transitionConfig: TransitionConfig = {
     x: { type: "tween", ease: "circOut", duration: 0.5 },
     opacity: { duration: 0.3 },
     scale: { duration: 0.5 },
