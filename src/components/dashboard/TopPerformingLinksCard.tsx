@@ -1,129 +1,124 @@
+// src/components/dashboard/TopPerformingLinksCard.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
-  Link as LinkIcon,
-  MoreHorizontal,
-  ChevronDown,
-  Edit,
-  EyeOff,
   Loader2,
+  TrendingUp,
+  ArrowRight,
+  ExternalLink,
+  ChevronDown,
+  Trophy,
+  Medal,
+  Link2,
+  Eye,
+  ArrowUpWideNarrow,
+  ArrowDownWideNarrow,
+  Coins,
+  DollarSign,
+  Currency,
+  ChartNoAxesColumn,
+  Megaphone,
+  TrendingDown,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "@/i18n/routing";
-import type { TopLinkItem, EditableLinkData } from "@/types/type";
-import EditLinkModal from "./EditLinkModal"; // <-- Pastiin path import ini bener
-import { useAlert } from "@/hooks/useAlert";
+import { motion, AnimatePresence } from "framer-motion";
+import clsx from "clsx";
+import type { AdLevel } from "@/types/type";
 
-// ========================================================
-// === DESAIN API (MOCK/DUMMY) ===
-// ========================================================
-async function fetchTopPerformingLinks(
-  sortBy: "latest" | "longest"
-): Promise<TopLinkItem[]> {
-  console.log(`MANGGIL API: /api/links/top-performing?sort=${sortBy}`);
+// --- TIPE DATA ---
+interface TopLinkData {
+  id: string;
+  title: string;
+  shortUrl: string;
+  originalUrl: string;
+  validViews: number;
+  totalEarnings: number;
+  cpm: number;
+  adsLevel: AdLevel;
+}
 
-  // Simulasi loading
+// --- MOCK API ---
+async function fetchTopLinks(
+  sortBy: "highest" | "lowest"
+): Promise<TopLinkData[]> {
   await new Promise((resolve) => setTimeout(resolve, 800));
 
-  // Mock Data (Pastiin ada 'adsLevel')
-  const mockLinks: TopLinkItem[] = [
+  // Data Dummy (Disamain sama LinkList biar ID-nya connect)
+  const mockData: TopLinkData[] = [
     {
       id: "1",
-      shortUrl: "short.link/asu12",
-      originalUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-      totalViews: 5100,
-      totalEarnings: 22.95,
-      cpm: 4.5,
-      alias: "asu12",
+      title: "Link Shadow Fight Mod",
+      shortUrl: "short.link/w1W0K12",
+      originalUrl: "https://preline.co/examples/html/hero-agency.html",
+      validViews: 22001,
+      totalEarnings: 208.9,
+      cpm: 9.5,
       adsLevel: "level3",
-      passwordProtected: false,
     },
     {
       id: "2",
-      shortUrl: "short.link/mULy0n0",
-      originalUrl: "https://www.google.com",
-      totalViews: 4200,
-      totalEarnings: 18.9,
-      cpm: 4.5,
-      adsLevel: "level1",
-      passwordProtected: false,
+      title: "Turbo VPN Mod",
+      shortUrl: "short.link/wongireng",
+      originalUrl: "https://example.com/turbo-vpn-mod",
+      validViews: 15001,
+      totalEarnings: 130.5,
+      cpm: 8.7,
+      adsLevel: "level2",
     },
     {
       id: "3",
-      shortUrl: "short.link/w1W0k12",
-      originalUrl: "https://www.github.com",
-      totalViews: 3500,
-      totalEarnings: 15.75,
-      cpm: 4.5,
-      adsLevel: "noAds",
-      passwordProtected: false,
+      title: "Config Pubg Gacor",
+      shortUrl: "short.link/pubg-v1",
+      originalUrl: "https://drive.google.com/file/d/...",
+      validViews: 12050,
+      totalEarnings: 98.2,
+      cpm: 8.1,
+      adsLevel: "level1",
     },
-    {
-      id: "4",
-      shortUrl: "short.link/gatot",
-      originalUrl: "https://www.vercel.com",
-      totalViews: 2800,
-      totalEarnings: 12.6,
-      cpm: 4.5,
-      password: "123",
-      expiresAt: "2025-12-31T23:59:00Z",
-      adsLevel: "level2",
-      passwordProtected: true,
-    },
-    {
-      id: "5",
-      shortUrl: "short.link/kaca",
-      originalUrl: "https://www.figma.com",
-      totalViews: 1500,
-      totalEarnings: 6.75,
-      cpm: 4.5,
-      adsLevel: "level4",
-      passwordProtected: false,
-    },
+    // Generate sisanya
+    ...Array(16)
+      .fill(null)
+      .map((_, i) => ({
+        id: `link-${i + 5}`, // ID ini match sama LinkList
+        title: `Generated Link ${i + 5}`,
+        shortUrl: `short.link/gen${i + 5}`,
+        originalUrl: `https://generated.link/page${i + 5}`,
+        validViews: Math.floor(Math.random() * 10000),
+        totalEarnings: parseFloat((Math.random() * 100).toFixed(2)),
+        cpm: parseFloat((Math.random() * 5 + 4).toFixed(2)),
+        adsLevel: ["noAds", "level1", "level2", "level3", "level4"][
+          Math.floor(Math.random() * 5)
+        ] as AdLevel,
+      })),
   ];
 
-  if (sortBy === "longest") {
-    return mockLinks.reverse();
-  }
-  return mockLinks;
+  const sortedData = mockData.sort((a, b) => {
+    if (sortBy === "highest") return b.validViews - a.validViews;
+    return a.validViews - b.validViews;
+  });
+
+  return sortedData.slice(0, 10);
 }
 
 export default function TopPerformingLinksCard() {
   const t = useTranslations("Dashboard");
-  const { showAlert } = useAlert();
-
-  // State Data
   const [isLoading, setIsLoading] = useState(true);
-  const [links, setLinks] = useState<TopLinkItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  // State UI
-  const [sortBy, setSortBy] = useState<"latest" | "longest">("latest");
+  const [links, setLinks] = useState<TopLinkData[]>([]);
+  const [sortBy, setSortBy] = useState<"highest" | "lowest">("highest");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [openAccordionId, setOpenAccordionId] = useState<string | null>("1");
-  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
-
-  // State Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedLink, setSelectedLink] = useState<TopLinkItem | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  // Refs
   const sortRef = useRef<HTMLDivElement>(null);
-  const actionMenuRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Data
+  // State Accordion
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
   useEffect(() => {
     async function loadLinks() {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchTopPerformingLinks(sortBy);
+        const data = await fetchTopLinks(sortBy);
         setLinks(data);
-      } catch (err: any) {
-        setError(err.message || "Gagal memuat link");
       } finally {
         setIsLoading(false);
       }
@@ -131,322 +126,257 @@ export default function TopPerformingLinksCard() {
     loadLinks();
   }, [sortBy]);
 
-  // Handle Click Outside (Dropdowns)
+  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
         setIsSortOpen(false);
       }
-      if (
-        actionMenuRef.current &&
-        !actionMenuRef.current.contains(event.target as Node)
-      ) {
-        setOpenActionMenuId(null);
-      }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- Handlers ---
-
-  const handleSortChange = (value: "latest" | "longest") => {
-    setSortBy(value);
-    setIsSortOpen(false);
+  const toggleAccordion = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleAccordionToggle = (id: string) => {
-    setOpenAccordionId(openAccordionId === id ? null : id);
-    setOpenActionMenuId(null);
-  };
+  // --- HELPER ICON RANKING ---
+  const getRankIcon = (index: number) => {
+    // Kalau filter terbawah, pake angka biasa aja biar gak aneh
+    if (sortBy === "lowest") {
+      return (
+        <span className="text-[1.2em] font-mono text-grays">
+          <TrendingDown className="w-5 h-5 text-redshortlink" />
+        </span>
+      );
+    }
 
-  const handleActionMenuToggle = (id: string) => {
-    setOpenActionMenuId(openActionMenuId === id ? null : id);
-  };
-
-  const handleHideLink = async (id: string) => {
-    setOpenActionMenuId(null);
-    // alert(`Link ${id} disembunyikan (simulasi)`); <-- HAPUS
-
-    // GANTI JADI INI
-    showAlert(
-      "Link berhasil disembunyikan dari list.",
-      "success",
-      "Link Hidden"
-    );
-  };
-
-  // --- Modal Logic ---
-
-  const openModal = (link: TopLinkItem) => {
-    setSelectedLink(link);
-    setIsModalOpen(true);
-    setOpenActionMenuId(null);
-  };
-
-  const handleUpdateLink = async (formData: EditableLinkData) => {
-    if (!selectedLink) return;
-    setIsUpdating(true);
-
-    console.log("Updating link (TopPerforming):", selectedLink.id, formData);
-
-    // Simulasi API Call (Delay)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Update state lokal biar UI langsung berubah
-    setLinks(
-      links.map((l) =>
-        l.id === selectedLink.id
-          ? {
-              ...l,
-              ...formData,
-              shortUrl: `short.link/${formData.alias}`,
-            }
-          : l
-      )
-    );
-
-    setIsUpdating(false);
-    setIsModalOpen(false);
-    setTimeout(() => setSelectedLink(null), 300);
+    switch (index) {
+      case 0: // Gold Trophy
+        return (
+          <Trophy className="w-6 h-6 text-yellow-500 fill-yellow-500/20" />
+        );
+      case 1: // Silver Medal
+        return <Medal className="w-6 h-6 text-slate-400 fill-slate-400/20" />;
+      case 2: // Bronze Medal
+        return <Medal className="w-6 h-6 text-orange-500 fill-orange-500/20" />;
+      default: // Rank 4 dst (Icon Link Biasa)
+        return <Link2 className="w-5 h-5 text-bluelight" />;
+    }
   };
 
   return (
-    <>
-      {/* Wrapper Card */}
-      <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
-        {/* Header Card */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-            {t("topPerformingLinks")}
-          </h3>
+    <div className="bg-white p-6 rounded-3xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+      {/* --- Header --- */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight flex items-center gap-2">
+          {t("topPerformingLinks")}
+        </h3>
 
-          {/* Sort Dropdown */}
-          <div className="relative" ref={sortRef}>
-            <button
-              onClick={() => setIsSortOpen(!isSortOpen)}
-              className="flex items-center gap-2 text-[1.4em] font-medium text-grays hover:text-bluelight transition-colors"
-            >
-              <span>{sortBy === "latest" ? t("latest") : "Longest"}</span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  isSortOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            <AnimatePresence>
-              {isSortOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 border border-gray-100"
+        {/* Dropdown Filter (Teratas/Terbawah) */}
+        <div className="relative" ref={sortRef}>
+          <button
+            onClick={() => setIsSortOpen(!isSortOpen)}
+            className="flex items-center gap-2 text-[1.3em] bg-blues font-medium text-bluelight transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-dashboard"
+          >
+            {sortBy === "highest" ? "Teratas" : "Terbawah"}
+            <ChevronDown
+              className={`w-4 h-4 transition-transform ${
+                isSortOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          <AnimatePresence>
+            {isSortOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute top-full right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 p-1 z-20 overflow-hidden"
+              >
+                <button
+                  onClick={() => {
+                    setSortBy("highest");
+                    setIsSortOpen(false);
+                  }}
+                  className={clsx(
+                    "flex items-center gap-2 w-full text-left text-[1.3em] px-3 py-2 rounded-lg transition-colors",
+                    sortBy === "highest"
+                      ? "bg-blue-50 text-bluelight font-semibold"
+                      : "text-shortblack hover:bg-blues/30"
+                  )}
                 >
-                  <button
-                    onClick={() => handleSortChange("latest")}
-                    className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
-                      sortBy === "latest"
-                        ? "text-bluelight font-semibold bg-blue-dashboard"
-                        : "text-shortblack hover:bg-blues"
-                    }`}
-                  >
-                    {t("latest")}
-                  </button>
-                  <button
-                    onClick={() => handleSortChange("longest")}
-                    className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
-                      sortBy === "longest"
-                        ? "text-bluelight font-semibold bg-blue-dashboard"
-                        : "text-shortblack hover:bg-blues"
-                    }`}
-                  >
-                    Longest
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* List Links */}
-        <div className="flex-1 relative">
-          {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
-            </div>
-          ) : error ? (
-            <div className="absolute inset-0 flex items-center justify-center text-redshortlink">
-              {error}
-            </div>
-          ) : (
-            <div
-              onWheel={(e) => e.stopPropagation()}
-              className="h-[300px] overflow-y-auto pr-2 space-y-2 overscroll-contain custom-scrollbar-minimal"
-            >
-              {links.map((link) => (
-                <div
-                  key={link.id}
-                  className={`rounded-xl transition-colors ${
-                    openAccordionId === link.id ? "bg-blues" : "bg-white"
-                  }`}
+                  <ArrowUpWideNarrow className="w-4 h-4" /> Teratas
+                </button>
+                <button
+                  onClick={() => {
+                    setSortBy("lowest");
+                    setIsSortOpen(false);
+                  }}
+                  className={clsx(
+                    "flex items-center gap-2 w-full text-left text-[1.3em] px-3 py-2 rounded-lg transition-colors",
+                    sortBy === "lowest"
+                      ? "bg-blue-50 text-bluelight font-semibold"
+                      : "text-shortblack hover:bg-blues/30"
+                  )}
                 >
-                  {/* Link Item Header (Accordion Trigger) */}
-                  <div
-                    className="flex items-center justify-between p-4 cursor-pointer"
-                    onClick={() => handleAccordionToggle(link.id)}
-                  >
-                    <div className="flex items-center gap-4 overflow-hidden">
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-dashboard">
-                        <LinkIcon className="w-4 h-4 text-bluelight flex-shrink-0" />
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <p className="text-[1.6em] font-semibold text-shortblack truncate">
-                          {link.shortUrl}
-                        </p>
-                        <p className="text-[1.4em] text-grays w-[80%] line-clamp-1">
-                          {link.originalUrl}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      {/* Kebab Menu (Action) */}
-                      <div className="relative" ref={actionMenuRef}>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActionMenuToggle(link.id);
-                          }}
-                          className={`p-1 rounded-full hover:text-bluelight text-grays ${
-                            openActionMenuId === link.id
-                              ? "text-bluelight bg-blue-dashboard"
-                              : ""
-                          }`}
-                        >
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                        <AnimatePresence>
-                          {openActionMenuId === link.id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.1 }}
-                              className="absolute top-full right-0 mt-1 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 border border-gray-100"
-                            >
-                              <button
-                                onClick={() => openModal(link)}
-                                className="flex items-center gap-2 w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md text-shortblack hover:bg-blues"
-                              >
-                                <Edit className="w-4 h-4" />
-                                <span>Edit</span>
-                              </button>
-                              <button
-                                onClick={() => handleHideLink(link.id)}
-                                className="flex items-center gap-2 w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md text-shortblack hover:bg-blues"
-                              >
-                                <EyeOff className="w-4 h-4" />
-                                <span>Hide</span>
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-
-                      <ChevronDown
-                        className={`w-5 h-5 transition-transform rounded-full ${
-                          openAccordionId === link.id
-                            ? "rotate-180 text-bluelight bg-blue-dashboard"
-                            : "text-grays"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Accordion Content */}
-                  <AnimatePresence>
-                    {openAccordionId === link.id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-6 pb-4 pt-2 border-t border-bluelight/20">
-                          <div className="flex items-center justify-between">
-                            <div className="space-y-1 text-[1.4em]">
-                              <p className="text-grays">
-                                Valid Views:{" "}
-                                <span className="font-medium text-shortblack">
-                                  {link.totalViews.toLocaleString("en-US")}
-                                </span>
-                              </p>
-                              <p className="text-grays">
-                                Pendapatan:{" "}
-                                <span className="font-medium text-shortblack">
-                                  ${link.totalEarnings.toFixed(2)}
-                                </span>
-                              </p>
-                              <p className="text-grays">
-                                CPM:{" "}
-                                <span className="font-medium text-shortblack">
-                                  ${link.cpm.toFixed(2)}
-                                </span>
-                              </p>
-                            </div>
-                            <Link
-                              href={`/analytics/${link.id}`}
-                              className="text-[1.4em] font-medium bg-white text-bluelight px-4 py-2 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-50"
-                            >
-                              Detail
-                            </Link>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          )}
+                  <ArrowDownWideNarrow className="w-4 h-4" /> Terbawah
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Modal Component */}
-      <EditLinkModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setTimeout(() => setSelectedLink(null), 300);
-        }}
-        onSubmit={handleUpdateLink}
-        initialData={
-          selectedLink
-            ? {
-                alias:
-                  selectedLink.alias ||
-                  selectedLink.shortUrl.split("/").pop() ||
-                  "",
-                password: selectedLink.password,
-                // Konversi ISO string ke format datetime-local (YYYY-MM-DDTHH:mm)
-                expiresAt: selectedLink.expiresAt
-                  ? new Date(
-                      new Date(selectedLink.expiresAt).getTime() -
-                        new Date().getTimezoneOffset() * 60000
-                    )
-                      .toISOString()
-                      .slice(0, 16)
-                  : "",
-                adsLevel: selectedLink.adsLevel || "level1",
-              }
-            : null
-        }
-        isUpdating={isUpdating}
-        shortUrlDisplay={selectedLink?.shortUrl}
-        originalUrlDisplay={selectedLink?.originalUrl}
-      />
-    </>
+      {/* --- List Content --- */}
+      <div className="flex-1 relative min-h-[250px]">
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
+          </div>
+        ) : (
+          <div
+            onWheel={(e) => e.stopPropagation()}
+            className="space-y-0 overflow-y-auto h-[270px] pr-2 custom-scrollbar-minimal"
+          >
+            {links.map((link, index) => (
+              <div
+                key={link.id}
+                className={clsx(
+                  "transition-colors duration-200 border-b border-gray-50 last:border-none px-2 rounded-xl",
+                  expandedId === link.id && "bg-blues/50"
+                )}
+              >
+                {/* Main Row (Header Link) */}
+                <div
+                  onClick={() => toggleAccordion(link.id)}
+                  className="flex items-center gap-4 py-4 px-2 cursor-pointer group relative z-10"
+                >
+                  {/* Rank Icon */}
+                  <div className="flex-shrink-0 w-8 flex justify-center">
+                    {getRankIcon(index)}
+                  </div>
+
+                  {/* Info Utama */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <p
+                        className={clsx(
+                          "text-[1.4em] font-medium truncate pr-2 transition-colors",
+                          expandedId === link.id
+                            ? "text-bluelight font-bold"
+                            : "text-shortblack group-hover:text-bluelight"
+                        )}
+                      >
+                        {link.title}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Link
+                        onClick={(e) => e.stopPropagation()}
+                        href={link.shortUrl}
+                        className="text-[1.4em] text-grays truncate max-w-[150px] opacity-80 hover:underline hover:text-bluelight transition-colors"
+                      >
+                        {link.shortUrl}
+                      </Link>
+                      {/* Views Counter (Clean) */}
+                    </div>
+                  </div>
+                  <div className="flex justify-end items-center gap-4">
+                    <div className="flex justify-end items-center py-1 gap-4">
+                      <Link
+                        onClick={(e) => e.stopPropagation()}
+                        href={`/new-link?highlight=${link.id}`}
+                        className="text-bluelight hover:underline flex items-center gap-1 font-semibold text-[1.2em] group/link"
+                      >
+                        <ExternalLink className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" />
+                      </Link>
+                    </div>
+                    <ChevronDown
+                      className={clsx(
+                        "w-4 h-4 text-bluelight transition-transform duration-300",
+                        expandedId === link.id && "rotate-180 text-bluelight"
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Accordion Detail (Clean Layout) */}
+                <AnimatePresence>
+                  {expandedId === link.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="pb-4 pr-4 pl-4">
+                        {/* Stats Row - Simple Grid */}
+                        <div className="grid sm:grid-cols-2 grid-cols-2 gap-x-8 gap-y-2 text-[1.3em] pt-1">
+                          {/* Views */}
+                          <div className="flex items-center gap-4">
+                            <Eye className="w-5 h-5 text-bluelight" />
+                            <div className="flex flex-col items-start py-1 border-b border-gray-100/80">
+                              <span className="text-grays">Views</span>
+                              <span className="font-medium text-shortblack">
+                                {link.validViews.toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Earning */}
+                          <div className="flex items-center gap-4">
+                            <Coins className="w-5 h-5 text-bluelight" />
+                            <div className="flex flex-col items-start py-1 border-b border-gray-100/80">
+                              <span className="text-grays">Earnings</span>
+                              <span className="font-medium text-shortblack">
+                                ${link.totalEarnings.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          {/* CPM */}
+                          <div className="flex items-center gap-4">
+                            <ChartNoAxesColumn className="w-5 h-5 text-bluelight" />
+                            <div className="flex flex-col items-start py-1 border-b border-gray-100/80">
+                              <span className="text-grays">CPM</span>
+                              <span className="font-medium text-shortblack">
+                                ${link.cpm.toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Ads Level */}
+                          <div className="flex items-center gap-4">
+                            <Megaphone className="w-5 h-5 text-bluelight" />
+                            <div className="flex flex-col items-start py-1">
+                              <span className="text-grays">Ads Level</span>
+                              <span className="font-medium text-shortblack capitalize">
+                                {link.adsLevel}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Detail Link */}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer Link */}
+      <div className=" text-center">
+        <Link
+          href="/new-link"
+          className="text-[1.3em] font-semibold text-grays hover:text-bluelight flex items-center justify-center gap-1 transition-colors"
+        >
+          Lihat Semua Link <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    </div>
   );
 }

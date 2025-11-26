@@ -210,3 +210,17 @@ export interface SavedPaymentMethod {
   isDefault: boolean; // Penanda kalo ini metode utama
   category: "wallet" | "bank" | "crypto"; // Opsional, buat grouping icon
 }
+
+export interface PrivacySettings {
+  loginAlert: boolean;
+  cookieConsent: boolean;
+  saveLoginInfo: boolean;
+}
+
+export interface UserPreferences {
+  language: "en" | "id";
+  currency: "USD" | "IDR" | "MYR" | "SGD";
+  timezone: string;
+  // 👇 GANTI KEY JADI 'privacy'
+  privacy: PrivacySettings;
+}
