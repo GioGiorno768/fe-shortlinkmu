@@ -53,6 +53,14 @@
   --breakpoint-custom2: 2805px;
 }
 
+@layer utilities {
+  @media (min-height: 680px) {
+    .tall\:h-\[550px\] {
+      height: 550px;
+    }
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -321,7 +329,6 @@ body {
   height: 8px; /* Tinggi (buat scroll horizontal) */
 }
 
-
 ::-webkit-scrollbar-thumb:hover {
   /* Pake warna --grays lu pas di-hover */
   background: var(--color-blue-950);
@@ -339,5 +346,3 @@ body {
   background: var(--color-bluelight); /* Warna thumb lu */
   border-radius: 10px;
 }
-
-

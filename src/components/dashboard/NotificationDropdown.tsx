@@ -221,8 +221,7 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute right-[-1em] sm:right-0 top-[7em] w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col"
-          style={{ height: "550px", maxHeight: "80vh" }}
+          className="absolute right-[-1em] sm:right-0 sm:top-[8em] top-[6em]  w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col tall:h-[550px] tall:max-h-[80vh] h-[480px] max-h-[70vh]"
         >
           <AnimatePresence mode="popLayout" initial={false}>
             {selectedNotif ? (

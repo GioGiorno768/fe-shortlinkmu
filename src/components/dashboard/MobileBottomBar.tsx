@@ -75,7 +75,7 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 150, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-4 left-2 right-2 z-40 md:hidden flex justify-center pointer-events-none text-[10px]"
+          className="fixed bottom-2 left-2 right-2 z-40 md:hidden flex justify-center pointer-events-none text-[10px]"
         >
           {/* === INTERNAL POPUPS (Drop-up) === */}
           <AnimatePresence>
