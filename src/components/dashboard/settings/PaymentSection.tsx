@@ -403,7 +403,7 @@ export default function PaymentSection({
           Add New Method
         </h2>
 
-        <form onSubmit={handleAddMethod} className="space-y-8 max-w-3xl">
+        <form onSubmit={handleAddMethod} className="space-y-8 w-full">
           {/* ... (Bagian Form sama persis kayak kode sebelumnya) ... */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {

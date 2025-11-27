@@ -1,7 +1,7 @@
 // src/app/[locale]/(dashboard)/analytics/page.tsx
 "use client";
 
-import StatsCard from "@/components/dashboard/StatsCard";
+import StatsCard from "@/components/dashboard/analytics/StatsCard";
 import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 import { useTranslations } from "next-intl";
 import {
@@ -12,8 +12,8 @@ import {
   UserPlus,
   UserPlus2, // Kita pake ikon dollar buat CPM
 } from "lucide-react";
-import TopCountriesCard from "@/components/dashboard/TopCountriesCard";
-import TopReferrersCard from "@/components/dashboard/TopReferrersCard";
+import TopCountriesCard from "@/components/dashboard/analytics/TopCountriesCard";
+import TopReferrersCard from "@/components/dashboard/analytics/TopReferrersCard";
 import TrafficHistory from "@/components/dashboard/analytics/TrafficHistory";
 
 export default function AnalyticsPage() {

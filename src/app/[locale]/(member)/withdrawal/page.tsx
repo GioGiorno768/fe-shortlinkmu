@@ -208,19 +208,6 @@ export default function WithdrawalPage() {
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree space-y-8 pb-10">
-      {/* Grid Statistik & Metode */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="lg:col-span-3">
-          <WithdrawalStatsCard
-            stats={stats}
-            onOpenModal={() => setIsModalOpen(true)}
-          />
-        </div>
-        <div className="lg:col-span-2">
-          <WithdrawalMethodCard method={method} />
-        </div>
-      </div>
-
       {/* --- INFO CARD BARU --- */}
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4 text-blue-800 shadow-sm">
         <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
@@ -239,6 +226,19 @@ export default function WithdrawalPage() {
         </div>
       </div>
       {/* ---------------------- */}
+
+      {/* Grid Statistik & Metode */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3">
+          <WithdrawalStatsCard
+            stats={stats}
+            onOpenModal={() => setIsModalOpen(true)}
+          />
+        </div>
+        <div className="lg:col-span-2">
+          <WithdrawalMethodCard method={method} />
+        </div>
+      </div>
 
       {/* Tabel Transaksi */}
       <TransactionTable onCancel={requestCancel} transactions={transactions} />

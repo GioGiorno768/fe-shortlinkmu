@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import StatsCard from "@/components/dashboard/StatsCard";
+import StatsCard from "@/components/dashboard/analytics/StatsCard";
 import AchievementCard from "@/components/dashboard/AchievementCard"; // <-- IMPORT KARTU BARU
 import LinkAnalyticsCard from "@/components/dashboard/LinkAnalyticsCard";
 import TopPerformingLinksCard from "@/components/dashboard/TopPerformingLinksCard";
@@ -20,7 +20,6 @@ import DashboardSlider from "@/components/dashboard/DashboardSlider";
 
 export default function DashboardPage() {
   const t = useTranslations("Dashboard");
-
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree">
@@ -35,7 +34,6 @@ export default function DashboardPage() {
         <div className="col-span-1 md:col-span-2 lg:col-span-2 h-full">
           <MilestoneCard />
         </div>
-
       </div>
 
       {/* Charts Section (Ini sisa kode lu, gak diubah) */}

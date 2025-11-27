@@ -455,7 +455,7 @@ export default function LinkList() {
               setCurrentPage(1);
             }}
             placeholder="Search..."
-            className="w-full text-[1.6em] px-12 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight bg-blues"
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 focus:border-bluelight text-[1.4em] text-shortblack placeholder:text-gray-400 transition-all shadow-sm"
           />
         </div>
 

@@ -94,7 +94,7 @@ export default function TransactionTable({
               placeholder="Search ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3 rounded-xl bg-blues text-[1.4em] w-full focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-shortblack border-transparent border"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 focus:border-bluelight text-[1.4em] text-shortblack placeholder:text-gray-400 transition-all shadow-sm"
             />
           </div>
           {/* Tombol Export */}

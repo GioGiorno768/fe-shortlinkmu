@@ -76,7 +76,7 @@ export default function ActivityItem({ item, isLast }: ActivityItemProps) {
         {/* Icon Bulat */}
         <div className="absolute left-0 sm:static flex-shrink-0">
           <div
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 ${colorClass} z-10 relative bg-white`}
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 ${colorClass} relative bg-white`}
           >
             <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>

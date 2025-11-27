@@ -44,7 +44,9 @@ export default function ReferralTable({ users }: ReferralTableProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden font-figtree">
       <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h3 className="text-[1.8em] font-semibold text-shortblack">Daftar Teman</h3>
+        <h3 className="text-[1.8em] font-semibold text-shortblack">
+          Daftar Teman
+        </h3>
 
         {/* Search Bar */}
         <div className="relative w-full sm:w-auto">
@@ -54,7 +56,7 @@ export default function ReferralTable({ users }: ReferralTableProps) {
             placeholder="Cari user..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 rounded-lg bg-blues text-[1.4em] w-full focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-shortblack"
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 focus:border-bluelight text-[1.4em] text-shortblack placeholder:text-gray-400 transition-all shadow-sm"
           />
         </div>
       </div>
