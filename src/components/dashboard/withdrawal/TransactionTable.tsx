@@ -108,11 +108,11 @@ export default function TransactionTable({
         <table className="w-full text-left">
           <thead className="bg-blues text-grays uppercase text-[1.2em] font-bold tracking-wider">
             <tr>
-              <th className="px-8 py-5">Date & ID</th>
-              <th className="px-8 py-5">Method</th>
-              <th className="px-8 py-5">Amount</th>
-              <th className="px-8 py-5 text-center">Status</th>
-              <th className="px-8 py-5 text-right">Action</th>
+              <th className="px-4 md:px-8 py-3 md:py-5">Date & ID</th>
+              <th className="px-4 md:px-8 py-3 md:py-5">Method</th>
+              <th className="px-4 md:px-8 py-3 md:py-5">Amount</th>
+              <th className="px-4 md:px-8 py-3 md:py-5 text-center">Status</th>
+              <th className="px-4 md:px-8 py-3 md:py-5 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -122,24 +122,24 @@ export default function TransactionTable({
                   key={tx.id}
                   className="hover:bg-slate-50 transition-colors group"
                 >
-                  <td className="px-8 py-5">
-                    <div className="font-bold text-shortblack text-[1.4em]">
+                  <td className="px-4 md:px-8 py-3 md:py-5">
+                    <div className="font-bold text-shortblack text-[1.4em] sm:w-fit w-[8em]">
                       {formatDate(tx.date)}
                     </div>
                     <div className="text-grays text-[1.2em] font-mono">
                       #{tx.id}
                     </div>
                   </td>
-                  <td className="px-8 py-5">
+                  <td className="px-4 md:px-8 py-3 md:py-5">
                     <div className="text-shortblack text-[1.4em] font-medium">
                       {tx.method}
                     </div>
                     <div className="text-grays text-[1.2em]">{tx.account}</div>
                   </td>
-                  <td className="px-8 py-5 font-bold text-shortblack text-[1.4em]">
+                  <td className="px-4 md:px-8 py-3 md:py-5 font-bold text-shortblack text-[1.4em]">
                     {formatCurrency(tx.amount)}
                   </td>
-                  <td className="px-8 py-5 text-center">
+                  <td className="px-4 md:px-8 py-3 md:py-5 text-center">
                     <span
                       className={clsx(
                         "px-4 py-1.5 rounded-full text-[1.2em] font-bold border uppercase tracking-wide",
@@ -149,7 +149,7 @@ export default function TransactionTable({
                       {tx.status}
                     </span>
                   </td>
-                  <td className="px-8 py-5 text-right">
+                  <td className="px-4 md:px-8 py-3 md:py-5 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {/* TOMBOL DETAIL (External Link) */}
                       {tx.txId && (
@@ -179,7 +179,7 @@ export default function TransactionTable({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-8 py-12 text-center text-grays text-[1.6em]"
+                  className="px-4 md:px-8 py-12 text-center text-grays text-[1.6em]"
                 >
                   No transactions found.
                 </td>

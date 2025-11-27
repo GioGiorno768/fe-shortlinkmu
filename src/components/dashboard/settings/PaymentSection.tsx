@@ -19,6 +19,7 @@ import {
 import { useAlert } from "@/hooks/useAlert";
 import clsx from "clsx";
 import type { SavedPaymentMethod } from "@/types/type";
+import ConfirmationModal from "../ConfirmationModal";
 
 // --- KONFIGURASI PROVIDER (TETAP SAMA) ---
 const PAYMENT_CONFIG = {
@@ -170,6 +171,18 @@ export default function PaymentSection({
     accountNumber: "",
   });
 
+  // State Modal Delete
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    methodId: "",
+    isLoading: false,
+  });
+
+  // 1. Trigger
+  const openDeleteModal = (id: string) => {
+    setDeleteModal({ isOpen: true, methodId: id, isLoading: false });
+  };
+
   // --- 2. HANDLER TAMBAH METODE BARU ---
   const handleAddMethod = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,24 +247,41 @@ export default function PaymentSection({
   };
 
   // --- 4. HANDLER DELETE ---
-  const handleDelete = async (id: string) => {
-    if (!confirm("Yakin ingin menghapus metode pembayaran ini?")) return;
+  // const handleDelete = async (id: string) => {
+  //   if (!confirm("Yakin ingin menghapus metode pembayaran ini?")) return;
 
-    setActionLoadingId(id);
+  //   setActionLoadingId(id);
 
-    // [API Call] DELETE /api/user/payment-methods/{id}
-    console.log(`MANGGIL API: DELETE /api/user/payment-methods/${id}`);
+  //   // [API Call] DELETE /api/user/payment-methods/{id}
+  //   console.log(`MANGGIL API: DELETE /api/user/payment-methods/${id}`);
 
+  //   try {
+  //     await new Promise((r) => setTimeout(r, 800)); // Simulasi
+
+  //     setSavedMethods((prev) => prev.filter((m) => m.id !== id));
+  //     showAlert("Metode pembayaran dihapus.", "info");
+  //   } catch (err) {
+  //     showAlert("Gagal menghapus data.", "error");
+  //   } finally {
+  //     setActionLoadingId(null);
+  //   }
+  // };
+
+  // 2. Confirm Action
+  const confirmDelete = async () => {
+    setDeleteModal((prev) => ({ ...prev, isLoading: true }));
+    const id = deleteModal.methodId;
+
+    // ... Logic handleDelete lama ...
     try {
-      await new Promise((r) => setTimeout(r, 800)); // Simulasi
-
+      await new Promise((r) => setTimeout(r, 800));
       setSavedMethods((prev) => prev.filter((m) => m.id !== id));
       showAlert("Metode pembayaran dihapus.", "info");
     } catch (err) {
       showAlert("Gagal menghapus data.", "error");
-    } finally {
-      setActionLoadingId(null);
     }
+
+    setDeleteModal({ isOpen: false, methodId: "", isLoading: false });
   };
 
   const handleCategoryChange = (category: CategoryKey) => {
@@ -341,7 +371,7 @@ export default function PaymentSection({
                     )}
 
                     <button
-                      onClick={() => handleDelete(method.id)}
+                      onClick={() => openDeleteModal(method.id)}
                       disabled={actionLoadingId === method.id}
                       className="text-[1.3em] font-semibold text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
@@ -475,6 +505,18 @@ export default function PaymentSection({
           </div>
         </form>
       </motion.div>
+
+      {/* Pasang Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={confirmDelete}
+        title="Hapus Metode?"
+        description="Anda tidak dapat mengembalikan metode pembayaran yang sudah dihapus."
+        confirmLabel="Hapus Permanen"
+        type="danger"
+        isLoading={deleteModal.isLoading}
+      />
     </div>
   );
 }

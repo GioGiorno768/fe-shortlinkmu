@@ -149,13 +149,13 @@ export default function TopTrafficCard() {
       <div className="flex justify-between items-center gap-[2em] flex-wrap">
         {/* Card 1: Top Month */}
         <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
-          <p className="text-[1.4em] font-medium text-grays">{t("topMonth")}</p>
+          <p className="text-[1.4em] font-medium text-grays">Top Month</p>
           <div>
             <p className="text-[2.8em] font-semibold text-bluelight my-1">
               {stats.topMonth.month}
             </p>
             <p className="text-[1.6em] font-medium text-grays">
-              {formatViews(stats.topMonth.views)} Views
+              {stats.topYear.year}
             </p>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default function TopTrafficCard() {
             {t("topTraffic")}
           </h3>
           <Link
-            href="/analytics/traffic-source" // Ganti ke rute detail traffic lu
+            href="/analytics#monthly-performance" // <-- Pake Anchor ID
             className="flex items-center gap-1 text-[1.4em] font-medium text-bluelight hover:underline"
           >
             <span>{t("detail")}</span>

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import TopCountriesCard from "@/components/dashboard/TopCountriesCard";
 import TopReferrersCard from "@/components/dashboard/TopReferrersCard";
+import TrafficHistory from "@/components/dashboard/analytics/TrafficHistory";
 
 export default function AnalyticsPage() {
   const t = useTranslations("Dashboard");
@@ -106,6 +107,9 @@ export default function AnalyticsPage() {
           <div className="h-[380px]">
             <TopReferrersCard />
           </div>
+        </div>
+        <div id="monthly-performance" className="w-full">
+          <TrafficHistory />
         </div>
       </div>
     </div>

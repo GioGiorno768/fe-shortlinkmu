@@ -10,6 +10,7 @@ import WithdrawalStatsCard from "@/components/dashboard/withdrawal/WithdrawalSta
 import WithdrawalMethodCard from "@/components/dashboard/withdrawal/WithdrawalMethodCard";
 import TransactionTable from "@/components/dashboard/withdrawal/TransactionTable";
 import WithdrawalRequestModal from "@/components/dashboard/withdrawal/WithdrawalRequestModal";
+import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
 
 // --- (API Mocks tetep sama kayak sebelumnya, gua skip biar ringkas) ---
 async function cancelWithdrawalAPI(id: string) {
@@ -71,6 +72,51 @@ export default function WithdrawalPage() {
   const [stats, setStats] = useState<WithdrawalStats | null>(null);
   const [method, setMethod] = useState<PaymentMethod | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  // STATE MODAL CANCEL
+  const [cancelModal, setCancelModal] = useState({
+    isOpen: false,
+    txId: "",
+    isLoading: false,
+  });
+
+  // 1. Handler Buka Modal
+  const requestCancel = (id: string) => {
+    setCancelModal({ isOpen: true, txId: id, isLoading: false });
+  };
+
+  // 2. Handler Eksekusi
+  const onConfirmCancel = async () => {
+    setCancelModal((prev) => ({ ...prev, isLoading: true }));
+
+    // Panggil logic handleCancelRequest lu yg lama disini
+    // Tapi modif dikit biar parameternya ambil dari state cancelModal.txId
+    // ... (Salin logic API call handleCancelRequest disini) ...
+    const txToCancel = transactions.find((t) => t.id === cancelModal.txId);
+
+    if (txToCancel) {
+      try {
+        await cancelWithdrawalAPI(cancelModal.txId);
+        showAlert("Permintaan penarikan dibatalkan.", "info");
+
+        if (stats) {
+          setStats({
+            ...stats,
+            availableBalance: stats.availableBalance + txToCancel.amount,
+            pendingWithdrawn: stats.pendingWithdrawn - txToCancel.amount,
+          });
+        }
+        setTransactions((prev) =>
+          prev.map((t) =>
+            t.id === cancelModal.txId ? { ...t, status: "cancelled" } : t
+          )
+        );
+      } catch (error) {
+        showAlert("Gagal membatalkan.", "error");
+      }
+    }
+
+    setCancelModal({ isOpen: false, txId: "", isLoading: false });
+  };
 
   // --- HANDLER CANCEL ---
   const handleCancelRequest = async (id: string) => {
@@ -195,10 +241,7 @@ export default function WithdrawalPage() {
       {/* ---------------------- */}
 
       {/* Tabel Transaksi */}
-      <TransactionTable
-        onCancel={handleCancelRequest}
-        transactions={transactions}
-      />
+      <TransactionTable onCancel={requestCancel} transactions={transactions} />
 
       {/* Modal */}
       <WithdrawalRequestModal
@@ -207,6 +250,18 @@ export default function WithdrawalPage() {
         defaultMethod={method}
         availableBalance={stats?.availableBalance || 0}
         onSuccess={handleWithdrawalSuccess}
+      />
+
+      {/* Pasang Modal */}
+      <ConfirmationModal
+        isOpen={cancelModal.isOpen}
+        onClose={() => setCancelModal({ ...cancelModal, isOpen: false })}
+        onConfirm={onConfirmCancel}
+        title="Batalkan Penarikan?"
+        description="Saldo akan dikembalikan ke akun Anda. Tindakan ini tidak dapat dibatalkan."
+        confirmLabel="Ya, Batalkan"
+        type="warning"
+        isLoading={cancelModal.isLoading}
       />
     </div>
   );

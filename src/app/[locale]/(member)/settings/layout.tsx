@@ -43,7 +43,7 @@ export default function SettingsLayout({
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* SIDEBAR (STICKY) */}
-        <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-3xl p-4 shadow-sm border border-gray-100 z-20 sticky top-[15em]">
+        <div className="w-full lg:w-[280px] flex-shrink-0 bg-white rounded-3xl p-4 shadow-sm border border-gray-100 z-20 sticky sm:top-[15em] top-[10em]">
           <div className="grid lg:grid-cols-1 grid-cols-2 gap-2">
             {tabs.map((tab) => {
               // Cek apakah path sekarang mengandung href tab ini

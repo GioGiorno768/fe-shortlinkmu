@@ -95,7 +95,7 @@ export default function ReferralTable({ users }: ReferralTableProps) {
                   <td className="px-6 py-4">
                     <span
                       className={clsx(
-                        "px-3 py-1 rounded-full text-[1.2em] font-medium",
+                        "px-3 py-1 rounded-full text-[1.2em] font-medium text-center block w-[8em]",
                         user.status === "active"
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-100 text-gray-500"

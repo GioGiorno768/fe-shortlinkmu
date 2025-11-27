@@ -25,6 +25,7 @@ import clsx from "clsx";
 import EditLinkModal from "./EditLinkModal";
 import type { AdLevel, EditableLinkData } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
+import ConfirmationModal from "./ConfirmationModal";
 
 // Interface Shortlink
 interface Shortlink {
@@ -67,6 +68,14 @@ export default function LinkList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // STATE BUAT MODAL KONFIRMASI
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    linkId: "",
+    currentStatus: "" as "active" | "disabled",
+    isLoading: false,
+  });
+
   // State UI
   const [searchTerm, setSearchTerm] = useState("");
   const [filterBy, setFilterBy] = useState<FilterByType>("date");
@@ -103,6 +112,47 @@ export default function LinkList() {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
+    });
+  };
+
+  const openDisableConfirmation = (
+    linkId: string,
+    currentStatus: "active" | "disabled"
+  ) => {
+    setOpenDropdown(null); // Tutup dropdown menu dulu
+    setConfirmModal({
+      isOpen: true,
+      linkId,
+      currentStatus,
+      isLoading: false,
+    });
+  };
+
+  const handleConfirmDisable = async () => {
+    setConfirmModal((prev) => ({ ...prev, isLoading: true }));
+
+    const { linkId, currentStatus } = confirmModal;
+    const newStatus = currentStatus === "active" ? "disabled" : "active";
+
+    // Simulasi API call (Ganti logic handleDisableLink lu yg lama kesini)
+    await new Promise((r) => setTimeout(r, 1000));
+
+    setLinks(
+      links.map((l) => (l.id === linkId ? { ...l, status: newStatus } : l))
+    );
+
+    showAlert(
+      `Link berhasil diubah menjadi ${newStatus}.`,
+      newStatus === "active" ? "success" : "warning",
+      "Status Updated"
+    );
+
+    // Tutup Modal & Reset Loading
+    setConfirmModal({
+      isOpen: false,
+      linkId: "",
+      currentStatus: "active",
+      isLoading: false,
     });
   };
 
@@ -595,7 +645,7 @@ export default function LinkList() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDisableLink(link.id, link.status);
+                              openDisableConfirmation(link.id, link.status);
                             }}
                             className="flex items-center gap-2 w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
                           >
@@ -816,6 +866,30 @@ export default function LinkList() {
           </button>
         </div>
       )}
+
+      {/* TARUH KOMPONEN MODAL DI BAWAH SINI (Sebelum EditLinkModal) */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={handleConfirmDisable}
+        title={
+          confirmModal.currentStatus === "active"
+            ? "Disable Link?"
+            : "Enable Link?"
+        }
+        description={
+          confirmModal.currentStatus === "active"
+            ? "Link ini tidak akan bisa diakses oleh pengunjung jika dinonaktifkan. Anda yakin?"
+            : "Link akan aktif kembali dan bisa diakses oleh publik."
+        }
+        confirmLabel={
+          confirmModal.currentStatus === "active"
+            ? "Yes, Disable"
+            : "Yes, Enable"
+        }
+        type={confirmModal.currentStatus === "active" ? "danger" : "success"}
+        isLoading={confirmModal.isLoading}
+      />
 
       {/* Modal Edit */}
       <EditLinkModal

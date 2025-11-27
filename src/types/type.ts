@@ -224,3 +224,4 @@ export interface UserPreferences {
   // 👇 GANTI KEY JADI 'privacy'
   privacy: PrivacySettings;
 }
+

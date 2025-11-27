@@ -4,7 +4,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import { Loader2, OctagonAlert, ChevronDown, ChevronRight, ArrowRight, ArrowRightIcon } from "lucide-react";
+import {
+  Loader2,
+  OctagonAlert,
+  ChevronDown,
+  ArrowRightIcon,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 
@@ -20,7 +25,12 @@ const Chart = dynamic(() => import("react-apexcharts"), {
 
 // Tipe data buat state
 type TimeRange = "perWeek" | "perMonth" | "perYear";
-type StatType = "totalEarnings" | "totalClicks" | "validClicks";
+// 1. UPDATE TIPE STAT: Tambahin 'totalReferral'
+type StatType =
+  | "totalEarnings"
+  | "totalViews"
+  | "totalClicks"
+  | "totalReferral";
 
 // Tipe data yang kita harapin dari API
 interface AnalyticsData {
@@ -31,71 +41,26 @@ interface AnalyticsData {
   categories: string[];
 }
 
-// --- FUNGSI API SETUP (GANTI INI NANTI) ---
+// --- FUNGSI API SETUP (MOCK) ---
 async function fetchAnalyticsData(
   range: TimeRange,
   stat: StatType
 ): Promise<AnalyticsData> {
   console.log(`MANGGIL API: /api/analytics?range=${range}&stat=${stat}`);
 
-  // ======================================================
-  // === CONTOH KALO PAKE API BENERAN (NANTI AKTIFIN) ===
-  // ======================================================
-  /*
-  // Ganti URL ini pake API URL lu
-  const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/analytics?range=${range}&stat=${stat}`;
-  
-  // Ambil token auth kalo perlu
-  // const token = localStorage.getItem("authToken");
-
-  try {
-    const response = await fetch(API_URL, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // 'Authorization': `Bearer ${token}`
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gagal memuat data: ${response.statusText}`);
-    }
-
-    const data: AnalyticsData = await response.json();
-    
-    // Backend HARUS ngembaliin format:
-    // {
-    //   series: [{ name: "Total Clicks", data: [10, 41, 35, 51, 49, 62, 69] }],
-    //   categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    // }
-    
-    return data;
-
-  } catch (err: any) {
-    console.error("Error di fetchAnalyticsData:", err);
-    throw new Error(err.message || "Gagal terhubung ke server.");
-  }
-  */
-  // ======================================================
-  // === AKHIR DARI SETUP API BENERAN ===
-  // ======================================================
-
-  // ======================================================
-  // === INI DATA DUMMY (HAPUS NANTI) ===
-  // ======================================================
   await new Promise((resolve) => setTimeout(resolve, 700)); // Simulasi loading
 
   let data: AnalyticsData = {
-    series: [{ name: "Clicks", data: [] }],
+    series: [{ name: "Data", data: [] }],
     categories: [],
   };
-  const statName =
-    stat === "totalEarnings"
-      ? "Earnings"
-      : stat === "totalClicks"
-      ? "Clicks"
-      : "Views";
 
+  // 2. LOGIC LABEL CHART
+  let statName = "Total Views";
+  if (stat === "totalEarnings") statName = "Earnings";
+  if (stat === "totalReferral") statName = "New Referrals";
+
+  // --- DATA DUMMY ---
   if (range === "perWeek") {
     data = {
       series: [{ name: statName, data: [10, 41, 35, 51, 49, 62, 69] }],
@@ -149,51 +114,77 @@ async function fetchAnalyticsData(
       ],
     };
   }
-  // Data dummy buat tipe stat berbeda (biar keliatan ganti)
+
+  // 3. LOGIC DATA DUMMY KHUSUS TIPE STAT
+  // Biar grafiknya kelihatan beda-beda dikit angkanya
   if (stat === "totalEarnings") {
-    data.series[0].data = data.series[0].data.map((n) => n / 10);
-  } else if (stat === "validClicks") {
-    data.series[0].data = data.series[0].data.map((n) => n * 0.8);
+    data.series[0].data = data.series[0].data.map((n) =>
+      parseFloat((n / 10).toFixed(2))
+    );
+  } else if (stat === "totalViews") {
+    data.series[0].data = data.series[0].data.map((n) => Math.floor(n * 0.8));
+  } else if (stat === "totalReferral") {
+    // Data referral biasanya lebih kecil angkanya
+    data.series[0].data = data.series[0].data.map((n) => Math.floor(n / 15));
   }
+
   return data;
-  // ======================================================
-  // === AKHIR DARI DATA DUMMY ===
-  // ======================================================
 }
+
+// Helper buat nentuin warna chart
+const getChartColor = (stat: StatType) => {
+  switch (stat) {
+    case "totalEarnings":
+      return ["#22c499"]; // Hijau (Duit)
+    case "totalReferral":
+      return ["#f59e0b"]; // Orange/Kuning (Mirip icon user referral)
+    default:
+      return ["#350e8f"]; // Ungu (Klik/Default)
+  }
+};
+
+const getChartGradient = (stat: StatType) => {
+  switch (stat) {
+    case "totalEarnings":
+      return ["#e7fffc"];
+    case "totalReferral":
+      return ["#fef3c7"];
+    default:
+      return ["#ffffff"];
+  }
+};
 
 export default function LinkAnalyticsCard() {
   const t = useTranslations("Dashboard");
   const path = usePathname();
 
-  // State buat data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // State buat dropdown
   const [selectedRange, setSelectedRange] = useState<TimeRange>("perWeek");
-  const [selectedStat, setSelectedStat] = useState<StatType>("totalClicks");
+  const [selectedStat, setSelectedStat] = useState<StatType>("totalViews");
+
   const [isRangeOpen, setIsRangeOpen] = useState(false);
   const [isStatOpen, setIsStatOpen] = useState(false);
   const rangeRef = useRef<HTMLDivElement>(null);
   const statRef = useRef<HTMLDivElement>(null);
 
-  // State buat chart
   const [chartSeries, setChartSeries] = useState<ApexAxisChartSeries>([]);
   const [chartOptions, setChartOptions] = useState<ApexCharts.ApexOptions>({});
 
-  // Opsi dropdown
   const timeRanges: { key: TimeRange; label: string }[] = [
     { key: "perWeek", label: t("perWeek") },
     { key: "perMonth", label: t("perMonth") },
     { key: "perYear", label: t("perYear") },
   ];
+
+  // 4. UPDATE OPSI DROPDOWN
   const statOptions: { key: StatType; label: string }[] = [
-    { key: "totalClicks", label: t("totalClicks") },
+    { key: "totalViews", label: t("totalViews") },
     { key: "totalEarnings", label: t("totalEarnings") },
-    { key: "validClicks", label: t("validClicks") },
+    { key: "totalReferral", label: t("referral") }, // <-- Opsi Baru
   ];
 
-  // Efek buat fetch data pas state dropdown berubah
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
@@ -202,13 +193,12 @@ export default function LinkAnalyticsCard() {
       try {
         const data = await fetchAnalyticsData(selectedRange, selectedStat);
 
-        // Update state chart-nya
         setChartSeries(data.series);
         setChartOptions({
-          ...baseChartOptions, // Pake config dasar
+          ...baseChartOptions,
           xaxis: {
             ...baseChartOptions.xaxis,
-            categories: data.categories, // Ganti kategori X-axis
+            categories: data.categories,
           },
           tooltip: {
             ...baseChartOptions.tooltip,
@@ -219,18 +209,26 @@ export default function LinkAnalyticsCard() {
                   : undefined,
             },
           },
+          // 5. UPDATE WARNA CHART DINAMIS
+          colors: getChartColor(selectedStat),
+          fill: {
+            ...baseChartOptions.fill,
+            gradient: {
+              ...baseChartOptions.fill?.gradient,
+              gradientToColors: getChartGradient(selectedStat),
+            },
+          },
         });
       } catch (err: any) {
         setError(err.message);
-        setChartSeries([]); // Kosongin chart kalo error
+        setChartSeries([]);
       } finally {
         setIsLoading(false);
       }
     }
     loadData();
-  }, [selectedRange, selectedStat]); // <-- Fetch ulang kalo salah satu berubah
+  }, [selectedRange, selectedStat]);
 
-  // --- Konfigurasi Dasar Chart Spline Area ---
   const baseChartOptions: ApexCharts.ApexOptions = {
     chart: {
       type: "area",
@@ -238,7 +236,7 @@ export default function LinkAnalyticsCard() {
       zoom: { enabled: false },
       toolbar: { show: false },
     },
-    colors: ["#350e8f"], // --color-bluelight
+    colors: ["#350e8f"],
     fill: {
       type: "gradient",
       gradient: {
@@ -274,7 +272,7 @@ export default function LinkAnalyticsCard() {
     },
     xaxis: {
       type: "category",
-      categories: [], // Ini diisi sama data dari API
+      categories: [],
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
@@ -289,9 +287,7 @@ export default function LinkAnalyticsCard() {
       strokeDashArray: 4,
     },
   };
-  // ---------------------------------
 
-  // Efek buat nutup dropdown (copy-paste aja)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -310,11 +306,9 @@ export default function LinkAnalyticsCard() {
     };
   }, []);
 
-  console.log(statOptions.find((o) => o.key === selectedStat)?.label);
-
   return (
     <div className="bg-white p-6 rounded-3xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 h-full">
-      {/* Header (Title + 2 Dropdown) */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
           {t("clickAnalytics")}
