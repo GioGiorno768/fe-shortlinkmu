@@ -149,27 +149,27 @@ export default function TopTrafficCard() {
       <div className="flex justify-between items-center gap-[2em] flex-wrap">
         {/* Card 1: Top Month */}
         <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
-          <p className="text-[1.4em] font-medium text-grays">Top Month</p>
+          <p className="text-[1.4em] font-medium text-grays">Month</p>
           <div>
             <p className="text-[2.8em] font-semibold text-bluelight my-1">
               {stats.topMonth.month}
             </p>
             <p className="text-[1.6em] font-medium text-grays">
-              {stats.topYear.year}
+              All Time
             </p>
           </div>
         </div>
 
         {/* Card 2: Top Year */}
         <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
-          <p className="text-[1.4em] font-medium text-grays">{t("topYear")}</p>
+          <p className="text-[1.4em] font-medium text-grays">Year</p>
           <div>
             <div>
               <p className="text-[2.8em] font-semibold text-bluelight my-1">
                 {stats.topYear.year}
               </p>
               <p className="text-[1.6em] font-medium text-grays">
-                {formatViews(stats.topYear.views)} Views
+                All Time
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function TopTrafficCard() {
         <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
           <div className="flex items-center justify-between">
             <p className="text-[1.4em] font-medium text-grays">
-              {t("topLevel")}
+              Level
             </p>
             <LevelIcon
               className={`w-5 h-5 ${currentLevel.iconColor}`}
@@ -201,7 +201,7 @@ export default function TopTrafficCard() {
 
   return (
     // Card Wrapper
-    <div className=" p-4 bg-white rounded-xl flex justify-stretch items-stretch flex-col shadow-sm shadow-slate-500/50">
+    <div className=" p-4 bg-white rounded-3xl flex justify-stretch items-stretch flex-col shadow-sm shadow-slate-500/50">
       <div>
         <div className="flex items-center justify-between mb-4 px-2">
           <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">

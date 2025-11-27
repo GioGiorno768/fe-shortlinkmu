@@ -47,7 +47,7 @@ async function fetchReferralData(): Promise<ReferralData> {
   // --- DATA DUMMY (HAPUS NANTI) ---
   await new Promise((resolve) => setTimeout(resolve, 800)); // Simulasi loading
   return {
-    link: "https://shortlinkmu.com/ref?id=k",
+    link: "https://shortlinkmu.com/ref?id=k21314141423",
     userCount: 20,
   };
   // --- AKHIR DATA DUMMY ---
@@ -151,14 +151,23 @@ export default function ReferralCard() {
   };
 
   return (
-    <div className="bg-white p-6 py-4 rounded-xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-white p-6 py-4 rounded-3xl shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-200 box-border h-full">
       {/* Grid Utama 2 Kolom */}
       <div className="grid grid-cols-1 custom:grid-cols-3 gap-6 pb-2">
         {/* === Kolom Kiri: Referral === */}
         <div className="space-y-4 custom:col-span-2">
-          <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-            {t("referralTitle")}
-          </h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
+              {t("referralTitle")}
+            </h3>
+            <Link
+              href="/referral" // Link ke halaman referral
+              className="custom:hidden flex items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline "
+            >
+              <span>Detail</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
 
           {/* Box Link Referral */}
           <div className="bg-blues rounded-xl p-3 px-5 flex items-center gap-5 h-[72px]">
@@ -226,35 +235,29 @@ export default function ReferralCard() {
         </div>
 
         {/* === Kolom Kanan: Users === */}
-        <div className="grid grid-cols-1 gap-4 w-full">
-          <div className="space-y-4 ">
-            <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
-              {t("users")}
-            </h3>
+        <div className="grid grid-cols-1 w-full">
+          <div className="flex flex-col gap-4 h-full">
+            <Link
+              href="/referral" // Link ke halaman referral
+              className="custom:flex hidden items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline "
+            >
+              <span>Detail</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
 
             {/* Box User Count */}
-            <div className="bg-blues rounded-xl p-4 flex items-center justify-center h-[72px]">
+            <div className="bg-blues rounded-xl flex flex-col items-center p-6 justify-center h-full w-full">
+              <h1 className="text-[1.4em] pb-2 text-grays">{t("users")}</h1>
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-bluelight" />
               ) : error ? (
                 <span className="text-redshortlink">Error</span>
               ) : (
-                <span className="text-4xl font-bold text-bluelight font-manrope">
+                <span className="text-6xl font-bold text-bluelight font-manrope">
                   {data?.userCount}
                 </span>
               )}
             </div>
-          </div>
-
-          <div className="flex custom:justify-center justify-end custom:items-center">
-            {/* Link All Details */}
-            <Link
-              href="/referral" // Link ke halaman referral
-              className="flex items-center justify-end gap-1 text-[1.4em] custom:p-5 custom:py-2 py-1 px-5 rounded-lg font-medium text-bluelight hover:underline bg-blues"
-            >
-              <span>{t("allDetails")}</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
           </div>
         </div>
       </div>

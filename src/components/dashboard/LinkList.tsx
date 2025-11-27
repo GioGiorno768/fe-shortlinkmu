@@ -19,6 +19,7 @@ import {
   BarChart,
   Wallet,
   Megaphone,
+  TypeOutline,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
@@ -440,7 +441,7 @@ export default function LinkList() {
   return (
     <div className="rounded-xl mt-6 text-[10px]">
       {/* === HEADER (Sama seperti sebelumnya) === */}
-      <div className="flex flex-col bg-white md:flex-row items-center justify-between gap-4 mb-6 shadow-sm shadow-slate-500/50 p-6 rounded-xl">
+      <div className="flex flex-col bg-white md:flex-row items-center justify-between gap-4 mb-6 shadow-sm shadow-slate-500/50 p-6 rounded-3xl">
         <div className="relative w-full md:max-w-xs">
           <Search
             className="w-5 h-5 text-grays absolute left-4 top-1/2 -translate-y-1/2"
@@ -564,7 +565,7 @@ export default function LinkList() {
             <div
               key={link.id}
               className={clsx(
-                "rounded-xl bg-white shadow-sm shadow-slate-500/50 transition-shadow block w-full text-start",
+                "rounded-3xl bg-white shadow-sm shadow-slate-500/50 transition-shadow block w-full text-start",
                 link.status === "disabled" && "bg-gray-50 opacity-70",
                 expandedLink === link.id && "shadow-lg"
               )}
@@ -577,10 +578,10 @@ export default function LinkList() {
                 }}
                 className="flex items-center justify-between p-6 cursor-pointer"
               >
-                <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center sm:gap-4 gap-3 min-w-0">
                   <div
                     className={clsx(
-                      "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center",
+                      "sm:w-10 sm:h-10 w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center",
                       link.status === "active"
                         ? "bg-blue-dashboard"
                         : "bg-gray-200"
@@ -588,7 +589,7 @@ export default function LinkList() {
                   >
                     <LinkIcon
                       className={clsx(
-                        "w-5 h-5",
+                        "sm:w-5 sm:h-5 w-4 h-4",
                         link.status === "active"
                           ? "text-bluelight"
                           : "text-grays"
@@ -596,21 +597,23 @@ export default function LinkList() {
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[1.4em] font-medium text-grays truncate">
-                      {link.title} | {formatLinkDate(link.dateCreated)}
+                    <p className="sm:text-[1.4em] text-[1.2em] sm:flex-row flex-col flex sm:items-center items-start gap-1 font-medium text-grays truncate">
+                      <span className="md:inline hidden">{link.title}</span>
+                      <span className="md:inline hidden">|</span>
+                      <span>{formatLinkDate(link.dateCreated)}</span>
                     </p>
                     <a
                       href={link.shortUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-[1.6em] font-semibold text-shortblack hover:underline truncate line-clamp-1 block"
+                      className="sm:text-[1.6em] text-[1.4em] font-semibold text-shortblack hover:underline truncate line-clamp-1 block w-full"
                     >
                       {link.shortUrl}
                     </a>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center sm:gap-2 flex-shrink-0">
                   <div className="relative">
                     <button
                       type="button"
@@ -687,6 +690,22 @@ export default function LinkList() {
                   >
                     <div className="p-6 border-t border-gray-200 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6">
                       {/* Destination */}
+                      <div className="sm:hidden flex items-center gap-3">
+                        <TypeOutline className="w-5 h-5 text-bluelight flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-[1.2em] font-medium text-grays">
+                            Title
+                          </p>
+                          <a
+                            href={link.originalUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[1.4em] font-medium text-shortblack hover:underline truncate block"
+                          >
+                            {link.title}
+                          </a>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-bluelight flex-shrink-0" />
                         <div className="min-w-0">

@@ -35,7 +35,7 @@ export const getMemberMenu = (t: any) => [
   // (Bisa tambahin key 'levels' di en.json/id.json kalo mau translate)
   { icon: UserPlus2, label: t("referral"), href: "/referral" },
   { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
-  // { icon: History, label: t("history"), href: "/history" },
+  { icon: History, label: t("history"), href: "/history" },
 ];
 
 // Menu untuk ADMIN (Bisa tambah t() juga nanti)
