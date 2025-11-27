@@ -121,7 +121,7 @@ export default function TrafficHistory() {
         <div>
           <h3 className="text-[2em] font-bold text-shortblack flex items-center gap-3">
             <Calendar className="w-7 h-7 text-bluelight" />
-            Monthly Performance
+            Traffic Performance
           </h3>
           <p className="text-[1.4em] text-grays mt-2">
             Detail performa trafik bulanan, CPM, dan pendapatan Anda.
@@ -137,7 +137,7 @@ export default function TrafficHistory() {
               </div>
               <div>
                 <p className="text-[1.1em] text-yellow-700 font-bold uppercase tracking-wider">
-                  Best Month
+                  Best Traffic
                 </p>
                 <p className="text-[1.6em] font-bold text-shortblack">
                   {topMonth.month} {topMonth.year}

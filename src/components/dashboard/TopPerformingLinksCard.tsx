@@ -178,7 +178,7 @@ export default function TopPerformingLinksCard() {
         <div className="relative" ref={sortRef}>
           <button
             onClick={() => setIsSortOpen(!isSortOpen)}
-            className="flex items-center gap-2 text-[1.3em] bg-blues font-medium text-bluelight transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-dashboard"
+            className="flex items-center gap-2 text-[1.3em] bg-blues font-medium text-bluelight transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-dashboard mr-4"
           >
             {sortBy === "highest" ? "Teratas" : "Terbawah"}
             <ChevronDown
@@ -372,7 +372,7 @@ export default function TopPerformingLinksCard() {
       </div>
 
       {/* Footer Link */}
-      <div className=" text-center">
+      <div className=" text-center pt-4">
         <Link
           href="/new-link"
           className="text-[1.3em] font-semibold text-grays hover:text-bluelight flex items-center justify-center gap-1 transition-colors"

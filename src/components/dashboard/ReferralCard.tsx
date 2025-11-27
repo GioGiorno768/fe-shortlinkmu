@@ -160,9 +160,10 @@ export default function ReferralCard() {
             <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
               {t("referralTitle")}
             </h3>
+            {/* Link Detail */}
             <Link
               href="/referral" // Link ke halaman referral
-              className="custom:hidden flex items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline "
+              className="custom:hidden flex items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline mr-4"
             >
               <span>Detail</span>
               <ArrowRight className="w-4 h-4" />
@@ -239,10 +240,10 @@ export default function ReferralCard() {
           <div className="flex flex-col gap-4 h-full">
             <Link
               href="/referral" // Link ke halaman referral
-              className="custom:flex hidden items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline "
+              className="custom:flex hidden items-center justify-end gap-1 text-[1.4em] font-medium text-bluelight hover:underline mr-4 group"
             >
               <span>Detail</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
 
             {/* Box User Count */}

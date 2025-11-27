@@ -221,7 +221,7 @@ export default function Sidebar({
         {/* ===================================== */}
         <div
           ref={userPopupRef}
-          className="relative p-[1em] border-t border-slate-800"
+          className="sticky bottom-0 p-[1em] border-t border-slate-800"
         >
           {/* --- POPUP 1: Mode Expanded (Di atas tombol) --- */}
           <div

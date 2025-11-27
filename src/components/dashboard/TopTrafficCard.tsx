@@ -209,10 +209,10 @@ export default function TopTrafficCard() {
           </h3>
           <Link
             href="/analytics#monthly-performance" // <-- Pake Anchor ID
-            className="flex items-center gap-1 text-[1.4em] font-medium text-bluelight hover:underline"
+            className="flex items-center gap-1 text-[1.4em] font-medium text-bluelight hover:underline mr-4 group"
           >
             <span>{t("detail")}</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
           </Link>
         </div>
 
