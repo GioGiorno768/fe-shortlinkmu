@@ -90,7 +90,7 @@ export default function Header({
             <span className="solar--hamburger-menu-broken w-[3em] h-[3em] bg-shortblack " />
           </button>
 
-          <div className="sm:flex hidden cursor-default ">
+          <div className="md:flex hidden cursor-default ">
             {head.map((item, index) => (
               <div
                 key={index}

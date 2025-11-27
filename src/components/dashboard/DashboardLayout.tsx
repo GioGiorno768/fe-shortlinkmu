@@ -11,6 +11,7 @@ import { usePathname } from "@/i18n/routing";
 // --- TAMBAHKAN IMPORT INI ---
 import { useTranslations } from "next-intl";
 import { getMemberMenu, getAdminMenu } from "@/lib/menus";
+import MobileBottomBar from "./MobileBottomBar";
 
 export default function DashboardLayout({
   children,
@@ -60,7 +61,7 @@ export default function DashboardLayout({
           ${isCollapsed ? "custom:ml-20" : "custom:ml-64"}
           sm:pt-[9.2em] pt-[5em] px-4 custom:px-8 py-2
           transition-all duration-300 ease-in-out
-          min-h-screen
+          min-h-screen sm:mb-0 mb-20
         `}
       >
         <div className="w-full py-[1em] lg:px-[1.5em] px-[1.5em] mb-[.5em] rounded-xl">
@@ -71,6 +72,7 @@ export default function DashboardLayout({
 
         <DashboardFooter />
       </main>
+      <MobileBottomBar isSidebarOpen={isMobileOpen} />
     </div>
   );
 }

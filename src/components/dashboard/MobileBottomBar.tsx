@@ -1,0 +1,224 @@
+// src/components/dashboard/MobileBottomBar.tsx
+"use client";
+
+import { useState, useRef, useEffect, useTransition } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Globe,
+  Link2,
+  Wallet,
+  Check,
+  TrendingUp,
+  CreditCard,
+} from "lucide-react";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
+import { useLocale } from "next-intl";
+import clsx from "clsx";
+
+// 1. Tambah Interface Props
+interface MobileBottomBarProps {
+  isSidebarOpen: boolean;
+}
+
+// 2. Terima Props di Component
+export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps) {
+  const [activePopup, setActivePopup] = useState<"lang" | "wallet" | null>(null);
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+  const barRef = useRef<HTMLDivElement>(null);
+
+  // Close popup kalau klik di luar
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (barRef.current && !barRef.current.contains(event.target as Node)) {
+        setActivePopup(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Efek: Kalau Sidebar kebuka, tutup semua popup biar rapi pas muncul lagi
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setActivePopup(null);
+    }
+  }, [isSidebarOpen]);
+
+  const switchLanguage = (nextLocale: "en" | "id") => {
+    startTransition(() => {
+      router.replace(pathname, { locale: nextLocale });
+      setActivePopup(null);
+    });
+  };
+
+  const togglePopup = (name: "lang" | "wallet") => {
+    setActivePopup(activePopup === name ? null : name);
+  };
+
+  const walletData = [
+    { label: "Balance", value: "$880,210", icon: Wallet, color: "text-bluelight" },
+    { label: "Payout", value: "$10,210", icon: CreditCard, color: "text-green-600" },
+    { label: "CPM", value: "$5,000", icon: TrendingUp, color: "text-orange-500" },
+  ];
+
+  return (
+    // 3. Bungkus Utama dengan AnimatePresence buat animasi Mount/Unmount
+    <AnimatePresence>
+      {!isSidebarOpen && ( // Cuma render kalau sidebar TERTUTUP
+        <motion.div
+          ref={barRef}
+          // Animasi Slide Up/Down
+          initial={{ y: 150, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 150, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="fixed bottom-4 left-2 right-2 z-40 md:hidden flex justify-center pointer-events-none text-[10px]"
+        >
+          {/* === INTERNAL POPUPS (Drop-up) === */}
+          <AnimatePresence>
+            {/* 1. Language Popup */}
+            {activePopup === "lang" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="absolute bottom-[75px] left-0 w-[180px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
+              >
+                <div className="p-3 bg-gray-50 border-b border-gray-100">
+                  <span className="text-[1.1em] font-bold text-grays uppercase tracking-wider">
+                    Language
+                  </span>
+                </div>
+                <div className="p-1.5">
+                  {["en", "id"].map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => switchLanguage(l as "en" | "id")}
+                      className={clsx(
+                        "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-[1.3em] font-medium mb-1",
+                        locale === l
+                          ? "bg-blue-50 text-bluelight"
+                          : "text-shortblack hover:bg-gray-50"
+                      )}
+                    >
+                      <span className="flex items-center gap-2">
+                        {l === "en" ? "🇺🇸 English" : "🇮🇩 Indonesia"}
+                      </span>
+                      {locale === l && <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* 2. Wallet Popup */}
+            {activePopup === "wallet" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="absolute bottom-[75px] right-0 w-[220px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
+              >
+                <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                  <span className="text-[1.1em] font-bold text-grays uppercase tracking-wider">
+                    Quick Stats
+                  </span>
+                  <Link
+                    href="/withdrawal"
+                    className="text-[1.1em] text-bluelight font-semibold hover:underline"
+                  >
+                    Withdraw
+                  </Link>
+                </div>
+                <div className="p-1.5 divide-y divide-gray-50">
+                  {walletData.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2.5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={clsx(
+                            "p-1.5 rounded-full bg-slate-50",
+                            item.color
+                          )}
+                        >
+                          <item.icon className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="text-[1.2em] font-medium text-grays">
+                          {item.label}
+                        </span>
+                      </div>
+                      <span className="text-[1.3em] font-bold text-shortblack">
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* === THE BAR ITSELF === */}
+          <div className="w-full max-w-lg bg-white/90 backdrop-blur-md border border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-[2.5em] p-1.5 px-6 flex items-center justify-between gap-4 pointer-events-auto relative">
+            {/* Left Button: Language */}
+            <button
+              onClick={() => togglePopup("lang")}
+              className={clsx(
+                "flex flex-col items-center justify-center w-12 h-12 transition-all duration-300",
+                activePopup === "lang"
+                  ? "text-bluelight scale-105"
+                  : "text-grays hover:text-shortblack"
+              )}
+            >
+              <div
+                className={clsx(
+                  "p-2.5 rounded-full transition-colors",
+                  activePopup === "lang" ? "bg-blue-50" : "bg-transparent"
+                )}
+              >
+                <Globe className="w-5 h-5" strokeWidth={2.5} />
+              </div>
+            </button>
+
+            {/* Center Button: New Link */}
+            <Link href="/new-link" className="relative -top-5">
+              <motion.div
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05, y: -2 }}
+                className="w-14 h-14 rounded-full bg-gradient-to-br from-bluelight to-blue-600 shadow-xl shadow-blue-500/30 flex items-center justify-center text-white border-[3px] border-white ring-1 ring-blue-100"
+              >
+                <Link2 className="w-6 h-6" strokeWidth={2.5} />
+              </motion.div>
+            </Link>
+
+            {/* Right Button: Wallet */}
+            <button
+              onClick={() => togglePopup("wallet")}
+              className={clsx(
+                "flex flex-col items-center justify-center w-12 h-12 transition-all duration-300",
+                activePopup === "wallet"
+                  ? "text-bluelight scale-105"
+                  : "text-grays hover:text-shortblack"
+              )}
+            >
+              <div
+                className={clsx(
+                  "p-2.5 rounded-full transition-colors",
+                  activePopup === "wallet" ? "bg-blue-50" : "bg-transparent"
+                )}
+              >
+                <Wallet className="w-5 h-5" strokeWidth={2.5} />
+              </div>
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

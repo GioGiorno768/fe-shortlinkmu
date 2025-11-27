@@ -489,17 +489,23 @@ export default function LinkList() {
                       initial={{ opacity: 0, y: -5 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -5 }}
-                      className="absolute top-full right-0 mt-2 p-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-100"
+                      className="absolute top-full sm:right-0 left-0 mt-2 p-2 w-40 bg-white rounded-lg shadow-lg z-20 border border-gray-100"
                     >
                       <button
                         onClick={() => handleSortChange("highest")}
-                        className="block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
+                        className={`block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues ${
+                          sortBy === "highest" &&
+                          "font-semibold bg-blue-dashboard text-bluelight"
+                        }`}
                       >
                         Highest
                       </button>
                       <button
                         onClick={() => handleSortChange("lowest")}
-                        className="block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues"
+                        className={`block w-full text-left text-[1.5em] px-3 py-2 rounded-md text-shortblack hover:bg-blues ${
+                          sortBy === "lowest" &&
+                          "font-semibold bg-blue-dashboard text-bluelight"
+                        }`}
                       >
                         Lowest
                       </button>
