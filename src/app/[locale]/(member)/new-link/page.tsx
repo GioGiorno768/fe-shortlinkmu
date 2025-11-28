@@ -1,81 +1,44 @@
 // src/app/[locale]/(member)/new-link/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import CreateShortlink from "@/components/dashboard/CreateShortlink";
-import type {
-  CreateLinkFormData,
-  GeneratedLinkData,
-  Shortlink,
-  EditableLinkData,
-} from "@/types/type";
 import LinkList from "@/components/dashboard/links/LinkList";
-
-// Mock Fetch Data
-async function fetchUserLinks(): Promise<Shortlink[]> {
-  await new Promise((r) => setTimeout(r, 1000));
-  // ... Generate array dummy (copy dari LinkList lama) ...
-  return Array.from({ length: 20 }, (_, i) => ({
-    id: `link-${i}`,
-    title: `Link ${i}`,
-    shortUrl: `short.link/${i}`,
-    originalUrl: "https://google.com",
-    dateCreated: new Date().toISOString(),
-    validViews: 100 * i,
-    totalEarning: 5 * i,
-    totalClicks: 200 * i,
-    averageCPM: 4.5,
-    adsLevel: "level1",
-    passwordProtected: false,
-    status: "active",
-  }));
-}
+import { useLinks } from "@/hooks/useLinks"; // Import Hook kita
+import { Loader2 } from "lucide-react";
 
 export default function NewLinkPage() {
-  const [links, setLinks] = useState<Shortlink[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUserLinks().then((data) => {
-      setLinks(data);
-      setLoading(false);
-    });
-  }, []);
-
-  const handleUpdate = async (id: string, newData: EditableLinkData) => {
-    // Update state lokal (nanti ganti API call)
-    setLinks((prev) =>
-      prev.map((l) =>
-        l.id === id
-          ? { ...l, ...newData, passwordProtected: !!newData.password }
-          : l
-      )
-    );
-  };
-
-  const handleDisable = async (id: string, status: "active" | "disabled") => {
-    const newStatus = status === "active" ? "disabled" : "active";
-    setLinks((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
-    );
-  };
+  // Panggil semua logika dari Hook
+  const {
+    links,
+    isLoading,
+    isMutating,
+    createLink,
+    updateLink,
+    toggleLinkStatus,
+  } = useLinks();
 
   return (
-    <div className="lg:text-[10px] text-[8px] font-figtree space-y-6">
+    <div className="lg:text-[10px] text-[8px] font-figtree space-y-6 pb-10">
+      {/* Form Create Link
+        Kita pass `isMutating` biar tombolnya loading pas lagi submit ke API 
+      */}
       <CreateShortlink
-        generatedLink={null}
-        isLoading={false}
+        generatedLink={null} // Nanti bisa diatur di hook kalau mau nampilin hasil generate
+        isLoading={isMutating}
         error={null}
-        onSubmit={async () => true}
+        onSubmit={createLink}
       />
 
-      {loading ? (
-        <p className="text-center text-[1.4em]">Loading Links...</p>
+      {/* List Link */}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+        </div>
       ) : (
         <LinkList
           links={links}
-          onUpdateLink={handleUpdate}
-          onDisableLink={handleDisable}
+          onUpdateLink={updateLink}
+          onDisableLink={toggleLinkStatus}
         />
       )}
     </div>

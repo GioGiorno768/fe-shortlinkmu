@@ -1,3 +1,4 @@
+// src/components/dashboard/levels/LevelsGrid.tsx
 "use client";
 
 import { motion } from "framer-motion";
@@ -14,85 +15,13 @@ import {
 import clsx from "clsx";
 import type { UserLevel, LevelConfig } from "@/types/type";
 
+// 👇 Update Props: Terima 'levels' dari parent
 interface LevelsGridProps {
   currentLevel: UserLevel;
+  levels: LevelConfig[]; // <--- Tambah ini
 }
 
-// Config Data Statis (Bisa dipindah ke database nanti)
-const LEVELS: LevelConfig[] = [
-  {
-    no: 1,
-    id: "beginner",
-    name: "Beginner",
-    minEarnings: 0, // $0
-    cpmBonus: 0,
-    benefits: ["Basic Analytics", "Standard Support", "Monthly Payout"],
-    iconColor: "text-gray-500",
-    bgColor: "bg-white",
-    borderColor: "border-gray-200",
-  },
-  {
-    no: 2,
-    id: "rookie",
-    name: "Rookie",
-    minEarnings: 50, // $50 (Setara +/- 10-20k views indo)
-    cpmBonus: 5,
-    benefits: ["+5% CPM Bonus", "Priority Support", "Faster Withdrawal"],
-    iconColor: "text-green-500",
-    bgColor: "bg-green-50",
-    borderColor: "border-green-200",
-  },
-  {
-    no: 3,
-    id: "elite",
-    name: "Elite",
-    minEarnings: 250, // $250
-    cpmBonus: 10,
-    benefits: [
-      "+10% CPM Bonus",
-      "Daily Payout Request",
-      "No Captcha for Users",
-    ],
-    iconColor: "text-blue-500",
-    bgColor: "bg-blue-50",
-    borderColor: "border-blue-200",
-  },
-  {
-    no: 4,
-    id: "pro",
-    name: "Pro",
-    minEarnings: 1000, // $1,000
-    cpmBonus: 15,
-    benefits: ["+15% CPM Bonus", "Dedicated Manager", "Custom Alias Domain"],
-    iconColor: "text-purple-500",
-    bgColor: "bg-purple-50",
-    borderColor: "border-purple-200",
-  },
-  {
-    no: 5,
-    id: "master",
-    name: "Master",
-    minEarnings: 5000, // $5,000
-    cpmBonus: 25,
-    benefits: ["+25% CPM Bonus", "Instant Payout", "Exclusive Events"],
-    iconColor: "text-red-500",
-    bgColor: "bg-red-50",
-    borderColor: "border-red-200",
-  },
-  {
-    no: 6,
-    id: "mythic",
-    name: "Mythic",
-    minEarnings: 20000, // $20,000
-    cpmBonus: 40,
-    benefits: ["+40% CPM Bonus", "VIP Status", "Revenue Share 100%"],
-    iconColor: "text-yellow-500",
-    bgColor: "bg-yellow-50",
-    borderColor: "border-yellow-200",
-  },
-];
-
-// Helper Icon
+// Helper Icon (Tetap di sini karena ini urusan UI)
 const getIcon = (id: UserLevel) => {
   switch (id) {
     case "beginner":
@@ -112,17 +41,18 @@ const getIcon = (id: UserLevel) => {
   }
 };
 
-export default function LevelsGrid({ currentLevel }: LevelsGridProps) {
-  // Cari index level user sekarang buat logic "Locked"
-  const currentIndex = LEVELS.findIndex((l) => l.id === currentLevel);
+export default function LevelsGrid({ currentLevel, levels }: LevelsGridProps) {
+  // Logic cari index level user saat ini
+  const currentIndex = levels.findIndex((l) => l.id === currentLevel);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
-      {LEVELS.map((level, index) => {
+      {levels.map((level, index) => {
+        // Logic unlock: Level user >= Level card ini
+        // (Asumsi array 'levels' sudah urut dari beginner -> mythic)
         const isUnlocked = index <= currentIndex;
         const isCurrent = index === currentIndex;
         const Icon = getIcon(level.id);
-        console.log(isUnlocked);
 
         return (
           <motion.div

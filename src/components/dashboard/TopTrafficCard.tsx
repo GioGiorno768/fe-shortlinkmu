@@ -43,12 +43,6 @@ const levelConfig: LevelConfig = {
   mythic: { labelKey: "levelMythic", icon: Crown, iconColor: "text-bluelight" },
 };
 
-function formatViews(views: number): string {
-  if (views >= 1000000) return `${(views / 1000000).toFixed(1)}M`;
-  if (views >= 1000) return `${Math.floor(views / 1000)}K`;
-  return views.toString();
-}
-
 export default function TopTrafficCard({ data }: TopTrafficCardProps) {
   const t = useTranslations("Dashboard");
 
@@ -86,14 +80,14 @@ export default function TopTrafficCard({ data }: TopTrafficCardProps) {
             {/* Card 1: Top Month */}
             <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
               <p className="text-[1.4em] font-medium text-grays">
-                {t("topMonth")}
+                Month
               </p>
               <div>
                 <p className="text-[2.8em] font-semibold text-bluelight my-1">
                   {data.topMonth.month}
                 </p>
                 <p className="text-[1.6em] font-medium text-grays">
-                  {formatViews(data.topMonth.views)} Views
+                  All Time
                 </p>
               </div>
             </div>
@@ -101,7 +95,7 @@ export default function TopTrafficCard({ data }: TopTrafficCardProps) {
             {/* Card 2: Top Year */}
             <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
               <p className="text-[1.4em] font-medium text-grays">
-                {t("topYear")}
+                Year
               </p>
               <div>
                 <div>
@@ -109,7 +103,7 @@ export default function TopTrafficCard({ data }: TopTrafficCardProps) {
                     {data.topYear.year}
                   </p>
                   <p className="text-[1.6em] font-medium text-grays">
-                    {formatViews(data.topYear.views)} Views
+                    All Time
                   </p>
                 </div>
               </div>
@@ -119,7 +113,7 @@ export default function TopTrafficCard({ data }: TopTrafficCardProps) {
             <div className="flex-1 min-w-[17em] bg-white rounded-2xl p-6 shadow-sm shadow-slate-500/50 hover:shadow-lg transition-shadow duration-300 space-y-5">
               <div className="flex items-center justify-between">
                 <p className="text-[1.4em] font-medium text-grays">
-                  {t("topLevel")}
+                  Level
                 </p>
                 <LevelIcon
                   className={`w-5 h-5 ${currentLevel.iconColor}`}

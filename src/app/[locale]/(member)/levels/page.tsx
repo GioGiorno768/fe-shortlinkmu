@@ -1,45 +1,29 @@
+// src/app/[locale]/(member)/levels/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import { useAlert } from "@/hooks/useAlert";
 import { Loader2 } from "lucide-react";
-import type { UserLevelProgress } from "@/types/type";
+import { useEffect } from "react";
 
+// Components
 import CurrentLevelHeader from "@/components/dashboard/levels/CurrentLevelHeader";
 import LevelsGrid from "@/components/dashboard/levels/LevelsGrid";
 
-// --- MOCK API ---
-async function fetchUserLevelProgress(): Promise<UserLevelProgress> {
-  console.log("MANGGIL API: /api/user/level-progress");
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  return {
-    currentLevel: "rookie",
-    currentEarnings: 35.5, // $35.50
-    nextLevelEarnings: 50.0, // Target $50.00
-    progressPercent: 71, // (35.5 / 50) * 100
-  };
-}
+// Hook
+import { useLevels } from "@/hooks/useLevels";
 
 export default function LevelsPage() {
   const { showAlert } = useAlert();
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<UserLevelProgress | null>(null);
 
+  // Pake Hook yang udah kita benerin
+  const { userProgress, levelsConfig, isLoading, error } = useLevels();
+
+  // Tampilkan alert kalo ada error dari hook
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetchUserLevelProgress();
-        setData(res);
-      } catch (error) {
-        showAlert("Gagal memuat data level.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, [showAlert]);
+    if (error) {
+      showAlert(error, "error");
+    }
+  }, [error, showAlert]);
 
   if (isLoading) {
     return (
@@ -48,6 +32,10 @@ export default function LevelsPage() {
       </div>
     );
   }
+
+  // Render aman karena ada check if(isLoading) diatas
+  // tapi kita double check userProgress biar gak null
+  if (!userProgress) return null;
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree pb-10">
@@ -62,11 +50,14 @@ export default function LevelsPage() {
         </p>
       </div>
 
-      {/* 1. Current Progress Header */}
-      {data && <CurrentLevelHeader data={data} />}
+      {/* 1. Header: Data Progress User */}
+      <CurrentLevelHeader data={userProgress} />
 
-      {/* 2. All Levels Grid */}
-      {data && <LevelsGrid currentLevel={data.currentLevel} />}
+      {/* 2. Grid: Config Level (Sekarang Dinamis dari API) */}
+      <LevelsGrid
+        currentLevel={userProgress.currentLevel}
+        levels={levelsConfig} // <-- Pass data dinamis ke sini
+      />
     </div>
   );
 }
