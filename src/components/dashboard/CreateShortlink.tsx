@@ -19,7 +19,6 @@ import {
   Facebook,
   Twitter,
   Send,
-  Settings,
   Megaphone,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -30,75 +29,32 @@ import type {
 } from "@/types/type";
 import { Link } from "@/i18n/routing";
 
-// ========================================================
-// === DESAIN API (MOCK/DUMMY) ===
-// ========================================================
-// Nanti lu ganti fungsi ini pake API call beneran
-async function generateShortlinkAPI(
-  formData: CreateLinkFormData
-): Promise<GeneratedLinkData> {
-  console.log("MANGGIL API: /api/links/create", formData);
-
-  /* // --- CONTOH API CALL BENERAN (POST) ---
-  // const token = localStorage.getItem("authToken");
-  // const response = await fetch(
-  //   `${process.env.NEXT_PUBLIC_API_URL}/api/links/create`,
-  //   {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       // 'Authorization': `Bearer ${token}`
-  //     },
-  //     body: JSON.stringify(formData),
-  //   }
-  // );
-  // if (!response.ok) {
-  //   const errorData = await response.json();
-  //   // Asumsi backend ngirim error { message: "Alias already in use" }
-  //   throw new Error(errorData.message || "Gagal membuat link");
-  // }
-  // const data: GeneratedLinkData = await response.json();
-  // return data; // Asumsi API ngembaliin { shortUrl: "...", originalUrl: "..." }
-  */
-
-  // --- DATA DUMMY (HAPUS NANTI) ---
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulasi loading
-
-  // Validasi simpel
-  if (!formData.url.startsWith("http")) {
-    throw new Error("URL tidak valid. Harus diawali http:// atau https://");
-  }
-  // Simulasi error alias
-  if (formData.alias?.toLowerCase() === "test") {
-    throw new Error("Alias ini sudah digunakan.");
-  }
-
-  const randomString = Math.random().toString(36).substring(7);
-  return {
-    shortUrl: `short.link/${formData.alias || randomString}`,
-    originalUrl: formData.url,
-  };
-  // --- AKHIR DATA DUMMY ---
+// Definisi Props
+interface CreateShortlinkProps {
+  generatedLink: GeneratedLinkData | null;
+  isLoading: boolean;
+  error: string | null;
+  onSubmit: (data: CreateLinkFormData) => Promise<boolean>; // Return true kalo sukses (biar bisa clear form)
 }
-// ========================================================
 
-export default function CreateShortlink() {
+export default function CreateShortlink({
+  generatedLink,
+  isLoading,
+  error,
+  onSubmit,
+}: CreateShortlinkProps) {
   const t = useTranslations("Dashboard");
 
-  // --- TAMBAHKAN INI ---
-  // Helper buat ngedapetin format YYYY-MM-DDThh:mm (waktu LOKAL)
-  // Ini penting biar 'min' nya bener di browser user
+  // Helper Timezone Local
   const getMinDateTimeLocal = () => {
     const localDate = new Date();
-    // Kita offset manual biar jadi waktu lokal, bukan UTC
     localDate.setMinutes(
       localDate.getMinutes() - localDate.getTimezoneOffset()
     );
-    // Format ke "YYYY-MM-DDThh:mm"
     return localDate.toISOString().slice(0, 16);
   };
 
-  // State Form
+  // State Form (Tetap di sini karena ini UI Control)
   const [formData, setFormData] = useState<CreateLinkFormData>({
     url: "",
     alias: "",
@@ -111,18 +67,11 @@ export default function CreateShortlink() {
   // State UI
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isAdsLevelOpen, setIsAdsLevelOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [generatedLink, setGeneratedLink] = useState<GeneratedLinkData | null>(
-    null
-  );
   const [isShortCopied, setIsShortCopied] = useState(false);
   const [isDestCopied, setIsDestCopied] = useState(false);
 
-  // Ref
   const adsLevelRef = useRef<HTMLDivElement>(null);
 
-  // Opsi Ad Level
   const adLevels: { key: AdLevel; label: string }[] = [
     { key: "noAds", label: t("noAds") },
     { key: "level1", label: t("adsLevel1") },
@@ -131,7 +80,6 @@ export default function CreateShortlink() {
     { key: "level4", label: t("adsLevel4") },
   ];
 
-  // Efek: Nutup dropdown pas klik di luar
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -147,7 +95,6 @@ export default function CreateShortlink() {
     };
   }, []);
 
-  // --- Handlers ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -157,36 +104,22 @@ export default function CreateShortlink() {
     setIsAdsLevelOpen(false);
   };
 
+  // Handler Submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    setGeneratedLink(null);
+    // Panggil fungsi dari Parent
+    const success = await onSubmit(formData);
 
-    try {
-      const data = await generateShortlinkAPI(formData);
-      setGeneratedLink(data);
-      // Reset input utama, tapi biarin advanced settings
+    // Kalau sukses, reset form (tapi biarin settingan advanced)
+    if (success) {
       setFormData({
         ...formData,
         url: "",
         alias: "",
       });
-    } catch (err: any) {
-      // Set error
-      if (err.message.includes("alias")) {
-        setError(t("errorAliasInUse"));
-      } else if (err.message.includes("valid")) {
-        setError(t("errorUrlInvalid"));
-      } else {
-        setError(t("errorSomethingWentWrong"));
-      }
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Handle Copy
   const handleCopy = (text: string, type: "short" | "dest") => {
     navigator.clipboard.writeText(text);
     if (type === "short") {
@@ -198,7 +131,6 @@ export default function CreateShortlink() {
     }
   };
 
-  // Handle Share (Pake yang dari ReferralCard, sedikit modif)
   const socialPlatforms = [
     {
       name: "WhatsApp",
@@ -227,13 +159,10 @@ export default function CreateShortlink() {
     const text = `Lihat link saya: ${generatedLink.shortUrl}`;
     const encodedUrl = encodeURIComponent(generatedLink.shortUrl);
     const encodedText = encodeURIComponent(text);
-
-    let shareUrl = "";
-    if (platform.name === "WhatsApp" || platform.name === "Twitter") {
-      shareUrl = `${platform.url}${encodedText}`;
-    } else {
-      shareUrl = `${platform.url}${encodedUrl}&text=${encodedText}`;
-    }
+    const shareUrl =
+      platform.name === "WhatsApp" || platform.name === "Twitter"
+        ? `${platform.url}${encodedText}`
+        : `${platform.url}${encodedUrl}&text=${encodedText}`;
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -255,11 +184,8 @@ export default function CreateShortlink() {
 
   return (
     <div className="space-y-6">
-      {/* ======================= */}
-      {/* === CARD FORM UTAMA === */}
-      {/* ======================= */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm shadow-slate-500/50">
-        {/* Header Form */}
+      {/* FORM CARD */}
+      <div className="bg-white p-6 rounded-xl shadow-sm shadow-slate-500/50">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[1.8em] font-semibold text-shortblack tracking-tight">
             {t("createShortlink")}
@@ -277,9 +203,7 @@ export default function CreateShortlink() {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Input Dasar */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="url"
@@ -300,7 +224,6 @@ export default function CreateShortlink() {
             />
           </div>
 
-          {/* Input Advanced (Animasi) */}
           <AnimatePresence>
             {isAdvancedOpen && (
               <motion.div
@@ -309,10 +232,7 @@ export default function CreateShortlink() {
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <div
-                  className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300`}
-                >
-                  {/* Password */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300">
                   <div className="relative">
                     <Lock className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
@@ -324,7 +244,6 @@ export default function CreateShortlink() {
                       placeholder={t("setPassword")}
                     />
                   </div>
-                  {/* Title */}
                   <div className="relative">
                     <Type className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
@@ -336,27 +255,25 @@ export default function CreateShortlink() {
                       placeholder={t("setTitle")}
                     />
                   </div>
-                  {/* === UBAH BLOK INI === */}
-                  {/* Expired Date */}
                   <div className="relative">
                     <Calendar className="w-4 h-4 text-grays absolute left-4 top-1/2 -translate-y-1/2" />
                     <input
-                      type="datetime-local" // <-- 1. GANTI TYPE
+                      type="datetime-local"
                       name="expiresAt"
                       value={formData.expiresAt}
                       onChange={handleChange}
                       className="w-full text-[1.6em] px-10 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight bg-blues"
-                      min={getMinDateTimeLocal()} // <-- 2. GANTI MIN
+                      min={getMinDateTimeLocal()}
                     />
                   </div>
-                  {/* === AKHIR PERUBAHAN === */}
-                  {/* Ads Level Dropdown */}
-                  <div className="relative flex justify-stretch items-stretch gap-3" ref={adsLevelRef}>
+                  <div
+                    className="relative flex justify-stretch items-stretch gap-3"
+                    ref={adsLevelRef}
+                  >
                     <button
                       type="button"
                       onClick={() => setIsAdsLevelOpen(!isAdsLevelOpen)}
-                      className="w-full text-[1.6em] px-4 py-3 rounded-xl border border-gray-200 bg-blues
-                                 flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-bluelight"
+                      className="w-full text-[1.6em] px-4 py-3 rounded-xl border border-gray-200 bg-blues flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-bluelight"
                     >
                       <span
                         className={
@@ -399,7 +316,10 @@ export default function CreateShortlink() {
                         </motion.div>
                       )}
                     </AnimatePresence>
-                    <Link href={"/ads-info"} className="relative px-[1.5em] rounded-lg bg-blue-dashboard flex items-center justify-center">
+                    <Link
+                      href={"/ads-info"}
+                      className="relative px-[1.5em] rounded-lg bg-blue-dashboard flex items-center justify-center"
+                    >
                       <Megaphone className="w-6 h-6 text-bluelight" />
                     </Link>
                   </div>
@@ -408,13 +328,10 @@ export default function CreateShortlink() {
             )}
           </AnimatePresence>
 
-          {/* Tombol Submit */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-dashboard text-bluelight text-[1.6em] font-semibold py-4 rounded-xl 
-                       hover:bg-bluelight hover:text-white transition-all duration-300
-                       disabled:opacity-50 flex items-center justify-center gap-2 relative"
+            className="w-full bg-blue-dashboard text-bluelight text-[1.6em] font-semibold py-4 rounded-xl hover:bg-bluelight hover:text-white transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 relative"
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -424,7 +341,6 @@ export default function CreateShortlink() {
             <span>{isLoading ? t("generating") : t("generateShortlink")}</span>
           </button>
 
-          {/* Tampilan Error */}
           <AnimatePresence>
             {error && (
               <motion.div
@@ -441,9 +357,7 @@ export default function CreateShortlink() {
         </form>
       </div>
 
-      {/* ======================= */}
-      {/* === CARD HASIL LINK === */}
-      {/* ======================= */}
+      {/* RESULT CARD */}
       <AnimatePresence>
         {generatedLink && (
           <motion.div
@@ -452,7 +366,7 @@ export default function CreateShortlink() {
             exit={{ opacity: 0, y: -20 }}
             className="grid grid-cols-1 custom:grid-cols-3 gap-4"
           >
-            {/* Card Your Link */}
+            {/* Short Link */}
             <div className="bg-white p-4 rounded-xl shadow-sm shadow-slate-500/50 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-blue-dashboard flex-shrink-0 flex items-center justify-center">
@@ -480,7 +394,7 @@ export default function CreateShortlink() {
               </button>
             </div>
 
-            {/* Card Share */}
+            {/* Share */}
             <div className="bg-white p-4 rounded-xl shadow-sm shadow-slate-500/50 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 {socialPlatforms.map((platform) => (
@@ -503,10 +417,9 @@ export default function CreateShortlink() {
               </button>
             </div>
 
-            {/* Card Destination Link */}
+            {/* Original Link */}
             <div className="bg-white p-4 rounded-xl shadow-sm shadow-slate-500/50 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                {/* Ganti ikonnya biar beda */}
                 <div className="w-10 h-10 rounded-lg bg-blue-dashboard flex-shrink-0 flex items-center justify-center">
                   <LinkIcon className="w-5 h-5 text-bluelight" />
                 </div>

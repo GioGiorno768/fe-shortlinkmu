@@ -23,10 +23,10 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import clsx from "clsx";
-import EditLinkModal from "./EditLinkModal";
+import EditLinkModal from "../../components/dashboard/EditLinkModal";
 import type { AdLevel, EditableLinkData } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "../../components/dashboard/ConfirmationModal";
 
 // Interface Shortlink
 interface Shortlink {

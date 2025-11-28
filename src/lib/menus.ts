@@ -11,6 +11,8 @@ import {
   Users,
   Settings,
   Crown,
+  Link,
+  MessageCircleWarning,
 } from "lucide-react";
 
 // Menu untuk MEMBER
@@ -46,7 +48,10 @@ export const getAdminMenu = () => [
     href: "/admin/dashboard",
   },
   { icon: Users, label: "Manage Users", href: "/admin/users" },
+  { icon: Link, label: "Manage Links", href: "/admin/links" },
+  { icon: Users, label: "Withdrawals", href: "/admin/withdrawals" },
   { icon: ShieldAlert, label: "Abuse Reports", href: "/admin/reports" },
+  { icon: MessageCircleWarning, label: "Announcements", href: "/admin/announcements" },
   { icon: Megaphone, label: "Ads Settings", href: "/admin/ads-levels" },
-  { icon: Settings, label: "System Settings", href: "/admin/settings" },
+  { icon: Settings, label: "Settings", href: "/admin/settings" },
 ];

@@ -1,63 +1,21 @@
+// src/components/dashboard/MilestoneCard.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Crown,
-  TrendingUp,
-  ChevronRight,
-  Loader2,
-  LockOpen,
-  Lock,
-  Star,
-} from "lucide-react";
+import { TrendingUp, ChevronRight, Loader2, Lock, Star } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import clsx from "clsx";
+import type { MilestoneData } from "@/types/type";
 
-// --- TIPE DATA ---
-interface MilestoneData {
-  icon: any;
-  currentLevel: string; // cth: "Rookie"
-  nextLevel: string; // cth: "Elite"
-  currentEarnings: number; // cth: 35.50
-  nextTarget: number; // cth: 50.00
-  currentBonus: number; // cth: 5 (%)
-  nextBonus: number; // cth: 10 (%)
-  progress: number; // cth: 70 (%)
+// Terima data lewat props
+interface MilestoneCardProps {
+  data: MilestoneData | null;
 }
 
-// --- MOCK API ---
-async function fetchMilestoneData(): Promise<MilestoneData> {
-  // Simulasi loading
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return {
-    icon: Star,
-    currentLevel: "Rookie",
-    nextLevel: "Elite",
-    currentEarnings: 35.5,
-    nextTarget: 50.0,
-    currentBonus: 5,
-    nextBonus: 10,
-    progress: 71,
-  };
-}
-
-export default function MilestoneCard() {
-  const [data, setData] = useState<MilestoneData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetchMilestoneData();
-      setData(res);
-      setLoading(false);
-    };
-    load();
-  }, []);
-
+export default function MilestoneCard({ data }: MilestoneCardProps) {
   const formatCurrency = (num: number) => "$" + num.toFixed(2);
 
-  if (loading) {
+  // Handle Loading State (Kalau data belum ada)
+  if (!data) {
     return (
       <div className="h-full min-h-[180px] bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
@@ -65,7 +23,17 @@ export default function MilestoneCard() {
     );
   }
 
-  if (!data) return null;
+  // Destructure biar kodingan di bawah lebih bersih
+  const {
+    icon: Icon, // Rename jadi huruf besar biar bisa dipake sebagai Component
+    currentLevel,
+    nextLevel,
+    currentEarnings,
+    nextTarget,
+    currentBonus,
+    nextBonus,
+    progress,
+  } = data;
 
   return (
     <motion.div
@@ -77,7 +45,7 @@ export default function MilestoneCard() {
       {/* Dekorasi Background */}
       <div
         className={`absolute top-0 right-0 w-64 h-64 ${
-          data.currentLevel === "Rookie"
+          currentLevel === "Rookie"
             ? "bg-lightgreen-dashboard/50"
             : "bg-blue-50"
         } rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none`}
@@ -87,9 +55,11 @@ export default function MilestoneCard() {
       <div className="flex justify-between items-start relative z-10 ">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-green-50 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10">
-            <data.icon
+            <Icon
               className={`w-8 h-8 ${
-                data.icon === Star ? "text-green-500" : "text-yellow-300"
+                // Cek nama komponen icon-nya (karena Icon sekarang berupa fungsi/objek)
+                // Cara paling aman di sini pake logic props data aja kalau mau styling beda
+                currentLevel === "Rookie" ? "text-green-500" : "text-yellow-300"
               }`}
             />
           </div>
@@ -98,7 +68,7 @@ export default function MilestoneCard() {
               Current Rank
             </p>
             <h3 className="text-[2.4em] font-bold leading-none">
-              {data.currentLevel}
+              {currentLevel}
             </h3>
           </div>
         </div>
@@ -107,15 +77,14 @@ export default function MilestoneCard() {
         <div className="text-right hidden md:block">
           <div className="inline-flex items-center gap-2 bg-lightgreen-dashboard border border-darkgreen-dashboard px-3 py-1.5 rounded-full text-darkgreen-dashboard font-bold text-[1.2em]">
             <TrendingUp className="w-4 h-4" />
-            <span>+{data.currentBonus}% CPM Bonus</span>
+            <span>+{currentBonus}% CPM Bonus</span>
           </div>
         </div>
 
         <div className="text-right md:hidden block">
           <div className="flex justify-center flex-col items-center px-3 py-1.5 rounded-full text-darkgreen-dashboard font-bold text-[1.2em]">
             <div className="text-[2.4em] flex items-center gap-2">
-              
-              <span>+{data.currentBonus}%</span>
+              <span>+{currentBonus}%</span>
             </div>
             <span className="flex">CPM Bonus</span>
           </div>
@@ -127,12 +96,10 @@ export default function MilestoneCard() {
         <div className="flex justify-between items-end mb-3 text-[1.3em]">
           <span className="text-shortblack">
             Earnings:{" "}
-            <b className="text-bluelight">
-              {formatCurrency(data.currentEarnings)}
-            </b>
+            <b className="text-bluelight">{formatCurrency(currentEarnings)}</b>
           </span>
           <span className="text-slate-400">
-            Target: {formatCurrency(data.nextTarget)}
+            Target: {formatCurrency(nextTarget)}
           </span>
         </div>
 
@@ -141,11 +108,10 @@ export default function MilestoneCard() {
           {/* Bar Fill (Animated) */}
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${data.progress}%` }}
+            animate={{ width: `${progress}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
             className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full relative"
           >
-            {/* Glow Effect di ujung bar */}
             <div className="absolute right-0 top-0 bottom-0 w-2 bg-white/50 blur-[2px]" />
           </motion.div>
         </div>
@@ -154,10 +120,10 @@ export default function MilestoneCard() {
         <p className="mt-3 text-[1.2em] text-slate-400">
           You need{" "}
           <span className="text-bluelight font-bold">
-            {formatCurrency(data.nextTarget - data.currentEarnings)}
+            {formatCurrency(nextTarget - currentEarnings)}
           </span>{" "}
           more to unlock{" "}
-          <span className="text-yellow-400 font-bold">{data.nextLevel}</span>.
+          <span className="text-yellow-400 font-bold">{nextLevel}</span>.
         </p>
       </div>
 
@@ -167,9 +133,7 @@ export default function MilestoneCard() {
           <Lock className="w-5 h-5 text-slate-400" />
           <span className="text-[1.2em] text-slate-500">
             Next Reward:{" "}
-            <span className="text-bluelight font-bold">
-              +{data.nextBonus}% CPM
-            </span>
+            <span className="text-bluelight font-bold">+{nextBonus}% CPM</span>
           </span>
         </div>
 

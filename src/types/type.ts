@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+
 export type NavItem = {
   icon: React.ElementType;
   label: string;
@@ -225,3 +227,92 @@ export interface UserPreferences {
   privacy: PrivacySettings;
 }
 
+export interface DashboardSlide {
+  id: string;
+  title: string;
+  desc: string;
+  cta: string;
+  link: string;
+  icon: LucideIcon;
+  theme: "blue" | "purple" | "orange"; // Batasin string biar sesuai tema css
+}
+
+export interface MilestoneData {
+  icon: React.ElementType; // Ganti 'any' jadi ini biar lebih aman
+  currentLevel: string;
+  nextLevel: string;
+  currentEarnings: number;
+  nextTarget: number;
+  currentBonus: number;
+  nextBonus: number;
+  progress: number;
+}
+
+export interface ReferralCardData {
+  referralLink: string;
+  totalUsers: number;
+}
+
+export interface TopPerformingLink {
+  id: string;
+  title: string;
+  shortUrl: string;
+  originalUrl: string;
+  validViews: number;
+  totalEarnings: number;
+  cpm: number;
+  adsLevel: AdLevel;
+}
+
+export type TimeRange = "perWeek" | "perMonth" | "perYear";
+
+export type StatType = "totalEarnings" | "totalViews" | "totalReferral"; // totalClicks kita hapus aja biar konsisten sama opsi yg ada
+
+export interface AnalyticsData {
+  series: {
+    name: string;
+    data: number[];
+  }[];
+  categories: string[];
+}
+
+export interface MonthlyStat {
+  month: string;
+  year: number;
+  views: number;
+  cpm: number;
+  earnings: number;
+  level: string;
+  growth: number;
+}
+
+export interface Shortlink {
+  id: string;
+  title: string;
+  shortUrl: string;
+  originalUrl: string;
+  dateCreated: string;
+  dateExpired?: string;
+  validViews: number;
+  totalEarning: number;
+  totalClicks: number;
+  averageCPM: number;
+  adsLevel: AdLevel;
+  passwordProtected: boolean;
+  password?: string;
+  status: "active" | "disabled";
+}
+
+// Tipe buat Filter & Sort
+export type FilterByType =
+  | "date"
+  | "topLinks"
+  | "dateExpired"
+  | "validViews"
+  | "totalEarning"
+  | "avgCPM"
+  | "linkEnabled"
+  | "linkDisabled"
+  | "linkPassword";
+
+export type SortByType = "highest" | "lowest";

@@ -20,7 +20,7 @@ export default function middleware(request: NextRequest) {
   // Cek apakah URL mengandung "/admin"
   // (Logic aslinya nanti lu ganti pake cek Session/Token user)
   const isAdminPath = pathname.includes("/admin");
-  const isUserAdmin = false; // <--- GANTI INI DENGAN LOGIC AUTH LU NANTI (misal: checkCookie)
+  const isUserAdmin = true; // <--- GANTI INI DENGAN LOGIC AUTH LU NANTI (misal: checkCookie)
 
   if (isAdminPath && !isUserAdmin) {
     // Kalau bukan admin coba masuk, tendang ke login atau 404

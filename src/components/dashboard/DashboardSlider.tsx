@@ -1,43 +1,18 @@
+// src/components/dashboard/DashboardSlider.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence, Transition } from "framer-motion";
-import { Sparkles, Megaphone, Wallet, ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, Loader2 } from "lucide-react"; // Icon lain dihapus karena dikirim via props
 import { Link } from "@/i18n/routing";
 import clsx from "clsx";
+import type { DashboardSlide } from "@/types/type"; // Import tipe yang tadi
 
-// --- DATA SLIDE ---
-const SLIDES = [
-  {
-    id: "welcome",
-    title: "Selamat Datang, Kevin! 👋",
-    desc: "Semoga harimu menyenangkan. Yuk cek performa link kamu dan tingkatkan trafik hari ini!",
-    cta: "Buat Link Baru",
-    link: "/new-link",
-    icon: Sparkles,
-    theme: "blue",
-  },
-  {
-    id: "event",
-    title: "Bonus CPM Weekend! 🚀",
-    desc: "Dapatkan kenaikan CPM +15% untuk semua traffic dari Indonesia khusus Sabtu & Minggu ini.",
-    cta: "Lihat Info",
-    link: "/ads-info",
-    icon: Megaphone,
-    theme: "purple",
-  },
-  {
-    id: "feature",
-    title: "Withdraw via Crypto 💎",
-    desc: "Kabar gembira! Sekarang kamu bisa menarik saldo ke wallet USDT (TRC20) dengan fee rendah.",
-    cta: "Atur Payment",
-    link: "/settings?tab=payment",
-    icon: Wallet,
-    theme: "orange",
-  },
-];
+interface DashboardSliderProps {
+  slides: DashboardSlide[];
+}
 
-// Helper Styles
+// Helper Styles (Tetap di sini karena ini logic UI)
 const getTheme = (theme: string) => {
   switch (theme) {
     case "purple":
@@ -45,51 +20,51 @@ const getTheme = (theme: string) => {
         bg: "bg-gradient-to-br from-[#6b21a8] to-[#a855f7]",
         text: "text-white",
         button: "bg-white text-purple-700 hover:bg-purple-50",
-        icon: "text-purple-200",
       };
     case "orange":
       return {
         bg: "bg-gradient-to-br from-[#c2410c] to-[#fb923c]",
         text: "text-white",
         button: "bg-white text-orange-700 hover:bg-orange-50",
-        icon: "text-orange-200",
       };
     default: // blue
       return {
         bg: "bg-gradient-to-br from-bluelight to-blue-600",
         text: "text-white",
         button: "bg-white text-bluelight hover:bg-blue-50",
-        icon: "text-blue-300",
       };
   }
 };
 
-export default function DashboardSlider() {
+// Terima props 'slides'
+export default function DashboardSlider({ slides }: DashboardSliderProps) {
   const [index, setIndex] = useState(0);
-  const [direction, setDirection] = useState(1); // 1 = kanan, -1 = kiri
+  const [direction, setDirection] = useState(1);
 
   const nextSlide = useCallback(() => {
     setDirection(1);
-    setIndex((prev) => (prev + 1) % SLIDES.length);
-  }, []);
+    setIndex((prev) => (prev + 1) % slides.length); // Pake slides.length dari props
+  }, [slides.length]);
 
   const goToSlide = (i: number) => {
     setDirection(i > index ? 1 : -1);
     setIndex(i);
   };
 
-  // Auto-play
   useEffect(() => {
+    // Cek biar gak error kalau slides kosong
+    if (slides.length === 0) return;
+
     const timer = setInterval(nextSlide, 6000);
     return () => clearInterval(timer);
-  }, [nextSlide]);
+  }, [nextSlide, slides.length]);
 
-  // Variasi Animasi Optimized
+  // Variasi Animasi
   const variants = {
     enter: (dir: number) => ({
       x: dir > 0 ? "100%" : "-100%",
       opacity: 0,
-      scale: 0.98, // Skala dikit biar ada depth tapi ringan
+      scale: 0.98,
     }),
     center: {
       zIndex: 1,
@@ -104,36 +79,41 @@ export default function DashboardSlider() {
       scale: 0.98,
     }),
   };
-  type TransitionConfig = {
-    x: Transition;
-    opacity: Transition;
-    scale: Transition;
-  };
 
-  // PERFORMANCE FIX: Ganti 'spring' ke 'tween'
-  const transitionConfig: TransitionConfig = {
-    x: { type: "tween", ease: "circOut", duration: 0.5 },
+  const transitionConfig = {
+    x: {
+      type: "tween" as const,
+      ease: "circOut" as const, // <--- TAMBAHIN 'as const' DI SINI JUGA
+      duration: 0.5,
+    },
     opacity: { duration: 0.3 },
     scale: { duration: 0.5 },
   };
 
-  const currentSlide = SLIDES[index];
+  // Safety check kalau data belum masuk / kosong
+  if (!slides || slides.length === 0) {
+    return (
+      <div className="h-full min-h-[180px] bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
+      </div>
+    );
+  }
+
+  const currentSlide = slides[index];
   const theme = getTheme(currentSlide.theme);
   const Icon = currentSlide.icon;
 
   return (
-    <div className="relative h-full min-h-[300px] rounded-3xl overflow-hidden shadow-lg group bg-white">
-      {/* Container Slide */}
+    <div className="relative h-full min-h-[250px] rounded-3xl overflow-hidden shadow-lg group bg-white">
       <AnimatePresence initial={false} custom={direction} mode="popLayout">
         <motion.div
-          key={index}
+          key={currentSlide.id} // Pake ID dari data
           custom={direction}
           variants={variants}
           initial="enter"
           animate="center"
           exit="exit"
           transition={transitionConfig}
-          // PERFORMANCE FIX: Hint browser buat prioritasin layer ini
           style={{ willChange: "transform, opacity" }}
           className={clsx(
             "absolute inset-0 w-full h-full p-8 flex flex-col justify-center rounded-3xl",
@@ -141,14 +121,11 @@ export default function DashboardSlider() {
             theme.text
           )}
         >
-          {/* PERFORMANCE FIX: 
-             Decorations dengan BLUR cuma muncul di Desktop (sm:block).
-             Di Mobile kita hide atau ganti yg polos biar GPU ga ngos-ngosan.
-          */}
+          {/* Dekorasi Desktop */}
           <div className="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full hidden sm:block blur-3xl pointer-events-none" />
           <div className="absolute left-10 bottom-[-40px] w-40 h-40 bg-black/10 rounded-full hidden sm:block blur-2xl pointer-events-none" />
 
-          {/* Mobile Decoration (Polos tanpa blur) */}
+          {/* Dekorasi Mobile */}
           <div className="absolute -right-5 -top-5 w-32 h-32 bg-white/5 rounded-full sm:hidden pointer-events-none" />
 
           <div className="relative z-10 flex justify-between items-center gap-6">
@@ -162,14 +139,13 @@ export default function DashboardSlider() {
                 </span>
               </div>
 
-              <h2 className="text-[2.4em] font-bold leading-tight tracking-tight">
+              <h2 className="text-[2.4em] font-bold leading-tight tracking-tight line-clamp-2">
                 {currentSlide.title}
               </h2>
-              <p className="text-[1.5em] opacity-90 max-w-lg leading-snug">
+              <p className="text-[1.5em] opacity-90 max-w-lg leading-snug line-clamp-3">
                 {currentSlide.desc}
               </p>
 
-              {/* CTA Button */}
               <div className="pt-2">
                 <Link
                   href={currentSlide.link}
@@ -184,7 +160,7 @@ export default function DashboardSlider() {
               </div>
             </div>
 
-            {/* Illustration (Hidden di mobile biar enteng render tree-nya) */}
+            {/* Ilustrasi (Hidden di Mobile) */}
             <div className="hidden sm:block w-1/3 flex-shrink-0 text-right opacity-20">
               <Icon className="w-32 h-32 ml-auto" />
             </div>
@@ -192,9 +168,9 @@ export default function DashboardSlider() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Dots */}
+      {/* Dots Navigation */}
       <div className="absolute bottom-6 right-8 flex gap-2 z-20">
-        {SLIDES.map((_, i) => (
+        {slides.map((_, i) => (
           <button
             key={i}
             onClick={() => goToSlide(i)}

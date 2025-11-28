@@ -15,7 +15,7 @@ import LinkList from "@/components/dashboard/links/LinkList";
 async function fetchUserLinks(): Promise<Shortlink[]> {
   await new Promise((r) => setTimeout(r, 1000));
   // ... Generate array dummy (copy dari LinkList lama) ...
-  return Array.from({ length: 20 }, (_, i) => ({
+  return Array.from({ length: 10 }, (_, i) => ({
     id: `link-${i}`,
     title: `Link ${i}`,
     shortUrl: `short.link/${i}`,

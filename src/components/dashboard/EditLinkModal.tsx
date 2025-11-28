@@ -22,6 +22,7 @@ interface EditLinkModalProps {
   initialData: EditableLinkData | null;
   isUpdating: boolean;
   shortUrlDisplay?: string; // Buat nampilin shortlink di header modal
+  tittleDisplay?: string; // Buat nampilin title di header modal
   originalUrlDisplay?: string; // Buat nampilin original link di header modal
 }
 
@@ -32,6 +33,7 @@ export default function EditLinkModal({
   initialData,
   isUpdating,
   shortUrlDisplay,
+  tittleDisplay,
   originalUrlDisplay,
 }: EditLinkModalProps) {
   const t = useTranslations("Dashboard");
@@ -148,10 +150,7 @@ export default function EditLinkModal({
             </button>
 
             {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col h-full"
-            >
+            <form onSubmit={handleSubmit} className="flex flex-col h-full">
               {/* Header Modal */}
               <div className="flex items-start gap-4 mb-6 pr-8 flex-shrink-0">
                 <div className="flex-shrink-0 w-12 h-12 bg-blue-dashboard rounded-xl flex items-center justify-center">
@@ -162,7 +161,7 @@ export default function EditLinkModal({
                     {shortUrlDisplay || "Edit Link"}
                   </h3>
                   <p className="text-[1.4em] text-grays truncate">
-                    {originalUrlDisplay || "Update details for your shortlink"}
+                    {tittleDisplay}
                   </p>
                 </div>
               </div>

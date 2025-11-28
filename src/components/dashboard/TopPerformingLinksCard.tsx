@@ -1,12 +1,10 @@
 // src/components/dashboard/TopPerformingLinksCard.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   Loader2,
-  TrendingUp,
-  ArrowRight,
   ExternalLink,
   ChevronDown,
   Trophy,
@@ -16,115 +14,41 @@ import {
   ArrowUpWideNarrow,
   ArrowDownWideNarrow,
   Coins,
-  DollarSign,
-  Currency,
   ChartNoAxesColumn,
   Megaphone,
   TrendingDown,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
-import type { AdLevel } from "@/types/type";
+import type { TopPerformingLink } from "@/types/type";
 
-// --- TIPE DATA ---
-interface TopLinkData {
-  id: string;
-  title: string;
-  shortUrl: string;
-  originalUrl: string;
-  validViews: number;
-  totalEarnings: number;
-  cpm: number;
-  adsLevel: AdLevel;
+// Terima data lewat props
+interface TopPerformingLinksCardProps {
+  data: TopPerformingLink[] | null;
 }
 
-// --- MOCK API ---
-async function fetchTopLinks(
-  sortBy: "highest" | "lowest"
-): Promise<TopLinkData[]> {
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // Data Dummy (Disamain sama LinkList biar ID-nya connect)
-  const mockData: TopLinkData[] = [
-    {
-      id: "1",
-      title: "Link Shadow Fight Mod",
-      shortUrl: "short.link/w1W0K12",
-      originalUrl: "https://preline.co/examples/html/hero-agency.html",
-      validViews: 22001,
-      totalEarnings: 208.9,
-      cpm: 9.5,
-      adsLevel: "level3",
-    },
-    {
-      id: "2",
-      title: "Turbo VPN Mod",
-      shortUrl: "short.link/wongireng",
-      originalUrl: "https://example.com/turbo-vpn-mod",
-      validViews: 15001,
-      totalEarnings: 130.5,
-      cpm: 8.7,
-      adsLevel: "level2",
-    },
-    {
-      id: "3",
-      title: "Config Pubg Gacor",
-      shortUrl: "short.link/pubg-v1",
-      originalUrl: "https://drive.google.com/file/d/...",
-      validViews: 12050,
-      totalEarnings: 98.2,
-      cpm: 8.1,
-      adsLevel: "level1",
-    },
-    // Generate sisanya
-    ...Array(16)
-      .fill(null)
-      .map((_, i) => ({
-        id: `link-${i + 5}`, // ID ini match sama LinkList
-        title: `Generated Link ${i + 5}`,
-        shortUrl: `short.link/gen${i + 5}`,
-        originalUrl: `https://generated.link/page${i + 5}`,
-        validViews: Math.floor(Math.random() * 10000),
-        totalEarnings: parseFloat((Math.random() * 100).toFixed(2)),
-        cpm: parseFloat((Math.random() * 5 + 4).toFixed(2)),
-        adsLevel: ["noAds", "level1", "level2", "level3", "level4"][
-          Math.floor(Math.random() * 5)
-        ] as AdLevel,
-      })),
-  ];
-
-  const sortedData = mockData.sort((a, b) => {
-    if (sortBy === "highest") return b.validViews - a.validViews;
-    return a.validViews - b.validViews;
-  });
-
-  return sortedData.slice(0, 10);
-}
-
-export default function TopPerformingLinksCard() {
+export default function TopPerformingLinksCard({
+  data,
+}: TopPerformingLinksCardProps) {
   const t = useTranslations("Dashboard");
-  const [isLoading, setIsLoading] = useState(true);
-  const [links, setLinks] = useState<TopLinkData[]>([]);
+
+  // State UI
   const [sortBy, setSortBy] = useState<"highest" | "lowest">("highest");
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const sortRef = useRef<HTMLDivElement>(null);
 
-  // State Accordion
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadLinks() {
-      setIsLoading(true);
-      try {
-        const data = await fetchTopLinks(sortBy);
-        setLinks(data);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadLinks();
-  }, [sortBy]);
+  // Logic Sorting Client-Side (Pake useMemo biar efisien)
+  const sortedLinks = useMemo(() => {
+    if (!data) return [];
+    // Copy array dulu biar gak mutasi props langsung
+    return [...data].sort((a, b) => {
+      if (sortBy === "highest") return b.validViews - a.validViews;
+      return a.validViews - b.validViews; // Lowest
+    });
+  }, [data, sortBy]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -141,9 +65,8 @@ export default function TopPerformingLinksCard() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  // --- HELPER ICON RANKING ---
+  // Helper Icon Rank
   const getRankIcon = (index: number) => {
-    // Kalau filter terbawah, pake angka biasa aja biar gak aneh
     if (sortBy === "lowest") {
       return (
         <span className="text-[1.2em] font-mono text-grays">
@@ -151,17 +74,16 @@ export default function TopPerformingLinksCard() {
         </span>
       );
     }
-
     switch (index) {
-      case 0: // Gold Trophy
+      case 0:
         return (
           <Trophy className="w-6 h-6 text-yellow-500 fill-yellow-500/20" />
         );
-      case 1: // Silver Medal
+      case 1:
         return <Medal className="w-6 h-6 text-slate-400 fill-slate-400/20" />;
-      case 2: // Bronze Medal
+      case 2:
         return <Medal className="w-6 h-6 text-orange-500 fill-orange-500/20" />;
-      default: // Rank 4 dst (Icon Link Biasa)
+      default:
         return <Link2 className="w-5 h-5 text-bluelight" />;
     }
   };
@@ -174,11 +96,11 @@ export default function TopPerformingLinksCard() {
           {t("topPerformingLinks")}
         </h3>
 
-        {/* Dropdown Filter (Teratas/Terbawah) */}
+        {/* Dropdown Filter */}
         <div className="relative" ref={sortRef}>
           <button
             onClick={() => setIsSortOpen(!isSortOpen)}
-            className="flex items-center gap-2 text-[1.3em] bg-blues font-medium text-bluelight transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-dashboard mr-4"
+            className="flex items-center gap-2 text-[1.3em] bg-blues font-medium text-bluelight transition-colors px-3 py-1.5 rounded-lg hover:bg-blue-dashboard"
           >
             {sortBy === "highest" ? "Teratas" : "Terbawah"}
             <ChevronDown
@@ -231,7 +153,7 @@ export default function TopPerformingLinksCard() {
 
       {/* --- List Content --- */}
       <div className="flex-1 relative min-h-[250px]">
-        {isLoading ? (
+        {!data ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
           </div>
@@ -240,7 +162,7 @@ export default function TopPerformingLinksCard() {
             onWheel={(e) => e.stopPropagation()}
             className="space-y-0 overflow-y-auto h-[270px] pr-2 custom-scrollbar-minimal"
           >
-            {links.map((link, index) => (
+            {sortedLinks.map((link, index) => (
               <div
                 key={link.id}
                 className={clsx(
@@ -248,17 +170,15 @@ export default function TopPerformingLinksCard() {
                   expandedId === link.id && "bg-blues/50"
                 )}
               >
-                {/* Main Row (Header Link) */}
+                {/* Main Row */}
                 <div
                   onClick={() => toggleAccordion(link.id)}
                   className="flex items-center gap-4 py-4 px-2 cursor-pointer group relative z-10"
                 >
-                  {/* Rank Icon */}
                   <div className="flex-shrink-0 w-8 flex justify-center">
                     {getRankIcon(index)}
                   </div>
 
-                  {/* Info Utama */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <p
@@ -272,7 +192,6 @@ export default function TopPerformingLinksCard() {
                         {link.title}
                       </p>
                     </div>
-
                     <div className="flex items-center justify-between">
                       <Link
                         onClick={(e) => e.stopPropagation()}
@@ -281,11 +200,9 @@ export default function TopPerformingLinksCard() {
                       >
                         {link.shortUrl}
                       </Link>
-                      {/* Views Counter (Clean) */}
                     </div>
                   </div>
-                  
-                  {/* Button Detail Link */}
+
                   <div className="flex justify-end items-center gap-4">
                     <div className="flex justify-end items-center py-1 gap-4">
                       <Link
@@ -294,7 +211,6 @@ export default function TopPerformingLinksCard() {
                         className="text-bluelight hover:underline flex items-center gap-1 font-semibold text-[1.2em] group/link"
                       >
                         <ExternalLink className="w-4 h-4 group-hover/link:translate-x-0.5 transition-transform" />
-                        <span>Detail</span>
                       </Link>
                     </div>
                     <ChevronDown
@@ -306,7 +222,7 @@ export default function TopPerformingLinksCard() {
                   </div>
                 </div>
 
-                {/* Accordion Detail (Clean Layout) */}
+                {/* Accordion Detail */}
                 <AnimatePresence>
                   {expandedId === link.id && (
                     <motion.div
@@ -316,7 +232,6 @@ export default function TopPerformingLinksCard() {
                       transition={{ duration: 0.2 }}
                     >
                       <div className="pb-4 pr-4 pl-4">
-                        {/* Stats Row - Simple Grid */}
                         <div className="grid sm:grid-cols-2 grid-cols-2 gap-x-8 gap-y-2 text-[1.3em] pt-1">
                           {/* Views */}
                           <div className="flex items-center gap-4">
@@ -328,7 +243,6 @@ export default function TopPerformingLinksCard() {
                               </span>
                             </div>
                           </div>
-
                           {/* Earning */}
                           <div className="flex items-center gap-4">
                             <Coins className="w-5 h-5 text-bluelight" />
@@ -359,7 +273,6 @@ export default function TopPerformingLinksCard() {
                               </span>
                             </div>
                           </div>
-                          {/* Detail Link */}
                         </div>
                       </div>
                     </motion.div>
@@ -372,7 +285,7 @@ export default function TopPerformingLinksCard() {
       </div>
 
       {/* Footer Link */}
-      <div className=" text-center pt-4">
+      <div className=" text-center">
         <Link
           href="/new-link"
           className="text-[1.3em] font-semibold text-grays hover:text-bluelight flex items-center justify-center gap-1 transition-colors"
