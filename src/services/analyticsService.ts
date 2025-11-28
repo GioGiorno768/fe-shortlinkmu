@@ -97,25 +97,34 @@ export async function getAnalyticsData(
 }
 
 export async function getTopCountries(): Promise<CountryStat[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1200)); // Simulasi loading
   return [
     { isoCode: "id", name: "Indonesia", views: 40500, percentage: 45.5 },
     { isoCode: "us", name: "United States", views: 22000, percentage: 24.7 },
-    { isoCode: "gb", name: "United Kingdom", views: 5000, percentage: 5.5 },
+    { isoCode: "in", name: "India", views: 8000, percentage: 9.0 },
+    { isoCode: "my", name: "Malaysia", views: 5500, percentage: 6.2 },
+    { isoCode: "sg", name: "Singapore", views: 3000, percentage: 3.4 },
+    { isoCode: "gb", name: "United Kingdom", views: 2000, percentage: 2.2 },
+    { isoCode: "au", name: "Australia", views: 1500, percentage: 1.7 },
+    { isoCode: "de", name: "Germany", views: 1000, percentage: 1.1 },
   ];
 }
 
 export async function getTopReferrers(): Promise<ReferrerStat[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1200));
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulasi loading
   return [
     { name: "Google", views: 35000, percentage: 40.2 },
     { name: "Direct", views: 22000, percentage: 25.3 },
     { name: "Facebook", views: 15000, percentage: 17.2 },
+    { name: "Twitter / X.com", views: 8000, percentage: 9.2 },
+    { name: "detik.com", views: 4000, percentage: 4.6 },
+    { name: "github.com", views: 3000, percentage: 3.5 },
   ];
 }
 
 export async function getTrafficHistory(): Promise<MonthlyStat[]> {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
   return [
     {
       month: "Feb",
@@ -134,6 +143,33 @@ export async function getTrafficHistory(): Promise<MonthlyStat[]> {
       earnings: 1368.19,
       level: "Master",
       growth: 5.2,
+    },
+    {
+      month: "Dec",
+      year: 2024,
+      views: 342100,
+      cpm: 3.5,
+      earnings: 1197.35,
+      level: "Pro",
+      growth: -2.1,
+    },
+    {
+      month: "Nov",
+      year: 2024,
+      views: 350000,
+      cpm: 3.5,
+      earnings: 1225.0,
+      level: "Pro",
+      growth: 8.4,
+    },
+    {
+      month: "Oct",
+      year: 2024,
+      views: 322500,
+      cpm: 3.2,
+      earnings: 1032.0,
+      level: "Elite",
+      growth: 1.5,
     },
   ];
 }

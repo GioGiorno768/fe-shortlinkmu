@@ -1,3 +1,4 @@
+// src/components/dashboard/withdrawal/WithdrawalRequestModal.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,7 +10,6 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Building2,
   Smartphone,
   Bitcoin,
   ChevronDown,
@@ -20,8 +20,7 @@ import { useAlert } from "@/hooks/useAlert";
 import type { PaymentMethod } from "@/types/type";
 import clsx from "clsx";
 
-// --- 1. COPY KONFIGURASI DARI SETTINGS ---
-// Biar konsisten sama halaman Payment Settings
+// --- KONFIGURASI PAYMENT (Tetap di sini sesuai request lu) ---
 const PAYMENT_CONFIG = {
   wallet: {
     label: "Digital Wallet",
@@ -166,7 +165,7 @@ export default function WithdrawalRequestModal({
   const [isLoading, setIsLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState<string>("");
 
-  // --- STATE METODE BARU ---
+  // --- STATE METODE MANUAL (Buat fitur 'Use Different Method') ---
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
   const [selectedMethodId, setSelectedMethodId] = useState(
     PAYMENT_CONFIG.wallet.methods[0].id
@@ -196,27 +195,28 @@ export default function WithdrawalRequestModal({
     currentCategoryConfig.methods.find((m) => m.id === selectedMethodId) ||
     currentCategoryConfig.methods[0];
 
-  // Handler Ganti Kategori
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCat = e.target.value as CategoryKey;
     setActiveCategory(newCat);
-    // Reset ke metode pertama di kategori baru
     setSelectedMethodId(PAYMENT_CONFIG[newCat].methods[0].id);
-    setNewAccountNumber(""); // Reset nomor biar ga salah format
+    setNewAccountNumber("");
   };
 
-  // --- LOGIC STEP 1 ---
+  // --- LOGIC STEP 1: VALIDASI METODE ---
   const handleNextStep = () => {
     if (!useDefault) {
       if (!newAccountName || !newAccountNumber) {
         showAlert("Harap lengkapi detail akun pembayaran.", "warning");
         return;
       }
+    } else if (!defaultMethod) {
+      showAlert("Metode pembayaran default belum diatur.", "error");
+      return;
     }
     setStep(2);
   };
 
-  // --- LOGIC STEP 2 ---
+  // --- LOGIC STEP 2: SUBMIT ---
   const handleSubmit = async () => {
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount < 2.0) {
@@ -230,6 +230,7 @@ export default function WithdrawalRequestModal({
 
     setIsLoading(true);
 
+    // Tentukan metode mana yang dipake (Default atau Input Baru)
     const finalMethod: PaymentMethod =
       useDefault && defaultMethod
         ? defaultMethod
@@ -241,9 +242,9 @@ export default function WithdrawalRequestModal({
 
     try {
       await onSuccess(amount, finalMethod);
-      onClose();
+      onClose(); // Tutup modal kalo sukses
     } catch (err) {
-      // Error handled in parent
+      // Error udah dihandle di parent (hook)
     } finally {
       setIsLoading(false);
     }
@@ -288,13 +289,13 @@ export default function WithdrawalRequestModal({
               </button>
             </div>
 
-            {/* Content */}
+            {/* Content Body */}
             <div
               onWheel={(e) => e.stopPropagation()}
               className="p-8 overflow-y-auto custom-scrollbar-minimal flex-1"
             >
               {step === 1 ? (
-                // === STEP 1 ===
+                // === STEP 1: PILIH METODE ===
                 <div className="space-y-6">
                   {/* Option 1: Default Method */}
                   {defaultMethod && (
@@ -383,7 +384,7 @@ export default function WithdrawalRequestModal({
                               </div>
                             </div>
 
-                            {/* Dropdown 2: Provider (Depends on Category) */}
+                            {/* Dropdown 2: Provider */}
                             <div className="space-y-2">
                               <label className="text-[1.2em] font-medium text-grays">
                                 Provider
@@ -426,7 +427,7 @@ export default function WithdrawalRequestModal({
                             </div>
                           </div>
 
-                          {/* Input Account Number (Dynamic Label & Placeholder) */}
+                          {/* Input Account Number */}
                           <div className="space-y-2">
                             <label className="text-[1.2em] font-medium text-grays">
                               {currentMethodConfig.inputLabel}
@@ -447,9 +448,9 @@ export default function WithdrawalRequestModal({
                   </label>
                 </div>
               ) : (
-                // === STEP 2 === (Sama kayak sebelumnya)
+                // === STEP 2: INPUT AMOUNT ===
                 <div className="space-y-8">
-                  {/* Info Saldo */}
+                  {/* Info Saldo & Tujuan */}
                   <div className="bg-blues p-6 rounded-2xl flex items-center justify-between border border-blue-100">
                     <div>
                       <p className="text-[1.4em] text-grays mb-1">
@@ -495,6 +496,7 @@ export default function WithdrawalRequestModal({
                         max={availableBalance}
                       />
                     </div>
+                    {/* Tombol Cepat % */}
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={() => setWithdrawAmount("2.00")}
@@ -529,7 +531,7 @@ export default function WithdrawalRequestModal({
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer Buttons */}
             <div className="px-8 py-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-4">
               {step === 2 && (
                 <button

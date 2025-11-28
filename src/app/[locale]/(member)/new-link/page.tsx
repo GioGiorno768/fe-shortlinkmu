@@ -1,35 +1,73 @@
 // src/app/[locale]/(member)/new-link/page.tsx
 "use client";
 
+import { useState } from "react";
 import CreateShortlink from "@/components/dashboard/CreateShortlink";
 import LinkList from "@/components/dashboard/links/LinkList";
-import { useLinks } from "@/hooks/useLinks"; // Import Hook kita
+import EditLinkModal from "@/components/dashboard/EditLinkModal";
+import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
+import { useLinks } from "@/hooks/useLinks";
 import { Loader2 } from "lucide-react";
+import type { Shortlink } from "@/types/type";
 
 export default function NewLinkPage() {
-  // Panggil semua logika dari Hook
   const {
     links,
+    totalPages,
+    generatedLink,
     isLoading,
     isMutating,
+    page,
+    setPage,
+    search,
+    setSearch,
+    filterBy,
+    setFilterBy,
+    sortBy,
+    setSortBy,
     createLink,
     updateLink,
     toggleLinkStatus,
   } = useLinks();
 
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingLink, setEditingLink] = useState<Shortlink | null>(null);
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmData, setConfirmData] = useState<{
+    id: string;
+    status: "active" | "disabled";
+  } | null>(null);
+
+  const openEditModal = (id: string) => {
+    const link = links.find((l) => l.id === id);
+    if (link) {
+      setEditingLink(link);
+      setIsEditOpen(true);
+    }
+  };
+
+  const openConfirmModal = (id: string, status: "active" | "disabled") => {
+    setConfirmData({ id, status });
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmStatus = async () => {
+    if (confirmData) {
+      await toggleLinkStatus(confirmData.id, confirmData.status);
+      setIsConfirmOpen(false);
+    }
+  };
+
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree space-y-6 pb-10">
-      {/* Form Create Link
-        Kita pass `isMutating` biar tombolnya loading pas lagi submit ke API 
-      */}
       <CreateShortlink
-        generatedLink={null} // Nanti bisa diatur di hook kalau mau nampilin hasil generate
+        generatedLink={generatedLink}
         isLoading={isMutating}
         error={null}
         onSubmit={createLink}
       />
 
-      {/* List Link */}
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
           <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
@@ -37,10 +75,65 @@ export default function NewLinkPage() {
       ) : (
         <LinkList
           links={links}
-          onUpdateLink={updateLink}
-          onDisableLink={toggleLinkStatus}
+          totalPages={totalPages}
+          search={search}
+          setSearch={setSearch}
+          filterBy={filterBy}
+          setFilterBy={setFilterBy}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          page={page}
+          setPage={setPage}
+          onEdit={openEditModal}
+          onToggleStatus={openConfirmModal}
         />
       )}
+
+      {/* Modal Edit */}
+      <EditLinkModal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        isUpdating={isMutating}
+        initialData={
+          editingLink
+            ? {
+                alias: editingLink.shortUrl.split("/").pop() || "",
+                password: editingLink.password,
+                expiresAt: editingLink.dateExpired
+                  ? new Date(editingLink.dateExpired).toISOString().slice(0, 16)
+                  : "",
+                // FIX: Kasih default value biar gak undefined
+                adsLevel: editingLink.adsLevel || "level1",
+              }
+            : null
+        }
+        onSubmit={async (data) => {
+          if (editingLink) {
+            await updateLink(editingLink.id, data);
+            setIsEditOpen(false);
+          }
+        }}
+      />
+
+      {/* Modal Konfirmasi */}
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleConfirmStatus}
+        title={
+          confirmData?.status === "active" ? "Disable Link?" : "Enable Link?"
+        }
+        description={
+          confirmData?.status === "active"
+            ? "Link ini tidak akan bisa diakses publik. Yakin?"
+            : "Link akan diaktifkan kembali."
+        }
+        confirmLabel={
+          confirmData?.status === "active" ? "Ya, Disable" : "Ya, Enable"
+        }
+        type={confirmData?.status === "active" ? "danger" : "success"}
+        isLoading={isMutating}
+      />
     </div>
   );
 }

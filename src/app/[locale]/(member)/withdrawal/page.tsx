@@ -1,201 +1,63 @@
 // src/app/[locale]/(member)/withdrawal/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAlert } from "@/hooks/useAlert";
-import { Loader2, Info } from "lucide-react"; // Tambah ikon Info
-import type { WithdrawalStats, PaymentMethod, Transaction } from "@/types/type";
+import { useState } from "react";
+import { Loader2, Info } from "lucide-react";
+import { useWithdrawal } from "@/hooks/useWithdrawal";
 
+// Components
 import WithdrawalStatsCard from "@/components/dashboard/withdrawal/WithdrawalStatsCard";
 import WithdrawalMethodCard from "@/components/dashboard/withdrawal/WithdrawalMethodCard";
 import TransactionTable from "@/components/dashboard/withdrawal/TransactionTable";
 import WithdrawalRequestModal from "@/components/dashboard/withdrawal/WithdrawalRequestModal";
 import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
-
-// --- (API Mocks tetep sama kayak sebelumnya, gua skip biar ringkas) ---
-async function cancelWithdrawalAPI(id: string) {
-  /* ... */ return { success: true };
-}
-async function fetchWithdrawalStats(): Promise<WithdrawalStats> {
-  /* ... */ return {
-    availableBalance: 154.2055,
-    pendingWithdrawn: 12.5,
-    totalWithdrawn: 450.0,
-  };
-}
-async function fetchPaymentMethod(): Promise<PaymentMethod | null> {
-  /* ... */ return {
-    provider: "PayPal",
-    accountName: "Kevin Ragil",
-    accountNumber: "kevinragil768@gmail.com",
-  };
-}
-async function fetchTransactions(): Promise<Transaction[]> {
-  await new Promise((r) => setTimeout(r, 500));
-  return [
-    {
-      id: "WTH-003",
-      date: "2025-11-18T10:00:00Z",
-      amount: 12.5,
-      method: "PayPal",
-      account: "kevin***@gmail.com",
-      status: "pending",
-    },
-    {
-      id: "WTH-002",
-      date: "2025-11-01T14:30:00Z",
-      amount: 50.0,
-      method: "Bank Transfer",
-      account: "1234****",
-      status: "completed",
-      txId: "TRX123456789",
-    },
-    {
-      id: "WTH-001",
-      date: "2025-10-15T09:15:00Z",
-      amount: 25.0,
-      method: "PayPal",
-      account: "kevin***@gmail.com",
-      status: "rejected", // Contoh rejected
-    },
-  ];
-}
-async function requestWithdrawalAPI(amount: number, method: PaymentMethod) {
-  /* ... */ return { success: true };
-}
+import type { PaymentMethod } from "@/types/type";
 
 export default function WithdrawalPage() {
-  const { showAlert } = useAlert();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Panggil Logic dari Hook
+  const {
+    stats,
+    method,
+    transactions,
+    totalPages,
+    page,
+    setPage,
+    search,
+    setSearch,
+    isLoading,
+    isTableLoading,
+    isProcessing,
+    requestPayout,
+    cancelTransaction,
+  } = useWithdrawal();
 
-  const [stats, setStats] = useState<WithdrawalStats | null>(null);
-  const [method, setMethod] = useState<PaymentMethod | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  // STATE MODAL CANCEL
-  const [cancelModal, setCancelModal] = useState({
+  // UI State
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [cancelModalData, setCancelModalData] = useState<{
+    isOpen: boolean;
+    txId: string;
+  }>({
     isOpen: false,
     txId: "",
-    isLoading: false,
   });
 
-  // 1. Handler Buka Modal
-  const requestCancel = (id: string) => {
-    setCancelModal({ isOpen: true, txId: id, isLoading: false });
+  // Handlers
+  const openCancelModal = (id: string) => {
+    setCancelModalData({ isOpen: true, txId: id });
   };
 
-  // 2. Handler Eksekusi
   const onConfirmCancel = async () => {
-    setCancelModal((prev) => ({ ...prev, isLoading: true }));
-
-    // Panggil logic handleCancelRequest lu yg lama disini
-    // Tapi modif dikit biar parameternya ambil dari state cancelModal.txId
-    // ... (Salin logic API call handleCancelRequest disini) ...
-    const txToCancel = transactions.find((t) => t.id === cancelModal.txId);
-
-    if (txToCancel) {
-      try {
-        await cancelWithdrawalAPI(cancelModal.txId);
-        showAlert("Permintaan penarikan dibatalkan.", "info");
-
-        if (stats) {
-          setStats({
-            ...stats,
-            availableBalance: stats.availableBalance + txToCancel.amount,
-            pendingWithdrawn: stats.pendingWithdrawn - txToCancel.amount,
-          });
-        }
-        setTransactions((prev) =>
-          prev.map((t) =>
-            t.id === cancelModal.txId ? { ...t, status: "cancelled" } : t
-          )
-        );
-      } catch (error) {
-        showAlert("Gagal membatalkan.", "error");
-      }
-    }
-
-    setCancelModal({ isOpen: false, txId: "", isLoading: false });
-  };
-
-  // --- HANDLER CANCEL ---
-  const handleCancelRequest = async (id: string) => {
-    const txToCancel = transactions.find((t) => t.id === id);
-    if (!txToCancel) return;
-
-    if (
-      !confirm(
-        "Yakin ingin membatalkan penarikan ini? Saldo akan dikembalikan."
-      )
-    )
-      return;
-
-    try {
-      await cancelWithdrawalAPI(id);
-      showAlert("Permintaan penarikan dibatalkan.", "info");
-
-      if (stats) {
-        setStats({
-          ...stats,
-          availableBalance: stats.availableBalance + txToCancel.amount,
-          pendingWithdrawn: stats.pendingWithdrawn - txToCancel.amount,
-        });
-      }
-
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: "cancelled" } : t))
-      );
-    } catch (error) {
-      showAlert("Gagal membatalkan.", "error");
+    const success = await cancelTransaction(cancelModalData.txId);
+    if (success) {
+      setCancelModalData({ isOpen: false, txId: "" });
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const [statsData, methodData, historyData] = await Promise.all([
-          fetchWithdrawalStats(),
-          fetchPaymentMethod(),
-          fetchTransactions(),
-        ]);
-        setStats(statsData);
-        setMethod(methodData);
-        setTransactions(historyData);
-      } catch (error) {
-        showAlert("Gagal memuat data withdrawal.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, [showAlert]);
-
-  // --- HANDLER SUKSES DARI MODAL ---
-  const handleWithdrawalSuccess = async (
+  const onConfirmRequest = async (
     amount: number,
     usedMethod: PaymentMethod
   ) => {
-    await requestWithdrawalAPI(amount, usedMethod);
-    showAlert("Permintaan penarikan berhasil dikirim!", "success");
-
-    if (stats) {
-      setStats({
-        ...stats,
-        availableBalance: stats.availableBalance - amount,
-        pendingWithdrawn: stats.pendingWithdrawn + amount,
-      });
-    }
-
-    const newTx: Transaction = {
-      id: `WTH-NEW-${Date.now()}`,
-      date: new Date().toISOString(),
-      amount: amount,
-      method: usedMethod.provider,
-      account: usedMethod.accountNumber,
-      status: "pending",
-    };
-    setTransactions([newTx, ...transactions]);
+    await requestPayout(amount, usedMethod);
   };
 
   if (isLoading) {
@@ -208,7 +70,7 @@ export default function WithdrawalPage() {
 
   return (
     <div className="lg:text-[10px] text-[8px] font-figtree space-y-8 pb-10">
-      {/* --- INFO CARD BARU --- */}
+      {/* Info Card */}
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex items-start gap-4 text-blue-800 shadow-sm">
         <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
           <Info className="w-6 h-6 text-bluelight" />
@@ -217,22 +79,21 @@ export default function WithdrawalPage() {
           <p>
             <span className="font-bold">Info Pembayaran:</span> Pembayaran akan
             diproses paling lambat <strong>3-5 hari</strong> setelah permintaan
-            penarikan (tidak termasuk hari libur, Sabtu dan Minggu).
+            penarikan (tidak termasuk hari libur).
           </p>
           <p className="mt-2 text-blue-700/80 text-[0.95em]">
-            Jika dalam waktu 3 hari setelah penarikan status selesai dan belum
-            menerima pembayaran, silahkan menghubungi kami!
+            Jika dalam waktu 3 hari status selesai tapi belum terima dana,
+            silahkan hubungi kami.
           </p>
         </div>
       </div>
-      {/* ---------------------- */}
 
-      {/* Grid Statistik & Metode */}
+      {/* Stats & Method Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="lg:col-span-3">
           <WithdrawalStatsCard
             stats={stats}
-            onOpenModal={() => setIsModalOpen(true)}
+            onOpenModal={() => setIsRequestModalOpen(true)}
           />
         </div>
         <div className="lg:col-span-2">
@@ -240,28 +101,39 @@ export default function WithdrawalPage() {
         </div>
       </div>
 
-      {/* Tabel Transaksi */}
-      <TransactionTable onCancel={requestCancel} transactions={transactions} />
-
-      {/* Modal */}
-      <WithdrawalRequestModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        defaultMethod={method}
-        availableBalance={stats?.availableBalance || 0}
-        onSuccess={handleWithdrawalSuccess}
+      {/* Transaction History (Controlled Component) */}
+      <TransactionTable
+        transactions={transactions}
+        totalPages={totalPages}
+        page={page}
+        setPage={setPage}
+        search={search}
+        setSearch={setSearch}
+        onCancel={openCancelModal}
+        isLoading={isTableLoading}
       />
 
-      {/* Pasang Modal */}
+      {/* Modal: Request Payout */}
+      <WithdrawalRequestModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        defaultMethod={method}
+        availableBalance={stats?.availableBalance || 0}
+        onSuccess={onConfirmRequest}
+      />
+
+      {/* Modal: Cancel Confirmation */}
       <ConfirmationModal
-        isOpen={cancelModal.isOpen}
-        onClose={() => setCancelModal({ ...cancelModal, isOpen: false })}
+        isOpen={cancelModalData.isOpen}
+        onClose={() =>
+          setCancelModalData({ ...cancelModalData, isOpen: false })
+        }
         onConfirm={onConfirmCancel}
         title="Batalkan Penarikan?"
         description="Saldo akan dikembalikan ke akun Anda. Tindakan ini tidak dapat dibatalkan."
         confirmLabel="Ya, Batalkan"
         type="warning"
-        isLoading={cancelModal.isLoading}
+        isLoading={isProcessing}
       />
     </div>
   );

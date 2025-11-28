@@ -1,6 +1,7 @@
+// src/components/dashboard/history/ActivityHistoryList.tsx
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Filter,
@@ -8,43 +9,69 @@ import {
   CalendarOff,
   ChevronLeft,
   ChevronRight,
-  ChevronDown, // Tambah icon ini
-  Check, // Tambah icon ini buat indikator selected
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import ActivityItem from "./ActivityItem";
 import type { ActivityLog, ActivityType } from "@/types/type";
 import clsx from "clsx";
 
+// Import tipe FilterType yang sama dengan hook (atau taro di types.ts)
+type FilterType = "all" | ActivityType;
+
 interface ActivityHistoryListProps {
   activities: ActivityLog[];
+  // Props baru buat kontrol filter dari parent/hook
+  filter: FilterType;
+  setFilter: (val: FilterType) => void;
+  search: string;
+  setSearch: (val: string) => void;
+  page: number;
+  setPage: (val: number) => void;
+  totalPages: number;
+  isLoading: boolean;
 }
-
-type FilterType = "all" | ActivityType;
 
 export default function ActivityHistoryList({
   activities,
+  filter,
+  setFilter,
+  search,
+  setSearch,
+  page,
+  setPage,
+  totalPages,
+  isLoading,
 }: ActivityHistoryListProps) {
-  const [filter, setFilter] = useState<FilterType>("all");
-  const [search, setSearch] = useState("");
-
-  // State Dropdown Filter
+  // State UI lokal (cuma buat buka/tutup dropdown)
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // --- PAGINATION STATE ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Filter Options
   const filters: { id: FilterType; label: string }[] = [
-    { id: "all", label: "Semua Aktivitas" }, // Ganti label biar lebih jelas
+    { id: "all", label: "Semua Aktivitas" },
     { id: "login", label: "Login & Session" },
     { id: "security", label: "Keamanan Akun" },
     { id: "link", label: "Manajemen Link" },
     { id: "payment", label: "Pembayaran & Saldo" },
   ];
 
-  // Efek klik luar untuk nutup dropdown
+  // Logic Grouping Tanggal (Tetap di sini karena ini urusan tampilan)
+  const groupedData = useMemo(() => {
+    const groups: Record<string, ActivityLog[]> = {};
+    activities.forEach((item) => {
+      const date = new Date(item.timestamp).toLocaleDateString("id-ID", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(item);
+    });
+    return groups;
+  }, [activities]);
+
+  // Klik luar dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -58,49 +85,6 @@ export default function ActivityHistoryList({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 1. Logic Filtering
-  const filteredData = useMemo(() => {
-    return activities.filter((item) => {
-      const matchType = filter === "all" || item.type === filter;
-      const matchSearch =
-        item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.description.toLowerCase().includes(search.toLowerCase());
-      return matchType && matchSearch;
-    });
-  }, [activities, filter, search]);
-
-  // Reset page
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, search]);
-
-  // 2. Logic Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  // 3. Logic Grouping
-  const groupedData = useMemo(() => {
-    const groups: Record<string, ActivityLog[]> = {};
-    currentItems.forEach((item) => {
-      const date = new Date(item.timestamp).toLocaleDateString("id-ID", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(item);
-    });
-    return groups;
-  }, [currentItems]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  // Helper dapetin label filter yang aktif
   const activeLabel = filters.find((f) => f.id === filter)?.label;
 
   return (
@@ -114,11 +98,12 @@ export default function ActivityHistoryList({
             type="text"
             placeholder="Cari aktivitas..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)} // Panggil props
             className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 focus:border-bluelight text-[1.4em] text-shortblack placeholder:text-gray-400 transition-all shadow-sm"
           />
         </div>
-        {/* DROPDOWN FILTER (Menggantikan Tabs) */}
+
+        {/* Dropdown Filter */}
         <div className="relative w-full md:w-auto z-20" ref={filterRef}>
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -149,7 +134,7 @@ export default function ActivityHistoryList({
                   <button
                     key={f.id}
                     onClick={() => {
-                      setFilter(f.id);
+                      setFilter(f.id); // Panggil props
                       setIsFilterOpen(false);
                     }}
                     className={clsx(
@@ -169,9 +154,14 @@ export default function ActivityHistoryList({
         </div>
       </div>
 
-      {/* --- Timeline Content (Sama kayak sebelumnya) --- */}
+      {/* --- Timeline Content --- */}
       <div className="space-y-8 min-h-[400px]">
-        {Object.keys(groupedData).length > 0 ? (
+        {isLoading ? (
+          // Bisa ganti skeleton loader kalau mau lebih keren
+          <div className="text-center py-20 text-[1.4em] text-grays">
+            Loading history...
+          </div>
+        ) : activities.length > 0 ? (
           <>
             {Object.entries(groupedData).map(([date, items], groupIndex) => (
               <motion.div
@@ -206,35 +196,20 @@ export default function ActivityHistoryList({
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 mt-8 pt-4 border-t border-gray-200/50">
                 <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
                   className="p-3 rounded-xl border border-gray-200 bg-white text-shortblack hover:bg-blues disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
 
-                <div className="flex gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => handlePageChange(page)}
-                        className={clsx(
-                          "w-10 h-10 rounded-xl text-[1.4em] font-bold transition-all",
-                          currentPage === page
-                            ? "bg-bluelight text-white shadow-md shadow-blue-200"
-                            : "bg-white border border-gray-200 text-shortblack hover:bg-blues"
-                        )}
-                      >
-                        {page}
-                      </button>
-                    )
-                  )}
+                <div className="flex gap-1 text-[1.4em] font-medium text-grays px-4">
+                  Page {page} of {totalPages}
                 </div>
 
                 <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
                   className="p-3 rounded-xl border border-gray-200 bg-white text-shortblack hover:bg-blues disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -258,6 +233,7 @@ export default function ActivityHistoryList({
               onClick={() => {
                 setFilter("all");
                 setSearch("");
+                setPage(1);
               }}
               className="mt-6 text-[1.4em] font-semibold text-bluelight hover:underline"
             >

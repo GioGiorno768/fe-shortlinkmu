@@ -1,8 +1,6 @@
-// src/app/[locale]/(dashboard)/ads-info/page.tsx
+// src/app/[locale]/(member)/ads-info/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Check,
@@ -15,98 +13,10 @@ import {
   Bomb,
   Info,
 } from "lucide-react";
-import { Link } from "@/i18n/routing"; // Pake Link dari i18n
-import type { AdLevelConfig } from "@/types/type";
 import clsx from "clsx";
+import { useAdsInfo } from "@/hooks/useAdsInfo";
 
-// ========================================================
-// === DESAIN API (MOCK/DUMMY) ===
-// ========================================================
-// Nanti lu ganti fungsi ini buat fetch ke Laravel
-// Endpoint: GET /api/ads-levels
-async function fetchAdLevels(): Promise<AdLevelConfig[]> {
-  console.log("MANGGIL API: /api/ads-levels");
-
-  // Simulasi loading
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  // --- MOCK DATA ---
-  // Data ini nanti bisa di-setting dari Admin Panel Laravel lu
-  return [
-    {
-      id: "1",
-      name: "Low",
-      slug: "low",
-      description: "User-friendly, minimal ads focused on retention.",
-      cpmRate: "Variable",
-      revenueShare: 30,
-      demoUrl: "https://demo.shortlinkmu.com/low",
-      colorTheme: "green",
-      features: [
-        { label: "Banner Ads", value: true, included: true },
-        { label: "Interstitial", value: false, included: false },
-        { label: "Popunder", value: "1 / 24h", included: true },
-        { label: "Push Notif", value: false, included: false },
-        { label: "Captcha", value: "Simple", included: true },
-      ],
-    },
-    {
-      id: "2",
-      name: "Medium",
-      slug: "medium",
-      description: "Balanced experience between earnings and comfort.",
-      cpmRate: "Variable",
-      revenueShare: 50,
-      isPopular: true, // Highlight card ini
-      demoUrl: "https://demo.shortlinkmu.com/medium",
-      colorTheme: "blue",
-      features: [
-        { label: "Banner Ads", value: true, included: true },
-        { label: "Interstitial", value: "On Page Load", included: true },
-        { label: "Popunder", value: "2 / 24h", included: true },
-        { label: "Push Notif", value: false, included: false },
-        { label: "Captcha", value: "Standard", included: true },
-      ],
-    },
-    {
-      id: "3",
-      name: "High",
-      slug: "high",
-      description: "Maximized for earnings with more ad formats.",
-      cpmRate: "Variable",
-      revenueShare: 75,
-      demoUrl: "https://demo.shortlinkmu.com/high",
-      colorTheme: "orange",
-      features: [
-        { label: "Banner Ads", value: "Aggressive", included: true },
-        { label: "Interstitial", value: "Every Page", included: true },
-        { label: "Popunder", value: "3 / 24h", included: true },
-        { label: "Push Notif", value: true, included: true },
-        { label: "Captcha", value: "Double", included: true },
-      ],
-    },
-    {
-      id: "4",
-      name: "Aggressive",
-      slug: "aggressive",
-      description: "Highest possible revenue. Not for sensitive traffic.",
-      cpmRate: "Variable",
-      revenueShare: 100,
-      demoUrl: "https://demo.shortlinkmu.com/aggressive",
-      colorTheme: "red",
-      features: [
-        { label: "Banner Ads", value: "Max", included: true },
-        { label: "Interstitial", value: "Multipoint", included: true },
-        { label: "Popunder", value: "Unlimited", included: true },
-        { label: "Push Notif", value: "High Freq", included: true },
-        { label: "Captcha", value: "Triple", included: true },
-      ],
-    },
-  ];
-  // --- AKHIR MOCK DATA ---
-}
-
-// Helper buat dapetin warna & icon berdasarkan theme
+// Helper Styles (UI Logic)
 const getThemeStyles = (theme: string) => {
   switch (theme) {
     case "green":
@@ -149,26 +59,8 @@ const getThemeStyles = (theme: string) => {
 };
 
 export default function AdsInfoPage() {
-  // const t = useTranslations("AdsInfo"); // Kalau mau pake i18n nanti
-  const [levels, setLevels] = useState<AdLevelConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await fetchAdLevels();
-        setLevels(data);
-      } catch (err) {
-        setError("Gagal memuat data level iklan.");
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+  // Panggil Logic dari Hook
+  const { levels, isLoading, error } = useAdsInfo();
 
   if (isLoading) {
     return (

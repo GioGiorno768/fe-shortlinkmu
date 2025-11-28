@@ -1,6 +1,6 @@
+// src/components/dashboard/withdrawal/TransactionTable.tsx
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   Search,
   Download,
@@ -11,23 +11,29 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import type { Transaction } from "@/types/type";
-import { motion } from "framer-motion";
 
 interface TransactionTableProps {
   transactions: Transaction[];
   onCancel: (id: string) => void;
+  // Props Kontrol dari Hook
+  page: number;
+  setPage: (p: number) => void;
+  totalPages: number;
+  search: string;
+  setSearch: (s: string) => void;
+  isLoading?: boolean;
 }
 
 export default function TransactionTable({
   transactions,
   onCancel,
+  page,
+  setPage,
+  totalPages,
+  search,
+  setSearch,
+  isLoading,
 }: TransactionTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // --- STATE PAGINATION ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Batas per halaman
-
   const formatCurrency = (val: number) => `$${val.toFixed(2)}`;
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("id-ID", {
@@ -53,34 +59,9 @@ export default function TransactionTable({
     }
   };
 
-  // 1. Filter Data
-  const filteredData = transactions.filter((tx) =>
-    tx.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // 2. Reset Page kalau search berubah
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
-  // 3. Hitung Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentData = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  // Handler Ganti Halaman
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mt-8"
-    >
+    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mt-8 font-figtree">
+      {/* Header & Search */}
       <div className="p-8 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-6">
         <h3 className="text-[1.8em] font-bold text-shortblack">
           Transaction History
@@ -92,18 +73,18 @@ export default function TransactionTable({
             <input
               type="text"
               placeholder="Search ID..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 focus:border-bluelight text-[1.4em] text-shortblack placeholder:text-gray-400 transition-all shadow-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-[1.4em] text-shortblack transition-all shadow-sm"
             />
           </div>
-          {/* Tombol Export */}
           <button className="p-3 bg-blues text-bluelight rounded-xl hover:bg-blue-100 transition-colors border border-blue-100">
             <Download className="w-5 h-5" />
           </button>
         </div>
       </div>
 
+      {/* Table Content */}
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead className="bg-blues text-grays uppercase text-[1.2em] font-bold tracking-wider">
@@ -116,8 +97,17 @@ export default function TransactionTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {currentData.length > 0 ? (
-              currentData.map((tx) => (
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="p-12 text-center text-grays text-[1.4em]"
+                >
+                  Loading data...
+                </td>
+              </tr>
+            ) : transactions.length > 0 ? (
+              transactions.map((tx) => (
                 <tr
                   key={tx.id}
                   className="hover:bg-slate-50 transition-colors group"
@@ -151,17 +141,6 @@ export default function TransactionTable({
                   </td>
                   <td className="px-4 md:px-8 py-3 md:py-5 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {/* TOMBOL DETAIL (External Link) */}
-                      {tx.txId && (
-                        <button
-                          className="text-bluelight hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
-                          title="Lihat Bukti"
-                        >
-                          <ExternalLink className="w-5 h-5" />
-                        </button>
-                      )}
-
-                      {/* TOMBOL CANCEL (Hanya muncul kalau PENDING) */}
                       {tx.status === "pending" && (
                         <button
                           onClick={() => onCancel(tx.id)}
@@ -169,6 +148,14 @@ export default function TransactionTable({
                           title="Batalkan Request"
                         >
                           <XCircle className="w-5 h-5" />
+                        </button>
+                      )}
+                      {tx.txId && (
+                        <button
+                          className="text-bluelight hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
+                          title="Lihat Bukti"
+                        >
+                          <ExternalLink className="w-5 h-5" />
                         </button>
                       )}
                     </div>
@@ -179,7 +166,7 @@ export default function TransactionTable({
               <tr>
                 <td
                   colSpan={5}
-                  className="px-4 md:px-8 py-12 text-center text-grays text-[1.6em]"
+                  className="p-12 text-center text-grays text-[1.4em]"
                 >
                   No transactions found.
                 </td>
@@ -189,42 +176,30 @@ export default function TransactionTable({
         </table>
       </div>
 
-      {/* --- FOOTER PAGINATION --- */}
+      {/* Footer Pagination */}
       {totalPages > 1 && (
         <div className="p-6 border-t border-gray-100 flex justify-center items-center gap-2">
           <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            onClick={() => setPage(Math.max(1, page - 1))}
+            disabled={page === 1}
             className="p-3 rounded-xl border border-gray-200 bg-white text-shortblack hover:bg-blues disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          {/* Page Numbers */}
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={clsx(
-                "w-10 h-10 rounded-xl text-[1.4em] font-bold transition-all",
-                currentPage === page
-                  ? "bg-bluelight text-white shadow-md shadow-blue-200"
-                  : "bg-white border border-gray-200 text-shortblack hover:bg-blues"
-              )}
-            >
-              {page}
-            </button>
-          ))}
+          <span className="text-[1.4em] font-medium px-4 text-grays">
+            Page {page} of {totalPages}
+          </span>
 
           <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
+            disabled={page === totalPages}
             className="p-3 rounded-xl border border-gray-200 bg-white text-shortblack hover:bg-blues disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
