@@ -316,3 +316,12 @@ export type FilterByType =
   | "linkPassword";
 
 export type SortByType = "highest" | "lowest";
+
+// src/types/type.ts
+// ... (tipe yang lain tetap)
+
+export interface HeaderStats {
+  balance: number;
+  payout: number;
+  cpm: number;
+}

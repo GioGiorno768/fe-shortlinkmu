@@ -28,7 +28,7 @@ export default function WithdrawalStatsCard({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl shadow-sm shadow-slate-500/20 border border-gray-100 h-full flex flex-col relative overflow-hidden"
+      className="bg-white rounded-3xl shadow-sm shadow-slate-500/20 border border-gray-100 h-full flex flex-col relative overflow-hidden font-figtree"
     >
       {/* Header Section (Judul & Tombol) */}
       <div className="p-8 pb-4 flex justify-between items-start z-10">

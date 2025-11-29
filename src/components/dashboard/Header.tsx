@@ -1,3 +1,4 @@
+// src/components/dashboard/Header.tsx
 "use client";
 
 import { usePathname, useRouter } from "@/i18n/routing";
@@ -7,13 +8,16 @@ import {
   Bell,
   Sun,
   Moon,
-  WalletMinimal,
+  WalletMinimal, // Icon
   MoonStar,
+  Loader2, // Tambah loader biar UX bagus
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition, useRef, useEffect } from "react";
-// Import komponen notifikasi
 import NotificationDropdown from "./NotificationDropdown";
+
+// IMPORT HOOK KITA
+import { useHeader } from "@/hooks/useHeader";
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -35,7 +39,10 @@ export default function Header({
 
   // --- STATE NOTIFIKASI ---
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const notifRef = useRef<HTMLDivElement>(null); // Ref buat deteksi klik luar
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // --- PANGGIL HOOK HEADER (Data Real-time) ---
+  const { stats, isLoading } = useHeader();
 
   const switchLanguage = (nextLocale: "en" | "id") => {
     startTransition(() => {
@@ -43,7 +50,6 @@ export default function Header({
     });
   };
 
-  // --- EFEK KLIK LUAR (CLOSE DROPDOWN) ---
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -59,14 +65,35 @@ export default function Header({
     };
   }, [notifRef]);
 
+  // Helper Format Duit
+  const formatCurrency = (val?: number) => {
+    if (val === undefined) return "...";
+    return (
+      "$" +
+      val.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
+  };
+
+  // Config Data Head (Sekarang pake data dari stats)
   const head = [
-    { name: t("balance"), icon: "solar--wallet-linear", value: "$880,210" },
+    {
+      name: t("balance"),
+      icon: "solar--wallet-linear",
+      value: formatCurrency(stats?.balance),
+    },
     {
       name: t("payout"),
       icon: "hugeicons--money-send-circle",
-      value: "$10,210",
+      value: formatCurrency(stats?.payout),
     },
-    { name: t("cpm"), icon: "icon-park-outline--click-tap", value: "$5,000" },
+    {
+      name: t("cpm"),
+      icon: "icon-park-outline--click-tap",
+      value: formatCurrency(stats?.cpm),
+    },
   ];
 
   return (
@@ -112,17 +139,24 @@ export default function Header({
                         : "w-[2.8em] h-[2.8em]"
                     } bg-bluelight`}
                   ></span>
-                  <span className="text-[1.8em] font-manrope font-semibold">
-                    {item.value}
-                  </span>
+
+                  {/* Logic Loading Skeleton / Value */}
+                  {isLoading ? (
+                    <div className="h-[1.8em] w-[6em] bg-gray-200 animate-pulse rounded"></div>
+                  ) : (
+                    <span className="text-[1.8em] font-manrope font-semibold text-shortblack">
+                      {item.value}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right Section */}
+        {/* Right Section (Language, Theme, Notif) */}
         <div className="flex items-center gap-1 custom:gap-[2em]">
+          {/* ... (Bagian kanan ini udah clean, cuma UI logic) ... */}
           <div className="custom:flex hidden items-center bg-blue-dashboard rounded-full p-[0.5em] border border-bluelight/10">
             <button
               onClick={() => switchLanguage("en")}
@@ -159,24 +193,20 @@ export default function Header({
             )}
           </button>
 
-          {/* --- NOTIFICATIONS (UPDATED) --- */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
               className="p-2 custom:hover:-translate-y-1 translition-all duration-300 ease-in-out relative"
             >
               <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
-              {/* Dot Merah (Indikator Belum Baca) */}
               <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
 
-            {/* Component Dropdown */}
             <NotificationDropdown
               isOpen={isNotifOpen}
               onClose={() => setIsNotifOpen(false)}
             />
           </div>
-          {/* ------------------------------- */}
         </div>
       </div>
     </nav>
