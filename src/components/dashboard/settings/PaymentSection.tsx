@@ -1,7 +1,7 @@
 // src/components/dashboard/settings/PaymentSection.tsx
 "use client";
 
-import { useState } from "react"; // Hapus useEffect karena gak perlu fetch awal
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Save,
@@ -16,50 +16,24 @@ import {
   Star,
   CheckCircle,
 } from "lucide-react";
-import { useAlert } from "@/hooks/useAlert";
 import clsx from "clsx";
 import type { SavedPaymentMethod } from "@/types/type";
 import ConfirmationModal from "../ConfirmationModal";
+import { usePaymentLogic } from "@/hooks/useSettings"; // Pake Hook baru
 
-// --- KONFIGURASI PROVIDER (TETAP SAMA) ---
+// Konfigurasi Input Tetap Di Sini
 const PAYMENT_CONFIG = {
   wallet: {
     label: "Digital Wallet",
     icon: Smartphone,
     methods: [
-      {
-        id: "DANA",
-        label: "DANA",
-        inputType: "number",
-        inputLabel: "DANA Phone Number",
-        placeholder: "0812xxxx",
-      },
-      {
-        id: "OVO",
-        label: "OVO",
-        inputType: "number",
-        inputLabel: "OVO Phone Number",
-        placeholder: "0812xxxx",
-      },
-      {
-        id: "GoPay",
-        label: "GoPay",
-        inputType: "number",
-        inputLabel: "GoPay Phone Number",
-        placeholder: "0812xxxx",
-      },
-      {
-        id: "ShopeePay",
-        label: "ShopeePay",
-        inputType: "number",
-        inputLabel: "ShopeePay Number",
-        placeholder: "0812xxxx",
-      },
+      { id: "DANA", label: "DANA", type: "number", placeholder: "0812xxxx" },
+      { id: "OVO", label: "OVO", type: "number", placeholder: "0812xxxx" },
+      { id: "GoPay", label: "GoPay", type: "number", placeholder: "0812xxxx" },
       {
         id: "PayPal",
         label: "PayPal",
-        inputType: "email",
-        inputLabel: "PayPal Email Address",
+        type: "email",
         placeholder: "name@email.com",
       },
     ],
@@ -71,36 +45,19 @@ const PAYMENT_CONFIG = {
       {
         id: "BCA",
         label: "Bank BCA",
-        inputType: "number",
-        inputLabel: "Rekening BCA",
+        type: "number",
         placeholder: "1234567890",
       },
       {
         id: "BRI",
         label: "Bank BRI",
-        inputType: "number",
-        inputLabel: "Rekening BRI",
+        type: "number",
         placeholder: "1234567890",
       },
       {
         id: "Mandiri",
         label: "Bank Mandiri",
-        inputType: "number",
-        inputLabel: "Rekening Mandiri",
-        placeholder: "1234567890",
-      },
-      {
-        id: "BNI",
-        label: "Bank BNI",
-        inputType: "number",
-        inputLabel: "Rekening BNI",
-        placeholder: "1234567890",
-      },
-      {
-        id: "Jago",
-        label: "Bank Jago",
-        inputType: "number",
-        inputLabel: "Rekening Jago",
+        type: "number",
         placeholder: "1234567890",
       },
     ],
@@ -110,58 +67,28 @@ const PAYMENT_CONFIG = {
     icon: Bitcoin,
     methods: [
       {
-        id: "USDT-TRC20",
+        id: "USDT",
         label: "USDT (TRC20)",
-        inputType: "text",
-        inputLabel: "Wallet Address (TRC20)",
+        type: "text",
         placeholder: "Txr...",
       },
-      {
-        id: "USDT-ERC20",
-        label: "USDT (ERC20)",
-        inputType: "text",
-        inputLabel: "Wallet Address (ERC20)",
-        placeholder: "0x...",
-      },
-      {
-        id: "BTC",
-        label: "Bitcoin (BTC)",
-        inputType: "text",
-        inputLabel: "Bitcoin Wallet Address",
-        placeholder: "1A1z...",
-      },
-      {
-        id: "LTC",
-        label: "Litecoin (LTC)",
-        inputType: "text",
-        inputLabel: "Litecoin Wallet Address",
-        placeholder: "L...",
-      },
+      { id: "BTC", label: "Bitcoin", type: "text", placeholder: "1A1z..." },
     ],
   },
 };
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
-// 👇 UBAH PROPS DISINI
-interface PaymentSectionProps {
-  initialMethods: SavedPaymentMethod[];
-}
-
 export default function PaymentSection({
   initialMethods,
-}: PaymentSectionProps) {
-  const { showAlert } = useAlert();
+}: {
+  initialMethods: SavedPaymentMethod[];
+}) {
+  // Panggil Hook Sakti
+  const { methods, addMethod, removeMethod, setAsDefault, isProcessing } =
+    usePaymentLogic(initialMethods);
 
-  // State Data (Langsung diisi dari props)
-  const [savedMethods, setSavedMethods] =
-    useState<SavedPaymentMethod[]>(initialMethods);
-
-  // State Loading Action
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // State Form
+  // State Form Lokal
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
   const [selectedMethodId, setSelectedMethodId] = useState(
     PAYMENT_CONFIG.wallet.methods[0].id
@@ -172,137 +99,38 @@ export default function PaymentSection({
   });
 
   // State Modal Delete
-  const [deleteModal, setDeleteModal] = useState({
-    isOpen: false,
-    methodId: "",
-    isLoading: false,
-  });
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // 1. Trigger
-  const openDeleteModal = (id: string) => {
-    setDeleteModal({ isOpen: true, methodId: id, isLoading: false });
+  const handleCategoryChange = (key: CategoryKey) => {
+    setActiveCategory(key);
+    setSelectedMethodId(PAYMENT_CONFIG[key].methods[0].id);
+    setDetails({ ...details, accountNumber: "" });
   };
 
-  // --- 2. HANDLER TAMBAH METODE BARU ---
-  const handleAddMethod = async (e: React.FormEvent) => {
+  const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    const newMethodPayload = {
+    const success = await addMethod({
       provider: selectedMethodId,
       accountName: details.accountName,
       accountNumber: details.accountNumber,
       category: activeCategory,
-    };
-
-    // [API Call] POST /api/user/payment-methods
-    console.log(
-      "MANGGIL API: POST /api/user/payment-methods",
-      newMethodPayload
-    );
-
-    try {
-      await new Promise((r) => setTimeout(r, 1000)); // Simulasi
-
-      const newMethodMock: SavedPaymentMethod = {
-        id: `pm-${Date.now()}`,
-        ...newMethodPayload,
-        isDefault: savedMethods.length === 0,
-      } as SavedPaymentMethod;
-
-      setSavedMethods([...savedMethods, newMethodMock]);
-      setDetails({ accountName: "", accountNumber: "" });
-      showAlert("Metode pembayaran berhasil ditambahkan!", "success");
-    } catch (err) {
-      showAlert("Gagal menambah metode pembayaran.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // --- 3. HANDLER SET DEFAULT ---
-  const handleSetDefault = async (id: string) => {
-    setActionLoadingId(id);
-
-    // [API Call] PATCH /api/user/payment-methods/{id}/set-default
-    console.log(
-      `MANGGIL API: PATCH /api/user/payment-methods/${id}/set-default`
-    );
-
-    try {
-      await new Promise((r) => setTimeout(r, 800)); // Simulasi
-
-      setSavedMethods((prev) =>
-        prev.map((m) => ({
-          ...m,
-          isDefault: m.id === id,
-        }))
-      );
-      showAlert("Metode pembayaran utama diperbarui.", "success");
-    } catch (err) {
-      showAlert("Gagal mengatur default.", "error");
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
-
-  // --- 4. HANDLER DELETE ---
-  // const handleDelete = async (id: string) => {
-  //   if (!confirm("Yakin ingin menghapus metode pembayaran ini?")) return;
-
-  //   setActionLoadingId(id);
-
-  //   // [API Call] DELETE /api/user/payment-methods/{id}
-  //   console.log(`MANGGIL API: DELETE /api/user/payment-methods/${id}`);
-
-  //   try {
-  //     await new Promise((r) => setTimeout(r, 800)); // Simulasi
-
-  //     setSavedMethods((prev) => prev.filter((m) => m.id !== id));
-  //     showAlert("Metode pembayaran dihapus.", "info");
-  //   } catch (err) {
-  //     showAlert("Gagal menghapus data.", "error");
-  //   } finally {
-  //     setActionLoadingId(null);
-  //   }
-  // };
-
-  // 2. Confirm Action
-  const confirmDelete = async () => {
-    setDeleteModal((prev) => ({ ...prev, isLoading: true }));
-    const id = deleteModal.methodId;
-
-    // ... Logic handleDelete lama ...
-    try {
-      await new Promise((r) => setTimeout(r, 800));
-      setSavedMethods((prev) => prev.filter((m) => m.id !== id));
-      showAlert("Metode pembayaran dihapus.", "info");
-    } catch (err) {
-      showAlert("Gagal menghapus data.", "error");
-    }
-
-    setDeleteModal({ isOpen: false, methodId: "", isLoading: false });
-  };
-
-  const handleCategoryChange = (category: CategoryKey) => {
-    setActiveCategory(category);
-    setSelectedMethodId(PAYMENT_CONFIG[category].methods[0].id);
-    setDetails((prev) => ({ ...prev, accountNumber: "" }));
+    });
+    // Reset form kalau sukses
+    if (success) setDetails({ accountName: "", accountNumber: "" });
   };
 
   const currentCategoryConfig = PAYMENT_CONFIG[activeCategory];
-  const currentMethodConfig =
-    currentCategoryConfig.methods.find((m) => m.id === selectedMethodId) ||
-    currentCategoryConfig.methods[0];
+  const currentMethodConfig = currentCategoryConfig.methods.find(
+    (m) => m.id === selectedMethodId
+  );
 
   return (
-    <div className="space-y-8">
-      {/* === LIST KARTU PEMBAYARAN === */}
+    <div className="space-y-8 font-figtree">
+      {/* 1. LIST METHODS */}
       <div className="space-y-4 p-8 bg-white rounded-3xl shadow-sm border border-gray-100">
         <h2 className="text-[2em] font-bold text-shortblack">Saved Methods</h2>
 
-        {/* Gak perlu loading state disini karena data udah dateng dari props */}
-        {savedMethods.length === 0 ? (
+        {methods.length === 0 ? (
           <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-3xl text-grays">
             <p className="text-[1.4em]">
               Belum ada metode pembayaran yang disimpan.
@@ -311,7 +139,7 @@ export default function PaymentSection({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <AnimatePresence>
-              {savedMethods.map((method) => (
+              {methods.map((method) => (
                 <motion.div
                   key={method.id}
                   layout
@@ -319,18 +147,20 @@ export default function PaymentSection({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   className={clsx(
-                    "relative p-6 rounded-3xl border-2 transition-all duration-300 shadow-sm",
+                    "relative p-6 rounded-3xl border-2 transition-all shadow-sm",
                     method.isDefault
                       ? "border-bluelight bg-blue-50/30"
-                      : "border-gray-100 bg-white hover:border-blue-200"
+                      : "border-gray-100 bg-white"
                   )}
                 >
+                  {/* Badge Default */}
                   {method.isDefault && (
                     <div className="absolute top-0 right-0 bg-bluelight text-white text-[1.1em] px-4 py-1 rounded-bl-2xl rounded-tr-2xl font-bold flex items-center gap-1 shadow-sm">
                       <Star className="w-3 h-3 fill-current" /> Default
                     </div>
                   )}
 
+                  {/* Info */}
                   <div className="flex items-start gap-4 mb-4">
                     <div className="p-3 rounded-2xl bg-blues text-bluelight">
                       {method.category === "bank" ? (
@@ -354,33 +184,23 @@ export default function PaymentSection({
                     </div>
                   </div>
 
+                  {/* Actions */}
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200/50">
                     {!method.isDefault && (
                       <button
-                        onClick={() => handleSetDefault(method.id)}
-                        disabled={actionLoadingId === method.id}
+                        onClick={() => setAsDefault(method.id)}
+                        disabled={isProcessing}
                         className="text-[1.3em] font-semibold text-bluelight hover:bg-blue-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
-                        {actionLoadingId === method.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <CheckCircle className="w-4 h-4" />
-                        )}
-                        Set Default
+                        <CheckCircle className="w-4 h-4" /> Set Default
                       </button>
                     )}
-
                     <button
-                      onClick={() => openDeleteModal(method.id)}
-                      disabled={actionLoadingId === method.id}
+                      onClick={() => setDeleteId(method.id)}
+                      disabled={isProcessing}
                       className="text-[1.3em] font-semibold text-red-500 hover:bg-red-50 px-4 py-2 rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                      {actionLoadingId === method.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                      Delete
+                      <Trash2 className="w-4 h-4" /> Delete
                     </button>
                   </div>
                 </motion.div>
@@ -392,19 +212,18 @@ export default function PaymentSection({
 
       <div className="h-px bg-gray-200 my-8" />
 
-      {/* === FORM TAMBAH BARU (TETAP SAMA) === */}
+      {/* 2. ADD NEW METHOD FORM */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100"
       >
         <h2 className="text-[2em] font-bold text-shortblack mb-8 flex items-center gap-3">
-          <Plus className="w-6 h-6 text-bluelight" />
-          Add New Method
+          <Plus className="w-6 h-6 text-bluelight" /> Add New Method
         </h2>
 
-        <form onSubmit={handleAddMethod} className="space-y-8 w-full">
-          {/* ... (Bagian Form sama persis kayak kode sebelumnya) ... */}
+        <form onSubmit={handleAddSubmit} className="space-y-8">
+          {/* Category Tabs */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
               const config = PAYMENT_CONFIG[key];
@@ -415,10 +234,10 @@ export default function PaymentSection({
                   type="button"
                   onClick={() => handleCategoryChange(key)}
                   className={clsx(
-                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all duration-200",
+                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all",
                     isActive
-                      ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20 ring-offset-2"
-                      : "border-gray-100 bg-white text-grays hover:border-blue-200 hover:bg-slate-50"
+                      ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20"
+                      : "border-gray-100 bg-white text-grays hover:bg-slate-50"
                   )}
                 >
                   <config.icon
@@ -430,8 +249,10 @@ export default function PaymentSection({
             })}
           </div>
 
-          <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6 relative overflow-hidden">
-            <div className="space-y-2 relative z-10">
+          {/* Input Fields */}
+          <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6">
+            {/* Provider Select */}
+            <div className="space-y-2">
               <label className="text-[1.4em] font-bold text-shortblack">
                 Select Provider
               </label>
@@ -439,7 +260,7 @@ export default function PaymentSection({
                 <select
                   value={selectedMethodId}
                   onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer hover:border-bluelight transition-colors"
+                  className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
                 >
                   {currentCategoryConfig.methods.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -453,9 +274,10 @@ export default function PaymentSection({
 
             <div className="h-px bg-blue-200/50 my-4"></div>
 
-            <div className="space-y-2 relative z-10">
+            {/* Account Name */}
+            <div className="space-y-2">
               <label className="text-[1.4em] font-medium text-grays">
-                Account Name (Holder)
+                Account Name
               </label>
               <div className="relative">
                 <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
@@ -465,37 +287,41 @@ export default function PaymentSection({
                   onChange={(e) =>
                     setDetails({ ...details, accountName: e.target.value })
                   }
-                  className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/50 text-[1.5em] bg-white/80 focus:bg-white transition-colors"
+                  className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50"
                   placeholder="e.g. Kevin Ragil"
                   required
                 />
               </div>
             </div>
 
-            <div className="space-y-2 relative z-10">
+            {/* Account Number */}
+            <div className="space-y-2">
               <label className="text-[1.4em] font-medium text-grays">
-                {currentMethodConfig.inputLabel}
+                Account Number / ID
               </label>
               <input
-                type={currentMethodConfig.inputType}
+                type={currentMethodConfig?.type || "text"}
                 value={details.accountNumber}
                 onChange={(e) =>
                   setDetails({ ...details, accountNumber: e.target.value })
                 }
-                className="w-full px-6 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/50 text-[1.5em] bg-white/80 focus:bg-white transition-colors font-mono"
-                placeholder={currentMethodConfig.placeholder}
+                className="w-full px-6 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50 font-mono"
+                placeholder={
+                  currentMethodConfig?.placeholder || "Enter number..."
+                }
                 required
               />
             </div>
           </div>
 
+          {/* Submit */}
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200 hover:-translate-y-1"
+              disabled={isProcessing}
+              className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200"
             >
-              {isSubmitting ? (
+              {isProcessing ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <Save className="w-6 h-6" />
@@ -506,16 +332,19 @@ export default function PaymentSection({
         </form>
       </motion.div>
 
-      {/* Pasang Modal */}
+      {/* Delete Modal */}
       <ConfirmationModal
-        isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
-        onConfirm={confirmDelete}
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={async () => {
+          if (deleteId) await removeMethod(deleteId);
+          setDeleteId(null);
+        }}
+        isLoading={isProcessing}
         title="Hapus Metode?"
-        description="Anda tidak dapat mengembalikan metode pembayaran yang sudah dihapus."
-        confirmLabel="Hapus Permanen"
+        description="Yakin ingin menghapus metode pembayaran ini? Tindakan ini tidak bisa dibatalkan."
+        confirmLabel="Hapus"
         type="danger"
-        isLoading={deleteModal.isLoading}
       />
     </div>
   );

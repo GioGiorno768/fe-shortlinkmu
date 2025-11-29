@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Globe,
-  Coins,
   Clock,
   Save,
   Loader2,
@@ -14,16 +13,17 @@ import {
   ShieldAlert,
   Cookie,
   KeyRound,
-  Check, // Icon Check buat indikator selected
+  Check,
 } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
 import { usePathname, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import clsx from "clsx";
-import Image from "next/image"; // Pake Image buat bendera
+import Image from "next/image";
 import type { UserPreferences, PrivacySettings } from "@/types/type";
+import { usePreferencesLogic } from "@/hooks/useSettings"; // Import Hook
 
-// --- DATA STATIS (Config Bendera & Label) ---
+// --- DATA STATIS ---
 const CURRENCY_OPTIONS = [
   { code: "USD", label: "US Dollar", countryCode: "us" },
   { code: "IDR", label: "Indonesian Rupiah", countryCode: "id" },
@@ -32,7 +32,7 @@ const CURRENCY_OPTIONS = [
 ];
 
 const LANGUAGE_OPTIONS = [
-  { code: "en", label: "English", countryCode: "us" }, // Pake US/GB terserah lu
+  { code: "en", label: "English", countryCode: "us" },
   { code: "id", label: "Indonesia", countryCode: "id" },
 ];
 
@@ -49,16 +49,16 @@ export default function PreferencesSection({
   const searchParams = useSearchParams();
   const currentLocale = useLocale();
 
-  const [isPending, startTransition] = useTransition();
-  const [isSaving, setIsSaving] = useState(false);
+  // Panggil Logic dari Hook
+  const { savePreferences, isSaving } = usePreferencesLogic();
 
-  // State buat Custom Dropdown Currency
+  const [isPending, startTransition] = useTransition();
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const currencyRef = useRef<HTMLDivElement>(null);
 
-  // State Form
+  // State Form (Default Value dari props)
   const [preferences, setPreferences] = useState<UserPreferences>({
-    language: currentLocale as "en" | "id",
+    language: (currentLocale as "en" | "id") || "en",
     currency: initialData?.currency || "USD",
     timezone: initialData?.timezone || "Asia/Jakarta",
     privacy: initialData?.privacy || {
@@ -68,6 +68,7 @@ export default function PreferencesSection({
     },
   });
 
+  // Sinkronisasi state bahasa kalau locale berubah dari luar
   useEffect(() => {
     setPreferences((prev) => ({
       ...prev,
@@ -75,7 +76,7 @@ export default function PreferencesSection({
     }));
   }, [currentLocale]);
 
-  // Close dropdown currency pas klik luar
+  // Klik luar dropdown currency
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -89,6 +90,7 @@ export default function PreferencesSection({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Ganti Bahasa (Langsung Redirect Client-Side)
   const handleLanguageChange = (lang: "en" | "id") => {
     setPreferences({ ...preferences, language: lang });
     startTransition(() => {
@@ -104,6 +106,7 @@ export default function PreferencesSection({
     );
   };
 
+  // Ganti Setting Privacy
   const handlePrivacyToggle = (key: keyof PrivacySettings) => {
     setPreferences((prev) => ({
       ...prev,
@@ -111,20 +114,11 @@ export default function PreferencesSection({
     }));
   };
 
+  // Submit Form (Ke Backend)
   const handleSave = async () => {
-    setIsSaving(true);
-    console.log("MANGGIL API: PUT /api/user/preferences", preferences);
-    try {
-      await new Promise((r) => setTimeout(r, 1000));
-      showAlert("Pengaturan berhasil disimpan!", "success");
-    } catch (err) {
-      showAlert("Gagal menyimpan pengaturan.", "error");
-    } finally {
-      setIsSaving(false);
-    }
+    await savePreferences(preferences);
   };
 
-  // Helper buat nyari object currency yang aktif
   const activeCurrency =
     CURRENCY_OPTIONS.find((c) => c.code === preferences.currency) ||
     CURRENCY_OPTIONS[0];
@@ -143,7 +137,7 @@ export default function PreferencesSection({
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* 1. Language Picker (Button Group) */}
+          {/* 1. Language Picker */}
           <div className="space-y-3">
             <label className="text-[1.4em] font-medium text-grays">
               Display Language
@@ -161,7 +155,6 @@ export default function PreferencesSection({
                       : "border-gray-200 text-grays hover:border-blue-200 hover:bg-slate-50"
                   )}
                 >
-                  {/* Bendera */}
                   <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
                     <Image
                       src={`https://flagcdn.com/${lang.countryCode}.svg`}
@@ -171,8 +164,6 @@ export default function PreferencesSection({
                     />
                   </div>
                   <span className="text-[1.4em] font-bold">{lang.label}</span>
-
-                  {/* Indikator Selected */}
                   {preferences.language === lang.code && (
                     <div className="absolute top-0 right-0 p-[2px] bg-bluelight rounded-bl-lg">
                       <Check className="w-3 h-3 text-white" />
@@ -183,7 +174,7 @@ export default function PreferencesSection({
             </div>
           </div>
 
-          {/* 2. Currency Picker (Custom Dropdown) */}
+          {/* 2. Currency Picker */}
           <div className="space-y-3" ref={currencyRef}>
             <label className="text-[1.4em] font-medium text-grays">
               Display Currency
@@ -211,7 +202,6 @@ export default function PreferencesSection({
                 />
               </button>
 
-              {/* Dropdown List */}
               <AnimatePresence>
                 {isCurrencyOpen && (
                   <motion.div
@@ -267,7 +257,7 @@ export default function PreferencesSection({
             </p>
           </div>
 
-          {/* Timezone Picker (Tetap Native Select - Karena listnya panjang bgt) */}
+          {/* Timezone Picker */}
           <div className="space-y-3 md:col-span-2">
             <label className="text-[1.4em] font-medium text-grays">
               Timezone
@@ -293,7 +283,7 @@ export default function PreferencesSection({
         </div>
       </motion.div>
 
-      {/* === PRIVACY & SESSION (Gak berubah) === */}
+      {/* === PRIVACY & SESSION === */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -371,6 +361,7 @@ export default function PreferencesSection({
         </div>
       </motion.div>
 
+      {/* Footer Submit */}
       <div className="flex justify-end pt-4">
         <button
           onClick={handleSave}
