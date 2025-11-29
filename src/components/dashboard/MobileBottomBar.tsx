@@ -10,26 +10,44 @@ import {
   Check,
   TrendingUp,
   CreditCard,
+  Loader2, // Tambah loader icon
 } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import clsx from "clsx";
+import { useHeader } from "@/hooks/useHeader"; // <--- 1. IMPORT HOOK
 
-// 1. Tambah Interface Props
 interface MobileBottomBarProps {
   isSidebarOpen: boolean;
 }
 
-// 2. Terima Props di Component
-export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps) {
-  const [activePopup, setActivePopup] = useState<"lang" | "wallet" | null>(null);
+export default function MobileBottomBar({
+  isSidebarOpen,
+}: MobileBottomBarProps) {
+  const [activePopup, setActivePopup] = useState<"lang" | "wallet" | null>(
+    null
+  );
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const barRef = useRef<HTMLDivElement>(null);
 
-  // Close popup kalau klik di luar
+  // 2. PANGGIL DATA REAL-TIME
+  const { stats, isLoading } = useHeader();
+
+  // Helper Format Currency
+  const formatCurrency = (val?: number) => {
+    if (val === undefined) return "...";
+    return (
+      "$" +
+      val.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    );
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (barRef.current && !barRef.current.contains(event.target as Node)) {
@@ -40,7 +58,6 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Efek: Kalau Sidebar kebuka, tutup semua popup biar rapi pas muncul lagi
   useEffect(() => {
     if (isSidebarOpen) {
       setActivePopup(null);
@@ -58,34 +75,47 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
     setActivePopup(activePopup === name ? null : name);
   };
 
+  // 3. GUNAKAN DATA DINAMIS DARI HOOK
   const walletData = [
-    { label: "Balance", value: "$880,210", icon: Wallet, color: "text-bluelight" },
-    { label: "Payout", value: "$10,210", icon: CreditCard, color: "text-green-600" },
-    { label: "CPM", value: "$5,000", icon: TrendingUp, color: "text-orange-500" },
+    {
+      label: "Balance",
+      value: formatCurrency(stats?.balance),
+      icon: Wallet,
+      color: "text-bluelight",
+    },
+    {
+      label: "Payout",
+      value: formatCurrency(stats?.payout),
+      icon: CreditCard,
+      color: "text-green-600",
+    },
+    {
+      label: "CPM",
+      value: formatCurrency(stats?.cpm),
+      icon: TrendingUp,
+      color: "text-orange-500",
+    },
   ];
 
   return (
-    // 3. Bungkus Utama dengan AnimatePresence buat animasi Mount/Unmount
     <AnimatePresence>
-      {!isSidebarOpen && ( // Cuma render kalau sidebar TERTUTUP
+      {!isSidebarOpen && (
         <motion.div
           ref={barRef}
-          // Animasi Slide Up/Down
           initial={{ y: 150, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 150, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="fixed bottom-2 left-2 right-2 z-40 md:hidden flex justify-center pointer-events-none text-[10px]"
         >
-          {/* === INTERNAL POPUPS (Drop-up) === */}
+          {/* === POPUPS === */}
           <AnimatePresence>
-            {/* 1. Language Popup */}
+            {/* Language Popup (Tetap sama) */}
             {activePopup === "lang" && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 className="absolute bottom-[75px] left-0 w-[180px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
               >
                 <div className="p-3 bg-gray-50 border-b border-gray-100">
@@ -115,13 +145,12 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
               </motion.div>
             )}
 
-            {/* 2. Wallet Popup */}
+            {/* Wallet Popup (UPDATED) */}
             {activePopup === "wallet" && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 className="absolute bottom-[75px] right-0 w-[220px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
               >
                 <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
@@ -136,37 +165,43 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
                   </Link>
                 </div>
                 <div className="p-1.5 divide-y divide-gray-50">
-                  {walletData.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-2.5"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={clsx(
-                            "p-1.5 rounded-full bg-slate-50",
-                            item.color
-                          )}
-                        >
-                          <item.icon className="w-3.5 h-3.5" />
+                  {/* Logic Loading State */}
+                  {isLoading ? (
+                    <div className="p-4 flex justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-bluelight" />
+                    </div>
+                  ) : (
+                    walletData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2.5"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={clsx(
+                              "p-1.5 rounded-full bg-slate-50",
+                              item.color
+                            )}
+                          >
+                            <item.icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-[1.2em] font-medium text-grays">
+                            {item.label}
+                          </span>
                         </div>
-                        <span className="text-[1.2em] font-medium text-grays">
-                          {item.label}
+                        <span className="text-[1.3em] font-bold text-shortblack">
+                          {item.value}
                         </span>
                       </div>
-                      <span className="text-[1.3em] font-bold text-shortblack">
-                        {item.value}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* === THE BAR ITSELF === */}
+          {/* === THE BAR ITSELF (Tetap sama) === */}
           <div className="w-full max-w-lg bg-white/90 backdrop-blur-md border border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-[2.5em] p-1.5 px-6 flex items-center justify-between gap-4 pointer-events-auto relative">
-            {/* Left Button: Language */}
             <button
               onClick={() => togglePopup("lang")}
               className={clsx(
@@ -186,7 +221,6 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
               </div>
             </button>
 
-            {/* Center Button: New Link */}
             <Link href="/new-link" className="relative -top-5">
               <motion.div
                 whileTap={{ scale: 0.9 }}
@@ -197,7 +231,6 @@ export default function MobileBottomBar({ isSidebarOpen }: MobileBottomBarProps)
               </motion.div>
             </Link>
 
-            {/* Right Button: Wallet */}
             <button
               onClick={() => togglePopup("wallet")}
               className={clsx(

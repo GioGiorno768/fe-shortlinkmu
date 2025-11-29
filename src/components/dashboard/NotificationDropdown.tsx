@@ -4,88 +4,32 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Bell,
   AlertTriangle,
   CheckCircle,
-  Check,
   Megaphone,
   ShieldAlert,
   ArrowLeft,
   Trash2,
-  Filter, // Icon Filter
+  Filter,
   ChevronDown,
   Link2,
   Wallet,
   User,
   Calendar,
+  Check,
 } from "lucide-react";
 import clsx from "clsx";
-import type { NotificationItem } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
-
-// --- EXTEND TIPE DATA LOKAL (Biar ada category) ---
-interface ExtendedNotificationItem extends NotificationItem {
-  category: "link" | "payment" | "account" | "event" | "system";
-}
-
-// --- MOCK API (Update Data dengan Kategori) ---
-async function fetchNotifications(): Promise<ExtendedNotificationItem[]> {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return [
-    {
-      id: "1",
-      type: "warning",
-      category: "system",
-      title: "Maintenance Scheduled",
-      message: "Sistem akan maintenance pada jam 02:00 - 04:00 WIB.",
-      isRead: false,
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    },
-    {
-      id: "2",
-      type: "success",
-      category: "payment",
-      title: "Payout Approved",
-      message: "Penarikan dana $15.50 berhasil dikirim ke PayPal.",
-      isRead: false,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    },
-    {
-      id: "3",
-      type: "info",
-      category: "event",
-      title: "Event Double CPM!",
-      message: "Nikmati kenaikan CPM 20% khusus weekend ini!",
-      isRead: true,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    },
-    {
-      id: "4",
-      type: "alert",
-      category: "account",
-      title: "Login Mencurigakan",
-      message: "Login dari IP tidak dikenal (Russia). Segera cek akun.",
-      isRead: true,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-    },
-    {
-      id: "5",
-      type: "info",
-      category: "link",
-      title: "Link Populer",
-      message: "Link 'short.link/xyz' tembus 1000 view hari ini!",
-      isRead: false,
-      timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    },
-  ];
-}
+// Import tipe extended dan Hook
+import type { ExtendedNotificationItem } from "@/services/notificationService";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Opsi Filter
+// Opsi Filter (Tetap sama)
 const FILTER_OPTIONS = [
   { id: "all", label: "Semua", icon: null },
   { id: "link", label: "Link", icon: Link2 },
@@ -99,29 +43,34 @@ export default function NotificationDropdown({
   onClose,
 }: NotificationDropdownProps) {
   const { showAlert } = useAlert();
-  const [notifications, setNotifications] = useState<
-    ExtendedNotificationItem[]
-  >([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // State Filter
+  // --- PANGGIL HOOK SAKTI ---
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    markRead,
+    markAllRead,
+    removeNotification,
+  } = useNotifications();
+
+  // State Lokal UI (Filter & Selected Item tetap di sini karena ini urusan tampilan)
   const [activeFilter, setActiveFilter] = useState("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
-
   const [selectedNotif, setSelectedNotif] =
     useState<ExtendedNotificationItem | null>(null);
 
+  // Reset filter pas dibuka
   useEffect(() => {
     if (isOpen) {
-      loadData();
       setSelectedNotif(null);
-      setActiveFilter("all"); // Reset filter pas dibuka
+      setActiveFilter("all");
       setIsFilterOpen(false);
     }
   }, [isOpen]);
 
-  // Tutup dropdown filter kalau klik di luar
+  // Klik luar filter
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -135,19 +84,8 @@ export default function NotificationDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchNotifications();
-      setNotifications(data);
-    } catch (e) {
-      console.error("Failed to load notifications");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // --- LOGIC UI ---
 
-  // Logic Filtering
   const filteredNotifications = notifications.filter((n) => {
     if (activeFilter === "all") return true;
     return n.category === activeFilter;
@@ -155,25 +93,23 @@ export default function NotificationDropdown({
 
   const handleItemClick = (notif: ExtendedNotificationItem) => {
     if (!notif.isRead) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
-      );
+      markRead(notif.id); // Pake fungsi dari hook
     }
     setSelectedNotif(notif);
   };
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    markAllRead(); // Pake fungsi dari hook
     showAlert("Semua notifikasi ditandai sudah dibaca.", "success");
   };
 
   const handleDelete = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    removeNotification(id); // Pake fungsi dari hook
     if (selectedNotif?.id === id) setSelectedNotif(null);
     showAlert("Notifikasi dihapus.", "info");
   };
 
-  // Helper UI (Sama kayak sebelumnya + Icon Kategori)
+  // Helper UI (Tetap sama)
   const getIcon = (type: string) => {
     switch (type) {
       case "warning":
@@ -210,7 +146,6 @@ export default function NotificationDropdown({
     return `${Math.floor(diff / 86400)}h lalu`;
   };
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
   const activeLabel = FILTER_OPTIONS.find((f) => f.id === activeFilter)?.label;
 
   return (
@@ -221,11 +156,11 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className="absolute right-[-1em] sm:right-0 sm:top-[8em] top-[6em]  w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col tall:h-[550px] tall:max-h-[80vh] h-[480px] max-h-[70vh]"
+          className="absolute right-[-1em] sm:right-0 sm:top-[8em] top-[6em] w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col tall:h-[550px] tall:max-h-[80vh] h-[480px] max-h-[70vh]"
         >
           <AnimatePresence mode="popLayout" initial={false}>
             {selectedNotif ? (
-              /* === DETAIL VIEW === */
+              /* === DETAIL VIEW (Tetap Sama) === */
               <motion.div
                 key="detail"
                 initial={{ x: "100%", opacity: 0 }}
@@ -245,6 +180,7 @@ export default function NotificationDropdown({
                     Detail
                   </h3>
                 </div>
+
                 <div className="p-8 overflow-y-auto custom-scrollbar-minimal flex-1">
                   <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -270,6 +206,7 @@ export default function NotificationDropdown({
                     </div>
                   </div>
                 </div>
+
                 <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
                   <button
                     onClick={() => handleDelete(selectedNotif.id)}
@@ -286,7 +223,7 @@ export default function NotificationDropdown({
                 </div>
               </motion.div>
             ) : (
-              /* === LIST VIEW === */
+              /* === LIST VIEW (Tetap Sama) === */
               <motion.div
                 key="list"
                 initial={{ x: "-20%", opacity: 0 }}
@@ -295,7 +232,7 @@ export default function NotificationDropdown({
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="absolute inset-0 flex flex-col bg-white h-full"
               >
-                {/* HEADER UTAMA */}
+                {/* HEADER */}
                 <div className="px-6 pt-5 pb-2 bg-white flex-shrink-0 z-20">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-3">
@@ -318,7 +255,7 @@ export default function NotificationDropdown({
                     )}
                   </div>
 
-                  {/* --- FILTER DROPDOWN BARU --- */}
+                  {/* FILTER DROPDOWN */}
                   <div className="relative pb-2" ref={filterRef}>
                     <button
                       onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -375,7 +312,6 @@ export default function NotificationDropdown({
                       )}
                     </AnimatePresence>
                   </div>
-                  {/* --------------------------- */}
                 </div>
 
                 <div className="h-px bg-gray-100 w-full"></div>
