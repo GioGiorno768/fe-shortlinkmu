@@ -17,7 +17,7 @@
 /.next/
 /out/
 
-/backup
+/src/backup
 
 # production
 /build
