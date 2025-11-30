@@ -4,27 +4,11 @@
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
-import {
-  LayoutDashboard,
-  Users,
-  Settings,
-  FileText,
-  Package,
-  Link2,
-  PlusSquare,
-  User,
-  Mail,
-  LogOut,
-  ChartSpline,
-  UserPlus2,
-  BanknoteArrowDown,
-  History,
-  Megaphone,
-} from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import SidebarItem from "./SidebarItem";
-import { NavItem } from "@/types/type";
-import Image from "next/image"; // Import Image
-import { useUser } from "@/hooks/useUser"; // Import Hook User
+import { NavItem, Role } from "@/types/type";
+import Image from "next/image";
+import { useUser } from "@/hooks/useUser";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -32,7 +16,7 @@ interface SidebarProps {
   onClose: () => void;
   toggleSidebar: () => void;
   menuItems: NavItem[];
-  role?: "member" | "admin";
+  role?: Role;
 }
 
 export default function Sidebar({
@@ -45,18 +29,25 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard");
-
-  // --- 1. PANGGIL HOOK USER (Data Dinamis) ---
   const { user, isLoading } = useUser();
 
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const userPopupRef = useRef<HTMLDivElement>(null);
 
+  // Styling Sidebar: Member = Ungu, Admin = Merah Gelap
+  const sidebarBg = role === "member" ? "bg-[#10052C]" : "bg-[#1a0b2e]";
+
+  // --- LOGIC MENU PROFILE DINAMIS ---
+  // Kalau Admin/Super Admin -> Lari ke halaman settings admin
+  // Kalau Member -> Lari ke halaman settings member
+  const settingsPath = role === "member" ? "/settings" : "/admin/settings";
+
   const userMenuItems = [
-    { icon: Settings, label: t("settings"), href: "/settings" },
+    { icon: Settings, label: t("settings"), href: settingsPath },
     { icon: LogOut, label: t("logOut"), href: "/logout" },
   ];
 
+  // Handle klik luar popup
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -72,11 +63,12 @@ export default function Sidebar({
     };
   }, [userPopupRef]);
 
+  // Tutup popup saat sidebar berubah mode
   useEffect(() => {
     setIsUserPopupOpen(false);
   }, [isCollapsed, isMobileOpen]);
 
-  // --- 2. FIX TYPE ERROR (Pisahin Render) ---
+  // Komponen Konten Popup
   const UserPopupContent = () => (
     <>
       {userMenuItems.map((item) => {
@@ -84,7 +76,6 @@ export default function Sidebar({
           pathname === item.href || pathname === `/id${item.href}`;
         const isLogout = item.label === t("logOut");
 
-        // Class yang sama buat kedua elemen biar DRY
         const itemClass = `flex items-center gap-3 px-3 py-2 rounded-md transition-colors duration-200 text-[1.4em] w-full
           ${
             isChildActive
@@ -96,7 +87,7 @@ export default function Sidebar({
           <div key={item.label}>
             {isLogout && <div className="h-px bg-slate-700 my-1 mx-3" />}
 
-            {/* LOGIC FIX: Render Button ATAU Link secara eksplisit */}
+            {/* Render Button (Logout) atau Link (Navigasi) */}
             {isLogout ? (
               <button
                 onClick={() => {
@@ -137,10 +128,10 @@ export default function Sidebar({
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar Container */}
       <aside
         className={`
-          bg-[#10052C] text-shortblack h-screen fixed left-0 top-0 
+          ${sidebarBg} text-shortblack h-screen fixed left-0 top-0 
           transition-all duration-300 ease-in-out
           ${isCollapsed ? "w-20" : "w-64"}
           ${isMobileOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"}
@@ -148,7 +139,7 @@ export default function Sidebar({
         `}
       >
         <div>
-          {/* Header Sidebar (Logo & Toggle) */}
+          {/* Header Sidebar (Logo) */}
           <div
             className={`flex w-full items-center justify-between ${
               isCollapsed ? "px-[2em]" : "px-[3em]"
@@ -183,9 +174,23 @@ export default function Sidebar({
             )}
           </div>
 
-          {/* Menu Items */}
-          <nav className="mt-[1em] px-[1em]">
-            {menuItems.map((item) => {
+          {/* Menu Items (List Utama) */}
+          <nav className="mt-[1em] px-[1em] pb-24 overflow-y-auto h-[calc(100vh-100px)] custom-scrollbar-minimal">
+            {menuItems.map((item, index) => {
+              if (item.isHeader) {
+                if (isCollapsed)
+                  return (
+                    <div key={index} className="h-px bg-white/10 my-4 mx-2" />
+                  );
+                return (
+                  <div key={index} className="px-4 pt-6 pb-2 mb-2">
+                    <p className="text-[1.1em] font-bold text-slate-500 uppercase tracking-wider">
+                      {item.label}
+                    </p>
+                  </div>
+                );
+              }
+
               const isActive = item.href === pathname;
               const isChildActive =
                 item.children?.some((child) => child.href === pathname) ??
@@ -193,7 +198,7 @@ export default function Sidebar({
 
               return (
                 <SidebarItem
-                  key={item.label}
+                  key={index}
                   item={item}
                   isCollapsed={isCollapsed}
                   isActive={isActive}
@@ -206,13 +211,13 @@ export default function Sidebar({
         </div>
 
         {/* ===================================== */}
-        {/* === BAGIAN USER PROFILE (DINAMIS) === */}
+        {/* === BAGIAN USER PROFILE (POPUP) ===   */}
         {/* ===================================== */}
         <div
           ref={userPopupRef}
-          className="sticky bottom-0 p-[1em] border-t border-slate-800"
+          className="sticky bottom-0 p-[1em] border-t border-slate-800 bg-inherit z-50"
         >
-          {/* Popup Mode Expanded */}
+          {/* Popup Expanded */}
           <div
             className={`
               absolute bottom-full left-0 right-0 p-2 mx-[1em] mb-1
@@ -229,7 +234,7 @@ export default function Sidebar({
             <UserPopupContent />
           </div>
 
-          {/* Popup Mode Collapsed */}
+          {/* Popup Collapsed */}
           <div
             className={`
               absolute bottom-[9em] left-[1em] z-50
@@ -246,18 +251,19 @@ export default function Sidebar({
             <UserPopupContent />
           </div>
 
-          {/* Tombol Trigger Profile */}
+          {/* Tombol Trigger */}
           <button
             onClick={() => setIsUserPopupOpen(!isUserPopupOpen)}
+            disabled={isLoading}
             className={`
               flex items-center gap-3 hover:bg-[#1f2545] p-[1.5em] rounded-xl 
-              transition-all duration-200 w-full group overflow-hidden
+              transition-all duration-200 w-full group relative overflow-hidden
               ${isCollapsed ? "justify-center" : ""}
               ${isUserPopupOpen ? "bg-[#1f2545]" : ""} 
             `}
           >
             {isLoading ? (
-              // === LOADING STATE (Skeleton) ===
+              // Loading Skeleton
               <>
                 <div className="w-[3em] h-[3em] rounded-full bg-slate-700/50 animate-pulse flex-shrink-0" />
                 {!isCollapsed && (
@@ -268,20 +274,19 @@ export default function Sidebar({
                 )}
               </>
             ) : (
-              // === USER DATA LOADED ===
+              // Data User
               <>
                 <div className="flex-shrink-0 relative">
-                  <div className="w-[2.5em] h-[2.5em] rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-[1.6em] overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all">
-                    {/* AVATAR IMAGE */}
+                  <div className="w-[2.5em] h-[2.5em] rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-[1.6em] overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all relative">
                     <Image
                       src={
                         user?.avatarUrl ||
                         "https://avatar.iran.liara.run/public/35"
                       }
                       alt="User"
-                      width={35}
-                      height={35}
-                      className="object-cover w-full h-full"
+                      fill
+                      className="object-cover"
+                      sizes="40px"
                     />
                   </div>
                 </div>

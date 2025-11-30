@@ -1,11 +1,13 @@
 import type { LucideIcon } from "lucide-react";
 
 export type NavItem = {
-  icon: React.ElementType;
+  icon?: React.ElementType;
   label: string;
   href?: string;
   children?: NavItem[];
+  isHeader?: boolean; // <--- PENTING BUAT PEMISAH
 };
+
 export type AdLevel = "noAds" | "level1" | "level2" | "level3" | "level4";
 
 // Tipe data untuk list link di card
@@ -176,13 +178,24 @@ export interface ActivityLog {
 
 export type NotificationType = "info" | "warning" | "success" | "alert";
 
+export type NotificationCategory =
+  | "link"
+  | "payment"
+  | "account"
+  | "event"
+  | "system";
+
+export type Role = "member" | "admin" | "super-admin";
+
 export interface NotificationItem {
   id: string;
   title: string;
   message: string;
-  type: NotificationType;
+  type: "info" | "warning" | "success" | "alert";
+  category: NotificationCategory; // <--- Wajib ada sekarang
   isRead: boolean;
-  timestamp: string; // ISO String
+  timestamp: string;
+  actionUrl?: string; // (Opsional) Kalo diklik lari kemana
 }
 
 export interface LevelConfig {
@@ -324,4 +337,34 @@ export interface HeaderStats {
   balance: number;
   payout: number;
   cpm: number;
+}
+
+// ... (kode yang lain tetep sama)
+
+// Tambahin ini di bawah HeaderStats yang lama
+export interface AdminHeaderStats {
+  pendingWithdrawals: number;
+  abuseReports: number;
+  newUsers: number;
+}
+
+// ... (kode lama)
+
+// 👇 TAMBAHAN BARU BUAT ADMIN DASHBOARD
+// ... (kode lama)
+
+export interface AdminDashboardStats {
+  financial: {
+    paidToday: number; // Total bayar hari ini ($)
+    usersPaidToday: number; // Jumlah user yang dibayar hari ini
+    trend: number;
+  };
+  content: {
+    linksCreatedToday: number; // Link dibuat hari ini
+    trend: number;
+  };
+  security: {
+    linksBlockedToday: number; // Link diblokir hari ini
+    trend: number;
+  };
 }

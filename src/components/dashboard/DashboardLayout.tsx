@@ -12,21 +12,27 @@ import { usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { getMemberMenu, getAdminMenu } from "@/lib/menus";
 import MobileBottomBar from "./MobileBottomBar";
+import { Role } from "@/types/type";
 
 export default function DashboardLayout({
   children,
-  role = "member", // Default ke member
+  role = "member", // Default member
 }: {
   children: React.ReactNode;
-  role?: "member" | "admin"; // Kita terima string role aja, bukan object menu
+  role?: Role;
 }) {
   const t = useTranslations("Dashboard"); // Hook translate jalan di sini
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  // --- LOGIKA MENU PINDAH KE SINI ---
-  // Client Component boleh render komponen Ikon
-  const menuItems = role === "admin" ? getAdminMenu() : getMemberMenu(t);
+  // SWITCH MENU BERDASARKAN ROLE
+  // Member -> getMemberMenu
+  // Admin -> getAdminMenu("admin")
+  // Super Admin -> getAdminMenu("super-admin")
+  const menuItems =
+    role === "admin" || role === "super-admin"
+      ? getAdminMenu(role)
+      : getMemberMenu(t);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -54,6 +60,7 @@ export default function DashboardLayout({
         isCollapsed={isCollapsed}
         toggleSidebar={toggleSidebar}
         openMobileSidebar={openMobileSidebar}
+        role={role}
       />
 
       <main

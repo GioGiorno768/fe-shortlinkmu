@@ -1,34 +1,29 @@
-// src/components/dashboard/Header.tsx
 "use client";
 
 import { usePathname, useRouter } from "@/i18n/routing";
-import {
-  Menu,
-  Search,
-  Bell,
-  Sun,
-  Moon,
-  WalletMinimal, // Icon
-  MoonStar,
-  Loader2, // Tambah loader biar UX bagus
-} from "lucide-react";
+import { Bell, Clock, ShieldAlert, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition, useRef, useEffect } from "react";
 import NotificationDropdown from "./NotificationDropdown";
-
-// IMPORT HOOK KITA
 import { useHeader } from "@/hooks/useHeader";
+import { useAdminStats } from "@/hooks/useAdminStats";
+
+// 👇 1. IMPORT TIPE 'Role' DARI SINI
+import type { Role } from "@/types/type";
 
 interface HeaderProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   openMobileSidebar: () => void;
+  // 👇 2. GANTI INI BIAR PAKE TIPE 'Role' (JANGAN DI-HARDCODE LAGI)
+  role?: Role;
 }
 
 export default function Header({
   isCollapsed,
   toggleSidebar,
   openMobileSidebar,
+  role = "member",
 }: HeaderProps) {
   const [isDark, setIsDark] = useState(true);
   const t = useTranslations("Dashboard");
@@ -37,12 +32,75 @@ export default function Header({
   const router = useRouter();
   const pathname = usePathname();
 
-  // --- STATE NOTIFIKASI ---
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // --- PANGGIL HOOK HEADER (Data Real-time) ---
-  const { stats, isLoading } = useHeader();
+  const { stats: userStats, isLoading: userLoading } = useHeader();
+  const { stats: adminStats, isLoading: adminLoading } = useAdminStats();
+
+  // Logic loading & data stats juga perlu update dikit
+  // Kalau admin ATAU super-admin, pake loading admin
+  const isAdminOrSuper = role === "admin" || role === "super-admin";
+  const isLoading = isAdminOrSuper ? adminLoading : userLoading;
+
+  const formatCurrency = (val?: number) =>
+    val
+      ? `$${val.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+      : "...";
+
+  const formatNumber = (val?: number) =>
+    val !== undefined ? val.toLocaleString("en-US") : "...";
+
+  const userHeadData = [
+    {
+      name: t("balance"),
+      icon: (
+        <span className="solar--wallet-linear w-[2.8em] h-[2.8em] bg-bluelight" />
+      ),
+      value: formatCurrency(userStats?.balance),
+      color: "text-shortblack",
+    },
+    {
+      name: t("payout"),
+      icon: (
+        <span className="hugeicons--money-send-circle w-[2.3em] h-[2.3em] bg-bluelight" />
+      ),
+      value: formatCurrency(userStats?.payout),
+      color: "text-shortblack",
+    },
+    {
+      name: t("cpm"),
+      icon: (
+        <span className="icon-park-outline--click-tap w-[2.5em] h-[2.5em] bg-bluelight" />
+      ),
+      value: formatCurrency(userStats?.cpm),
+      color: "text-shortblack",
+    },
+  ];
+
+  const adminHeadData = [
+    {
+      name: "Pending",
+      icon: <Clock className="w-[2.5em] h-[2.5em] text-orange-500" />,
+      value: formatNumber(adminStats?.pendingWithdrawals),
+      color: "text-orange-600",
+    },
+    {
+      name: "Reports",
+      icon: <ShieldAlert className="w-[2.5em] h-[2.5em] text-red-500" />,
+      value: formatNumber(adminStats?.abuseReports),
+      color: "text-red-600",
+    },
+    {
+      name: "Users",
+      icon: <UserPlus className="w-[2.5em] h-[2.5em] text-blue-500" />,
+      value: `+${formatNumber(adminStats?.newUsers)}`,
+      color: "text-blue-600",
+    },
+  ];
+
+  // 👇 3. UPDATE LOGIC SWITCHER (Biar super-admin juga dapet tampilan admin)
+  const headItems = isAdminOrSuper ? adminHeadData : userHeadData;
 
   const switchLanguage = (nextLocale: "en" | "id") => {
     startTransition(() => {
@@ -65,42 +123,10 @@ export default function Header({
     };
   }, [notifRef]);
 
-  // Helper Format Duit
-  const formatCurrency = (val?: number) => {
-    if (val === undefined) return "...";
-    return (
-      "$" +
-      val.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    );
-  };
-
-  // Config Data Head (Sekarang pake data dari stats)
-  const head = [
-    {
-      name: t("balance"),
-      icon: "solar--wallet-linear",
-      value: formatCurrency(stats?.balance),
-    },
-    {
-      name: t("payout"),
-      icon: "hugeicons--money-send-circle",
-      value: formatCurrency(stats?.payout),
-    },
-    {
-      name: t("cpm"),
-      icon: "icon-park-outline--click-tap",
-      value: formatCurrency(stats?.cpm),
-    },
-  ];
-
   return (
     <nav
       className={`
-        fixed top-0 right-0 
-        left-0
+        fixed top-0 right-0 left-0
         ${isCollapsed ? "custom:left-20" : "custom:left-64"}
         transition-all duration-300 ease-in-out z-30
         px-4 custom:px-8 sm:pt-6 pt-3
@@ -108,7 +134,6 @@ export default function Header({
       `}
     >
       <div className="shadow-sm shadow-slate-500/50 rounded-xl flex items-center justify-between md:px-[2em] px-[1em] lg:px-[4em] py-[1em] md:py-[2em] text-[10px] bg-white">
-        {/* Left Section */}
         <div className="flex items-center gap-10">
           <button
             onClick={openMobileSidebar}
@@ -117,34 +142,27 @@ export default function Header({
             <span className="solar--hamburger-menu-broken w-[3em] h-[3em] bg-shortblack " />
           </button>
 
-          <div className="md:flex hidden cursor-default ">
-            {head.map((item, index) => (
+          <div className="md:flex hidden cursor-default">
+            {headItems.map((item, index) => (
               <div
                 key={index}
                 title={item.name}
                 className={`sm:flex flex-col gap-[.8em] ${
-                  index != 2 && "border-r-[.2em] border-gray-dashboard pr-[3em]"
-                } ${index != 0 && "pl-[3em]"} `}
+                  index !== 2 &&
+                  "border-r-[.2em] border-gray-dashboard pr-[3em]"
+                } ${index !== 0 && "pl-[3em]"} `}
               >
-                <span className="text-grays text-[1.6em] tracking-tight ">
+                <span className="text-grays text-[1.4em] font-medium tracking-tight uppercase">
                   {item.name}
                 </span>
-                <div className="flex gap-[1.8em] justify-start items-center">
-                  <span
-                    className={`${item.icon} ${
-                      index == 1
-                        ? "w-[2.3em] h-[2.3em]"
-                        : index == 2
-                        ? "w-[2.5em] h-[2.5em]"
-                        : "w-[2.8em] h-[2.8em]"
-                    } bg-bluelight`}
-                  ></span>
-
-                  {/* Logic Loading Skeleton / Value */}
+                <div className="flex gap-[1.5em] justify-start items-center">
+                  {item.icon}
                   {isLoading ? (
-                    <div className="h-[1.8em] w-[6em] bg-gray-200 animate-pulse rounded"></div>
+                    <div className="h-[2em] w-[6em] bg-gray-100 animate-pulse rounded"></div>
                   ) : (
-                    <span className="text-[1.8em] font-manrope font-semibold text-shortblack">
+                    <span
+                      className={`text-[1.8em] font-manrope font-bold ${item.color}`}
+                    >
                       {item.value}
                     </span>
                   )}
@@ -154,9 +172,7 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Section (Language, Theme, Notif) */}
         <div className="flex items-center gap-1 custom:gap-[2em]">
-          {/* ... (Bagian kanan ini udah clean, cuma UI logic) ... */}
           <div className="custom:flex hidden items-center bg-blue-dashboard rounded-full p-[0.5em] border border-bluelight/10">
             <button
               onClick={() => switchLanguage("en")}
@@ -196,7 +212,7 @@ export default function Header({
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setIsNotifOpen(!isNotifOpen)}
-              className="p-2 custom:hover:-translate-y-1 translition-all duration-300 ease-in-out relative"
+              className="p-2 custom:hover:-translate-y-1 transition-all duration-300 ease-in-out relative"
             >
               <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
               <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
@@ -205,6 +221,7 @@ export default function Header({
             <NotificationDropdown
               isOpen={isNotifOpen}
               onClose={() => setIsNotifOpen(false)}
+              role={role}
             />
           </div>
         </div>

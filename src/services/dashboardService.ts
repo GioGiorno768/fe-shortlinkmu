@@ -8,6 +8,7 @@ import type {
   AnalyticsData,
   TimeRange,
   StatType,
+  AdminDashboardStats,
 } from "@/types/type";
 import { Sparkles, Megaphone, Wallet, Star } from "lucide-react";
 
@@ -175,4 +176,24 @@ export const getAnalytics = async (
   }
 
   return data;
+};
+
+// === ADMIN DASHBOARD SERVICE (FINAL) ===
+export const getAdminStats = async (): Promise<AdminDashboardStats> => {
+  await new Promise((r) => setTimeout(r, 800));
+  return {
+    financial: {
+      paidToday: 30.5,
+      usersPaidToday: 30,
+      trend: 12.0,
+    },
+    content: {
+      linksCreatedToday: 150,
+      trend: 8.5,
+    },
+    security: {
+      linksBlockedToday: 5,
+      trend: -2.4,
+    },
+  };
 };

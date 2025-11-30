@@ -1,11 +1,10 @@
 "use client";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Circle } from "lucide-react"; // Tambah Circle buat default icon
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { NavItem } from "@/types/type";
 import { Link } from "@/i18n/routing";
 
-// Kita pisah biar rapi, karena logikanya jadi agak kompleks
 export default function SidebarItem({
   item,
   isCollapsed,
@@ -22,8 +21,10 @@ export default function SidebarItem({
   const [isDropdownOpen, setIsDropdownOpen] = useState(isChildActive);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const Icon = item.icon;
   const pathname = usePathname();
+
+  // SAFETY CHECK: Kalau icon undefined, pake icon default (Circle)
+  const Icon = item.icon || Circle;
 
   // Efek buat nutup popup kalo diklik di luar
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function SidebarItem({
   if (item.children) {
     return (
       <div ref={ref} className="relative mb-1">
-        {/* Tombol Parent (My Links) - GAK BERUBAH */}
+        {/* Tombol Parent */}
         <button
           onClick={() => {
             if (isCollapsed) {
@@ -64,7 +65,11 @@ export default function SidebarItem({
           className={`
             flex items-center justify-between w-full gap-3 px-[3em] py-3 rounded-md
             transition-all duration-200
-            ${isChildActive ? "text-white" : "text-slate-400 hover:bg-[#1f2545] hover:text-white"}
+            ${
+              isChildActive
+                ? "text-white"
+                : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
+            }
             ${
               isCollapsed
                 ? "justify-center"
@@ -91,7 +96,7 @@ export default function SidebarItem({
           )}
         </button>
 
-        {/* Transisi Dropdown (Mode Expanded) */}
+        {/* Dropdown Content (Mode Expanded) */}
         {!isCollapsed && (
           <div
             className={`
@@ -106,9 +111,11 @@ export default function SidebarItem({
             <div className="overflow-hidden">
               <div className="mt-1 ml-[3em] pl-[1.5em] border-l border-slate-700">
                 {item.children.map((child) => {
-                  const ChildIcon = child.icon;
-                  const isChildActive =
+                  // Safety Check buat Child Icon juga
+                  const ChildIcon = child.icon || Circle;
+                  const isChildItemActive =
                     pathname === child.href || pathname === `/id${child.href}`;
+
                   return (
                     <Link
                       key={child.href}
@@ -118,7 +125,7 @@ export default function SidebarItem({
                         flex items-center gap-3 px-3 py-2 rounded-md mt-1
                         transition-all duration-200 text-[1.5em]
                         ${
-                          isChildActive
+                          isChildItemActive
                             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                             : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
                         }
@@ -136,14 +143,11 @@ export default function SidebarItem({
           </div>
         )}
 
-        {/* === INI YANG DIUBAH === */}
         {/* Popup Flyout (Mode Collapsed) */}
         <div
           className={`
             absolute left-full top-0 ml-[1.5em] z-50
-            bg-[#10052C] shadow-lg rounded-md p-2
-            w-max
-            
+            bg-[#10052C] shadow-lg rounded-md p-2 w-max
             transition-all duration-150 ease-out transform
             ${
               isCollapsed && isPopupOpen
@@ -153,13 +157,9 @@ export default function SidebarItem({
             origin-left space-y-[1em]
           `}
         >
-          {/* Judul popup (opsional tapi bagus) */}
-          {/* <div className="text-white text-[1.4em] font-medium px-3 pt-2 pb-1">
-            {item.label}
-          </div> */}
           {item.children.map((child) => {
-            const ChildIcon = child.icon;
-            const isChildActive =
+            const ChildIcon = child.icon || Circle;
+            const isChildItemActive =
               pathname === child.href || pathname === `/id${child.href}`;
             return (
               <Link
@@ -173,7 +173,7 @@ export default function SidebarItem({
                   flex items-center gap-3 px-3 py-2 rounded-md
                   transition-all duration-200 text-[1.4em] w-full
                   ${
-                    isChildActive
+                    isChildItemActive
                       ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg"
                       : "text-slate-400 hover:bg-[#1f2545] hover:text-white"
                   }

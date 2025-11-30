@@ -2,35 +2,32 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft, Link as LinkIcon, Lock, Mail } from "lucide-react";
-// --- UBAH INI ---
 import { Link } from "@/i18n/routing";
-// --- DARI INI ---
-// import Link from "next/link";
+
+// Varian animasi dipindah ke luar component agar tidak di-recreate setiap render
+const formVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1, // Efek muncul satu per satu
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1 },
+};
 
 export default function RegisterPage() {
-  // Varian animasi untuk form
-  const formVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1, // Efek muncul satu per satu
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-  };
-
   return (
     <main className="text-[10px] max-w-[155em] m-auto min-h-screen grid grid-cols-1 lg:grid-cols-2 font-figtree overflow-hidden">
       {/* ================================== */}
       {/* Bagian Kiri (Elegan & Interaktif) */}
       {/* ================================== */}
       <motion.div
-        className="hidden lg:flex flex-col justify-between p-[4em] bg-bluelight text-white relative overflow-hidden"
+        className="hidden lg:flex flex-col justify-between p-[4em] bg-bluelight text-white relative overflow-hidden will-change-transform"
         initial={{ x: "-100%", opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: "easeInOut" }}
@@ -64,14 +61,14 @@ export default function RegisterPage() {
         <motion.div
           animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[10%] right-[15%] w-20 h-20 bg-white/10 rounded-2xl z-0"
+          className="absolute top-[10%] right-[15%] w-20 h-20 bg-white/10 rounded-2xl z-0 will-change-transform"
         >
           <LinkIcon className="w-full h-full p-5" />
         </motion.div>
         <motion.div
           animate={{ y: [0, 20, 0], rotate: [0, -5, 0] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[10%] left-[10%] w-24 h-24 bg-white/10 rounded-full z-0"
+          className="absolute bottom-[10%] left-[10%] w-24 h-24 bg-white/10 rounded-full z-0 will-change-transform"
         >
           <Mail className="w-full h-full p-6" />
         </motion.div>
@@ -85,7 +82,7 @@ export default function RegisterPage() {
       {/* Bagian Kanan (Clean Form)        */}
       {/* ================================== */}
       <motion.div
-        className="bg-white p-[4em] flex flex-col items-center justify-center"
+        className="bg-white p-[4em] flex flex-col items-center justify-center will-change-transform"
         initial={{ x: "100%", opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: "easeInOut" }}

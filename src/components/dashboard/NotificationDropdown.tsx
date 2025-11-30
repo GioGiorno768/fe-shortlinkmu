@@ -1,50 +1,42 @@
-// src/components/dashboard/NotificationDropdown.tsx
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+// ... (Import Icon dll sama kayak file lama)
 import {
-  AlertTriangle,
-  CheckCircle,
-  Megaphone,
-  ShieldAlert,
-  ArrowLeft,
-  Trash2,
-  Filter,
-  ChevronDown,
   Link2,
   Wallet,
   User,
   Calendar,
+  Megaphone,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle,
+  Trash2,
+  ArrowLeft,
   Check,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
-import { useAlert } from "@/hooks/useAlert";
-// Import tipe extended dan Hook
-import type { ExtendedNotificationItem } from "@/services/notificationService";
 import { useNotifications } from "@/hooks/useNotifications";
+import type { Role, NotificationItem } from "@/types/type"; // Import tipe global
+import { useAlert } from "@/hooks/useAlert";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
   onClose: () => void;
+  role?: Role; // Terima props role
 }
-
-// Opsi Filter (Tetap sama)
-const FILTER_OPTIONS = [
-  { id: "all", label: "Semua", icon: null },
-  { id: "link", label: "Link", icon: Link2 },
-  { id: "payment", label: "Pembayaran", icon: Wallet },
-  { id: "account", label: "Akun", icon: User },
-  { id: "event", label: "Event", icon: Calendar },
-];
 
 export default function NotificationDropdown({
   isOpen,
   onClose,
+  role = "member",
 }: NotificationDropdownProps) {
   const { showAlert } = useAlert();
 
-  // --- PANGGIL HOOK SAKTI ---
+  // Panggil Hook dengan Role
   const {
     notifications,
     unreadCount,
@@ -52,16 +44,44 @@ export default function NotificationDropdown({
     markRead,
     markAllRead,
     removeNotification,
-  } = useNotifications();
+  } = useNotifications(role);
 
-  // State Lokal UI (Filter & Selected Item tetap di sini karena ini urusan tampilan)
+  // --- FILTER DINAMIS ---
+  // Kita bedain opsi filter buat User vs Admin
+  const getFilterOptions = () => {
+    const common = [
+      { id: "all", label: "Semua", icon: null },
+      { id: "payment", label: "Pembayaran", icon: Wallet },
+      { id: "account", label: "Akun", icon: User },
+    ];
+
+    if (role === "member") {
+      return [
+        ...common,
+        { id: "link", label: "Link", icon: Link2 },
+        { id: "event", label: "Event", icon: Calendar },
+      ];
+    } else {
+      // Admin Filters
+      return [
+        ...common,
+        { id: "link", label: "Reports", icon: ShieldAlert }, // Link jadi Reports
+        { id: "system", label: "Broadcast", icon: Megaphone }, // Tambah Broadcast
+      ];
+    }
+  };
+
+  const FILTER_OPTIONS = getFilterOptions();
+
+  // ... (State local UI: activeFilter, isFilterOpen, selectedNotif -> SAMA KAYAK SEBELUMNYA) ...
   const [activeFilter, setActiveFilter] = useState("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
-  const [selectedNotif, setSelectedNotif] =
-    useState<ExtendedNotificationItem | null>(null);
+  const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(
+    null
+  );
 
-  // Reset filter pas dibuka
+  // ... (Logic useEffect click outside & reset -> SAMA) ...
   useEffect(() => {
     if (isOpen) {
       setSelectedNotif(null);
@@ -70,7 +90,6 @@ export default function NotificationDropdown({
     }
   }, [isOpen]);
 
-  // Klik luar filter
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -84,32 +103,17 @@ export default function NotificationDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- LOGIC UI ---
-
   const filteredNotifications = notifications.filter((n) => {
     if (activeFilter === "all") return true;
     return n.category === activeFilter;
   });
 
-  const handleItemClick = (notif: ExtendedNotificationItem) => {
-    if (!notif.isRead) {
-      markRead(notif.id); // Pake fungsi dari hook
-    }
+  const handleItemClick = (notif: NotificationItem) => {
+    if (!notif.isRead) markRead(notif.id);
     setSelectedNotif(notif);
   };
 
-  const handleMarkAllRead = () => {
-    markAllRead(); // Pake fungsi dari hook
-    showAlert("Semua notifikasi ditandai sudah dibaca.", "success");
-  };
-
-  const handleDelete = (id: string) => {
-    removeNotification(id); // Pake fungsi dari hook
-    if (selectedNotif?.id === id) setSelectedNotif(null);
-    showAlert("Notifikasi dihapus.", "info");
-  };
-
-  // Helper UI (Tetap sama)
+  // Helper UI (Sama, cuma styling dikit)
   const getIcon = (type: string) => {
     switch (type) {
       case "warning":
@@ -137,6 +141,7 @@ export default function NotificationDropdown({
   };
 
   const formatTime = (dateStr: string) => {
+    // ... (logic time ago sama kayak file lama) ...
     const date = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -148,27 +153,31 @@ export default function NotificationDropdown({
 
   const activeLabel = FILTER_OPTIONS.find((f) => f.id === activeFilter)?.label;
 
+  // --- RENDER (Struktur sama, cuma passing data filteredNotifications yg udah role-aware) ---
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          // ... (Styling container dropdown SAMA) ...
           initial={{ opacity: 0, y: 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.2 }}
           className="absolute right-[-1em] sm:right-0 sm:top-[8em] top-[6em] w-[320px] sm:w-[380px] bg-white rounded-2xl shadow-xl shadow-slate-500/20 border border-gray-100 overflow-hidden z-50 origin-top-right flex flex-col tall:h-[550px] tall:max-h-[80vh] h-[480px] max-h-[70vh]"
         >
+          {/* ... (Isi Detail View & List View SAMA KAYAK FILE LAMA) ... */}
+          {/* Cuma pastiin pas render list pake filteredNotifications */}
           <AnimatePresence mode="popLayout" initial={false}>
             {selectedNotif ? (
-              /* === DETAIL VIEW (Tetap Sama) === */
+              // DETAIL VIEW
               <motion.div
                 key="detail"
                 initial={{ x: "100%", opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: "100%", opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="absolute inset-0 flex flex-col bg-white h-full"
               >
+                {/* Header Detail */}
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4 bg-white flex-shrink-0">
                   <button
                     onClick={() => setSelectedNotif(null)}
@@ -180,7 +189,7 @@ export default function NotificationDropdown({
                     Detail
                   </h3>
                 </div>
-
+                {/* Body Detail */}
                 <div className="p-8 overflow-y-auto custom-scrollbar-minimal flex-1">
                   <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
@@ -204,35 +213,43 @@ export default function NotificationDropdown({
                         {selectedNotif.message}
                       </p>
                     </div>
+                    {/* TOMBOL ACTION KHUSUS ADMIN */}
+                    {role !== "member" && selectedNotif.actionUrl && (
+                      <div className="pt-4">
+                        <a
+                          href={selectedNotif.actionUrl}
+                          className="block w-full text-center bg-bluelight text-white font-bold py-3 rounded-xl text-[1.4em] hover:bg-blue-700 transition-colors"
+                        >
+                          Proses Sekarang
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
-
+                {/* Footer Detail */}
                 <div className="p-4 border-t border-gray-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
                   <button
-                    onClick={() => handleDelete(selectedNotif.id)}
+                    onClick={() => {
+                      removeNotification(selectedNotif.id);
+                      setSelectedNotif(null);
+                      showAlert("Notifikasi dihapus.", "info");
+                    }}
                     className="text-[1.3em] font-medium text-red-500 hover:bg-red-50 px-4 py-2 rounded-lg flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" /> Hapus
                   </button>
-                  <button
-                    onClick={() => setSelectedNotif(null)}
-                    className="text-[1.3em] font-semibold text-shortblack bg-white border border-gray-200 px-6 py-2 rounded-lg hover:bg-gray-50"
-                  >
-                    Kembali
-                  </button>
                 </div>
               </motion.div>
             ) : (
-              /* === LIST VIEW (Tetap Sama) === */
+              // LIST VIEW
               <motion.div
                 key="list"
                 initial={{ x: "-20%", opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: "-20%", opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="absolute inset-0 flex flex-col bg-white h-full"
               >
-                {/* HEADER */}
+                {/* Header List */}
                 <div className="px-6 pt-5 pb-2 bg-white flex-shrink-0 z-20">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center gap-3">
@@ -247,15 +264,17 @@ export default function NotificationDropdown({
                     </div>
                     {unreadCount > 0 && (
                       <button
-                        onClick={handleMarkAllRead}
+                        onClick={() => {
+                          markAllRead();
+                          showAlert("Semua ditandai sudah dibaca.", "success");
+                        }}
                         className="text-[1.2em] font-medium text-bluelight hover:underline flex items-center gap-1"
                       >
                         <Check className="w-3 h-3" /> Mark read
                       </button>
                     )}
                   </div>
-
-                  {/* FILTER DROPDOWN */}
+                  {/* Filter Dropdown */}
                   <div className="relative pb-2" ref={filterRef}>
                     <button
                       onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -274,7 +293,6 @@ export default function NotificationDropdown({
                         }`}
                       />
                     </button>
-
                     <AnimatePresence>
                       {isFilterOpen && (
                         <motion.div
@@ -316,7 +334,7 @@ export default function NotificationDropdown({
 
                 <div className="h-px bg-gray-100 w-full"></div>
 
-                {/* CONTENT LIST */}
+                {/* Content List */}
                 <div
                   onWheel={(e) => e.stopPropagation()}
                   className="overflow-y-auto custom-scrollbar-minimal flex-1 bg-white"
@@ -327,21 +345,9 @@ export default function NotificationDropdown({
                     </div>
                   ) : filteredNotifications.length === 0 ? (
                     <div className="p-8 text-center flex flex-col items-center gap-3 mt-10">
-                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                        <Filter className="w-8 h-8 text-gray-300" />
-                      </div>
                       <p className="text-grays text-[1.4em]">
-                        Tidak ada notifikasi untuk kategori <b>{activeLabel}</b>
-                        .
+                        Tidak ada notifikasi.
                       </p>
-                      {activeFilter !== "all" && (
-                        <button
-                          onClick={() => setActiveFilter("all")}
-                          className="text-bluelight font-semibold text-[1.3em] hover:underline"
-                        >
-                          Lihat Semua
-                        </button>
-                      )}
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-50">
@@ -399,8 +405,7 @@ export default function NotificationDropdown({
                     </div>
                   )}
                 </div>
-
-                {/* FOOTER */}
+                {/* Footer List */}
                 <div className="p-3 bg-slate-50 border-t border-gray-100 text-center flex-shrink-0">
                   <button
                     onClick={onClose}

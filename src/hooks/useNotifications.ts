@@ -1,22 +1,20 @@
-// src/hooks/useNotifications.ts
 "use client";
 
 import { useState, useEffect } from "react";
 import * as notifService from "@/services/notificationService";
-// Import tipe extended dari service (atau dari types.ts kalau udah dipindah)
-import type { ExtendedNotificationItem } from "@/services/notificationService";
+import type { NotificationItem, Role } from "@/types/type";
 
-export function useNotifications() {
-  const [notifications, setNotifications] = useState<
-    ExtendedNotificationItem[]
-  >([]);
+// Terima parameter role
+export function useNotifications(role: Role = "member") {
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load Data
   useEffect(() => {
     async function loadData() {
+      setIsLoading(true); // Reset loading pas role ganti (opsional)
       try {
-        const data = await notifService.getNotifications();
+        // Kirim role ke service
+        const data = await notifService.getNotifications(role);
         setNotifications(data);
       } catch (error) {
         console.error("Gagal load notifikasi", error);
@@ -25,36 +23,24 @@ export function useNotifications() {
       }
     }
     loadData();
-  }, []);
+  }, [role]); // Re-fetch kalau role berubah
 
-  // Actions
+  // Actions (Sama kayak sebelumnya)
   const markRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
-    try {
-      await notifService.markAsRead(id);
-    } catch (e) {
-      console.error(e);
-    }
+    await notifService.markAsRead(id);
   };
 
   const markAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    try {
-      await notifService.markAllAsRead();
-    } catch (e) {
-      console.error(e);
-    }
+    await notifService.markAllAsRead();
   };
 
   const removeNotification = async (id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    try {
-      await notifService.deleteNotification(id);
-    } catch (e) {
-      console.error(e);
-    }
+    await notifService.deleteNotification(id);
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
