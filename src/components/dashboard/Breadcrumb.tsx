@@ -2,13 +2,7 @@
 
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import {
-  Home,
-  ChevronRight,
-  PlusSquare,
-  User,
-  Settings,
-} from "lucide-react";
+import { Home, ChevronRight, PlusSquare, User, Settings } from "lucide-react";
 import type { NavItem } from "@/types/type";
 // 👇 GANTI IMPORT INI (Ambil dari lib/menus)
 import { getMemberMenu, getAdminMenu } from "@/lib/menus";
@@ -21,7 +15,7 @@ export default function Breadcrumb() {
   const menuItems = [...getMemberMenu(t), ...getAdminMenu()];
 
   const breadcrumbNameMap: {
-    [key: string]: { label: string; icon: React.ElementType };
+    [key: string]: { label: string; icon?: React.ElementType };
   } = {};
 
   const flattenMenuItems = (items: NavItem[]) => {

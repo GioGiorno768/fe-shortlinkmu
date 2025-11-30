@@ -11,7 +11,7 @@ export default function Home() {
   return (
     <>
       <main className="text-[10px] max-w-[155em] m-auto">
-        <div className="m-auto sticky h-[100vh] top-0 w-full bg-white overflow-hidden ">
+        <div className="m-auto sticky h-screen top-0 w-full bg-white overflow-hidden ">
           <div
             className="absolute  top-0 -right-[13em] h-full w-[55%] bg-bluelight"
             style={{
