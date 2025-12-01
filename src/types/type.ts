@@ -424,8 +424,23 @@ export interface UserDetailData extends AdminUser {
 
 // --- ADMIN LINK MANAGEMENT TYPES ---
 
+export interface AdminLinkStats {
+  totalLinks: number;
+  newToday: number;
+  disabledLinks: number;
+}
+
+// Update AdminLinkFilters
+export interface AdminLinkFilters {
+  search?: string;
+  status?: string; // active, disabled, expired
+  adsLevel?: string; // level1, level2, ... noAds
+  sort?: string; // newest, oldest, most_views, least_views, most_earnings, least_earnings
+}
+
 export type LinkStatus = "active" | "disabled" | "expired";
 
+// Pastikan AdminLink punya field lengkap
 export interface AdminLink {
   id: string;
   title?: string;
@@ -437,24 +452,12 @@ export interface AdminLink {
     name: string;
     username: string;
     avatarUrl: string;
+    email: string; // Tambahan
   };
   views: number;
   earnings: number;
   createdAt: string;
   expiredAt?: string;
   status: LinkStatus;
-  adsLevel: AdLevel;
-}
-
-export interface AdminLinkStats {
-  totalLinks: number;
-  newToday: number;
-  disabledLinks: number;
-}
-
-export interface AdminLinkFilters {
-  search: string;
-  status: LinkStatus | "all";
-  adsLevel: AdLevel | "all";
-  sort: "newest" | "most_viewed";
+  adsLevel: string; // "level1", "noAds", dll
 }

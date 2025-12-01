@@ -5,16 +5,10 @@ import type {
   LinkStatus,
 } from "@/types/type";
 
-// --- MOCK DATA ---
+// --- MOCK DATA (Diperkaya) ---
 const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
   const isExpired = i % 15 === 0;
   const isDisabled = i % 20 === 0;
-  const status: LinkStatus = isDisabled
-    ? "disabled"
-    : isExpired
-    ? "expired"
-    : "active";
-
   return {
     id: `link-${i}`,
     title: i % 3 === 0 ? `Tutorial Cara Cepat Kaya #${i}` : undefined,
@@ -25,6 +19,7 @@ const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
       id: `user-${i}`,
       name: i % 2 === 0 ? `Budi Santoso ${i}` : `Siti Aminah ${i}`,
       username: `user_${i}`,
+      email: `user${i}@gmail.com`,
       avatarUrl: `https://avatar.iran.liara.run/public/${i}`,
     },
     views: Math.floor(Math.random() * 10000),
@@ -33,8 +28,8 @@ const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
     expiredAt: isExpired
       ? new Date(Date.now() - 100000000).toISOString()
       : undefined,
-    status,
-    adsLevel: i % 4 === 0 ? "level4" : i % 3 === 0 ? "level3" : "level1",
+    status: isDisabled ? "disabled" : isExpired ? "expired" : "active",
+    adsLevel: i % 4 === 0 ? "level4" : i % 3 === 0 ? "noAds" : "level1",
   };
 });
 
@@ -42,11 +37,11 @@ export async function getLinks(
   page: number = 1,
   filters: AdminLinkFilters
 ): Promise<{ data: AdminLink[]; totalPages: number }> {
-  await new Promise((r) => setTimeout(r, 800)); // Simulate delay
+  await new Promise((r) => setTimeout(r, 600));
 
   let filtered = [...MOCK_LINKS];
 
-  // Filter Search
+  // 1. Search (Owner Name, ShortLink, Original Link)
   if (filters.search) {
     const s = filters.search.toLowerCase();
     filtered = filtered.filter(
@@ -59,25 +54,44 @@ export async function getLinks(
     );
   }
 
-  // Filter Status
-  if (filters.status !== "all") {
+  // 2. Filter Status
+  if (filters.status && filters.status !== "all") {
     filtered = filtered.filter((l) => l.status === filters.status);
   }
 
-  // Filter Ads Level
-  if (filters.adsLevel !== "all") {
+  // 3. Filter Ads Level
+  if (filters.adsLevel && filters.adsLevel !== "all") {
     filtered = filtered.filter((l) => l.adsLevel === filters.adsLevel);
   }
 
-  // Sort
-  if (filters.sort === "most_viewed") {
-    filtered.sort((a, b) => b.views - a.views);
-  } else {
-    // Newest
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+  // 4. Sorting Complex
+  if (filters.sort) {
+    switch (filters.sort) {
+      case "newest":
+        filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        break;
+      case "oldest":
+        filtered.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        break;
+      case "most_views":
+        filtered.sort((a, b) => b.views - a.views);
+        break;
+      case "least_views":
+        filtered.sort((a, b) => a.views - b.views);
+        break;
+      case "most_earnings":
+        filtered.sort((a, b) => b.earnings - a.earnings);
+        break;
+      case "least_earnings":
+        filtered.sort((a, b) => a.earnings - b.earnings);
+        break;
+    }
   }
 
   const itemsPerPage = 10;
@@ -85,6 +99,16 @@ export async function getLinks(
   const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return { data, totalPages };
+}
+
+// Bulk Action
+export async function bulkUpdateLinkStatus(
+  ids: string[],
+  status: "active" | "disabled"
+): Promise<boolean> {
+  await new Promise((r) => setTimeout(r, 800));
+  console.log(`Bulk update ${ids.length} links to ${status}`);
+  return true;
 }
 
 export async function getLinkStats(): Promise<AdminLinkStats> {
