@@ -329,7 +329,7 @@ export const getAdminActivities = async (): Promise<{
         email: "bot@spam.com",
         avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bot",
         joinedAt: new Date(Date.now() - 10000000).toISOString(),
-        status: "banned",
+        status: "suspended",
       },
       {
         id: "u-4",

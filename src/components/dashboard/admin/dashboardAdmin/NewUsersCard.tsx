@@ -119,7 +119,7 @@ export default function NewUsersCard({
                   {[
                     { label: t("filter.all"), value: "all" },
                     { label: t("filter.active"), value: "active" },
-                    { label: t("filter.banned"), value: "banned" },
+                    { label: t("filter.banned"), value: "suspended" },
                   ].map((item) => (
                     <button
                       key={item.value}

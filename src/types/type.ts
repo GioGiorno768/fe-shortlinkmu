@@ -330,43 +330,65 @@ export type FilterByType =
 
 export type SortByType = "highest" | "lowest";
 
-// src/types/type.ts
-// ... (tipe yang lain tetap)
-
 export interface HeaderStats {
   balance: number;
   payout: number;
   cpm: number;
 }
 
-// ... (kode yang lain tetep sama)
-
-// Tambahin ini di bawah HeaderStats yang lama
 export interface AdminHeaderStats {
   pendingWithdrawals: number;
   abuseReports: number;
   newUsers: number;
 }
 
-// ... (kode lama)
-
-// 👇 TAMBAHAN BARU BUAT ADMIN DASHBOARD
-// ... (kode lama)
-
 export interface AdminDashboardStats {
   financial: {
-    paidToday: number; // Total bayar hari ini ($)
-    usersPaidToday: number; // Jumlah user yang dibayar hari ini
+    paidToday: number;
+    usersPaidToday: number;
     trend: number;
   };
   content: {
-    linksCreatedToday: number; // Link dibuat hari ini
+    linksCreatedToday: number;
     trend: number;
   };
   security: {
-    linksBlockedToday: number; // Link diblokir hari ini
+    linksBlockedToday: number;
     trend: number;
   };
+}
+
+export type UserStatus = "active" | "suspended";
+
+export interface AdminUser {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatarUrl: string;
+  status: UserStatus;
+  joinedAt: string;
+  lastLogin: string;
+  stats: {
+    totalLinks: number;
+    totalViews: number;
+    walletBalance: number;
+  };
+}
+
+export interface AdminUserStats {
+  totalUsers: { count: number; trend: number };
+  activeToday: { count: number; trend: number };
+  suspendedUsers: { count: number; trend: number };
+}
+
+export interface LoginLog {
+  id: string;
+  ip: string;
+  device: string;
+  timestamp: string;
+  location: string;
+  status: "success" | "failed";
 }
 
 export interface RecentWithdrawal {
@@ -389,5 +411,13 @@ export interface RecentUser {
   email: string;
   avatar: string;
   joinedAt: string; // ISO Date
-  status: "active" | "banned";
+  status: "active" | "suspended";
+}
+
+export interface UserDetailData extends AdminUser {
+  phoneNumber: string;
+  bio?: string;
+  paymentMethods: SavedPaymentMethod[];
+  withdrawalHistory: Transaction[];
+  loginHistory: LoginLog[];
 }

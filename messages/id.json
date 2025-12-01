@@ -136,6 +136,41 @@
         "active": "Aktif",
         "banned": "Banned"
       }
+    },
+    "UserDetail": {
+      "title": "Detail Pengguna",
+      "subtitle": "Kelola profil, keuangan, dan keamanan untuk pengguna ini.",
+      "backToUsers": "Kembali ke Pengguna",
+      "resetPassword": "Reset Password",
+      "suspendAccount": "Suspend Akun",
+      "userNotFound": "Pengguna Tidak Ditemukan",
+      "backToList": "Kembali ke Daftar",
+      "tabs": {
+        "overview": "Ringkasan",
+        "finance": "Keuangan",
+        "security": "Keamanan & Log"
+      },
+      "overview": {
+        "title": "Ringkasan Pengguna",
+        "description": "Pengguna ini aktif sejak {year}. Mereka telah membuat <bold>{links}</bold> tautan dan menghasilkan trafik signifikan. Tidak ada aktivitas mencurigakan baru-baru ini.",
+        "totalViews": "Total Tayangan",
+        "walletBalance": "Saldo Dompet",
+        "email": "Email",
+        "phone": "Telepon",
+        "bio": "Bio",
+        "joined": "Bergabung"
+      },
+      "finance": {
+        "savedMethods": "Metode Tersimpan",
+        "withdrawalHistory": "Riwayat Penarikan",
+        "noMethods": "Belum ada metode pembayaran.",
+        "default": "UTAMA"
+      },
+      "security": {
+        "noticeTitle": "Pemberitahuan Keamanan",
+        "noticeDesc": "Cek riwayat login di bawah. Percobaan gagal berulang atau login dari lokasi asing (beda negara) bisa menandakan akun yang dikompromikan.",
+        "loginActivity": "Aktivitas Login"
+      }
     }
   },
   "NotFound": {

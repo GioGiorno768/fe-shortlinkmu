@@ -136,6 +136,41 @@
         "active": "Active",
         "banned": "Banned"
       }
+    },
+    "UserDetail": {
+      "title": "User Details",
+      "subtitle": "Manage profile, finance, and security for this user.",
+      "backToUsers": "Back to Users",
+      "resetPassword": "Reset Password",
+      "suspendAccount": "Suspend Account",
+      "userNotFound": "User Not Found",
+      "backToList": "Back to User List",
+      "tabs": {
+        "overview": "Overview",
+        "finance": "Finance",
+        "security": "Security & Logs"
+      },
+      "overview": {
+        "title": "User Overview",
+        "description": "This user has been active since {year}. They have created <bold>{links}</bold> links and generated significant traffic. No suspicious activity detected recently.",
+        "totalViews": "Total Views",
+        "walletBalance": "Wallet Balance",
+        "email": "Email",
+        "phone": "Phone",
+        "bio": "Bio",
+        "joined": "Joined"
+      },
+      "finance": {
+        "savedMethods": "Saved Methods",
+        "withdrawalHistory": "Withdrawal History",
+        "noMethods": "No payment methods saved.",
+        "default": "DEFAULT"
+      },
+      "security": {
+        "noticeTitle": "Security Notice",
+        "noticeDesc": "Check the login history below. Frequent failed attempts or logins from unusual locations (different countries) may indicate a compromised account.",
+        "loginActivity": "Login Activity"
+      }
     }
   },
   "NotFound": {
