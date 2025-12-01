@@ -197,3 +197,176 @@ export const getAdminStats = async (): Promise<AdminDashboardStats> => {
     },
   };
 };
+
+export const getAdminActivities = async (): Promise<{
+  withdrawals: import("@/types/type").RecentWithdrawal[];
+  users: import("@/types/type").RecentUser[];
+}> => {
+  await new Promise((r) => setTimeout(r, 1000));
+  return {
+    withdrawals: [
+      {
+        id: "wd-1",
+        user: {
+          name: "Budi Santoso",
+          email: "budi@gmail.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi",
+        },
+        amount: 50.0,
+        method: "PayPal",
+        status: "pending",
+        date: new Date().toISOString(),
+      },
+      {
+        id: "wd-2",
+        user: {
+          name: "Siti Aminah",
+          email: "siti@yahoo.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti",
+        },
+        amount: 25.5,
+        method: "Bank Transfer",
+        status: "pending",
+        date: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+      },
+      {
+        id: "wd-3",
+        user: {
+          name: "John Doe",
+          email: "john@example.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
+        },
+        amount: 100.0,
+        method: "Crypto (USDT)",
+        status: "approved",
+        date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      },
+      {
+        id: "wd-4",
+        user: {
+          name: "Michael Jordan",
+          email: "mj@bulls.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+        },
+        amount: 500.0,
+        method: "PayPal",
+        status: "approved",
+        date: new Date(Date.now() - 90000000).toISOString(),
+      },
+      {
+        id: "wd-5",
+        user: {
+          name: "Elon Musk",
+          email: "elon@x.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elon",
+        },
+        amount: 1200.0,
+        method: "Crypto (BTC)",
+        status: "pending",
+        date: new Date(Date.now() - 95000000).toISOString(),
+      },
+      {
+        id: "wd-6",
+        user: {
+          name: "Mark Zuckerberg",
+          email: "mark@meta.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mark",
+        },
+        amount: 350.0,
+        method: "Bank Transfer",
+        status: "rejected",
+        date: new Date(Date.now() - 100000000).toISOString(),
+      },
+      {
+        id: "wd-7",
+        user: {
+          name: "Bill Gates",
+          email: "bill@microsoft.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bill",
+        },
+        amount: 45.0,
+        method: "PayPal",
+        status: "approved",
+        date: new Date(Date.now() - 110000000).toISOString(),
+      },
+      {
+        id: "wd-8",
+        user: {
+          name: "Jeff Bezos",
+          email: "jeff@amazon.com",
+          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jeff",
+        },
+        amount: 99.9,
+        method: "Bank Transfer",
+        status: "pending",
+        date: new Date(Date.now() - 120000000).toISOString(),
+      },
+    ],
+    users: [
+      {
+        id: "u-1",
+        name: "Asep Knalpot",
+        email: "asep@racing.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Asep",
+        joinedAt: new Date().toISOString(),
+        status: "active",
+      },
+      {
+        id: "u-2",
+        name: "Rina Nose",
+        email: "rina@tv.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rina",
+        joinedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+        status: "active",
+      },
+      {
+        id: "u-3",
+        name: "Spammer Bot",
+        email: "bot@spam.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bot",
+        joinedAt: new Date(Date.now() - 10000000).toISOString(),
+        status: "banned",
+      },
+      {
+        id: "u-4",
+        name: "User Baru 1",
+        email: "user1@test.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User1",
+        joinedAt: new Date(Date.now() - 15000000).toISOString(),
+        status: "active",
+      },
+      {
+        id: "u-5",
+        name: "User Baru 2",
+        email: "user2@test.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User2",
+        joinedAt: new Date(Date.now() - 20000000).toISOString(),
+        status: "active",
+      },
+      {
+        id: "u-6",
+        name: "User Baru 3",
+        email: "user3@test.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User3",
+        joinedAt: new Date(Date.now() - 25000000).toISOString(),
+        status: "active",
+      },
+      {
+        id: "u-7",
+        name: "User Baru 4",
+        email: "user4@test.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User4",
+        joinedAt: new Date(Date.now() - 30000000).toISOString(),
+        status: "active",
+      },
+      {
+        id: "u-8",
+        name: "User Baru 5",
+        email: "user5@test.com",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User5",
+        joinedAt: new Date(Date.now() - 35000000).toISOString(),
+        status: "active",
+      },
+    ],
+  };
+};

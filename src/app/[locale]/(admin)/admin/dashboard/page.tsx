@@ -2,17 +2,23 @@
 "use client";
 
 import TopStatsCards from "@/components/dashboard/admin/TopStatsCards";
-import { useAdminDashboard } from "@/hooks/useAdminDashboard"; // Hook baru
+import RecentActivities from "@/components/dashboard/admin/RecentActivities";
+import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
 export default function AdminDashboard() {
-  const { stats, isLoading } = useAdminDashboard();
+  const { stats, activities, isLoading } = useAdminDashboard();
 
   return (
     <div className="space-y-8">
       {/* 1. Top Stats */}
       <TopStatsCards data={stats} isLoading={isLoading} />
 
-      {/* ... komponen lainnya nanti ... */}
+      {/* 2. Recent Activities */}
+      <RecentActivities
+        withdrawals={activities?.withdrawals || []}
+        users={activities?.users || []}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

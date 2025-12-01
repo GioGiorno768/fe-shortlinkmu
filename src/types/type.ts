@@ -368,3 +368,25 @@ export interface AdminDashboardStats {
     trend: number;
   };
 }
+
+export interface RecentWithdrawal {
+  id: string;
+  user: {
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  amount: number;
+  method: string; // PayPal, Bank Transfer, etc.
+  status: "pending" | "approved" | "rejected";
+  date: string; // ISO Date
+}
+
+export interface RecentUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  joinedAt: string; // ISO Date
+  status: "active" | "banned";
+}
