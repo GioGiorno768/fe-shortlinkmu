@@ -63,16 +63,6 @@ export async function getUsers(
   return { data, totalPages };
 }
 
-export async function updateUserStatus(
-  id: string,
-  status: UserStatus,
-  reason?: string
-): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 800));
-  console.log(`Updating user ${id} status to ${status}. Reason: ${reason}`);
-  return true;
-}
-
 export async function getUserStats(): Promise<AdminUserStats> {
   // NANTI GANTI: fetch('/api/admin/users/stats')
   await new Promise((r) => setTimeout(r, 500));
@@ -161,4 +151,17 @@ export async function getUserDetail(
       },
     ],
   };
+}
+
+export async function updateUserStatus(
+  id: string,
+  status: UserStatus
+): Promise<void> {
+  // NANTI GANTI: fetch('/api/admin/users/status', { method: 'PATCH', ... })
+  await new Promise((r) => setTimeout(r, 500));
+
+  const user = MOCK_USERS.find((u) => u.id === id);
+  if (user) {
+    user.status = status;
+  }
 }

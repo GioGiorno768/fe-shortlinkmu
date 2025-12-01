@@ -421,3 +421,40 @@ export interface UserDetailData extends AdminUser {
   withdrawalHistory: Transaction[];
   loginHistory: LoginLog[];
 }
+
+// --- ADMIN LINK MANAGEMENT TYPES ---
+
+export type LinkStatus = "active" | "disabled" | "expired";
+
+export interface AdminLink {
+  id: string;
+  title?: string;
+  shortUrl: string;
+  originalUrl: string;
+  alias?: string;
+  owner: {
+    id: string;
+    name: string;
+    username: string;
+    avatarUrl: string;
+  };
+  views: number;
+  earnings: number;
+  createdAt: string;
+  expiredAt?: string;
+  status: LinkStatus;
+  adsLevel: AdLevel;
+}
+
+export interface AdminLinkStats {
+  totalLinks: number;
+  newToday: number;
+  disabledLinks: number;
+}
+
+export interface AdminLinkFilters {
+  search: string;
+  status: LinkStatus | "all";
+  adsLevel: AdLevel | "all";
+  sort: "newest" | "most_viewed";
+}

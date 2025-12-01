@@ -45,24 +45,6 @@ export default function UserDetailPage({ params }: PageProps) {
     }
   }, [id]);
 
-  const handleToggleStatus = async (reason?: string) => {
-    if (!data) return;
-
-    // If active -> suspend (process), if suspended -> active
-    const newStatus = data.status === "active" ? "process" : "active";
-    const success = await adminUserService.updateUserStatus(
-      data.id,
-      newStatus,
-      reason
-    );
-
-    if (success) {
-      setData((prev) => (prev ? { ...prev, status: newStatus } : null));
-    } else {
-      throw new Error("Failed to update status");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -92,10 +74,7 @@ export default function UserDetailPage({ params }: PageProps) {
 
   return (
     <div className="font-figtree pb-12 text-[10px]">
-      <UserDetailHeader
-        status={data.status}
-        onToggleStatus={handleToggleStatus}
-      />
+      <UserDetailHeader status={data.status} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <UserProfileCard data={data} />
