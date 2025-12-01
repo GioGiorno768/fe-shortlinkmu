@@ -378,8 +378,9 @@ export interface RecentWithdrawal {
   };
   amount: number;
   method: string; // PayPal, Bank Transfer, etc.
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "paid" | "rejected";
   date: string; // ISO Date
+  processed_by?: string; // Admin name who approved/paid
 }
 
 export interface RecentUser {

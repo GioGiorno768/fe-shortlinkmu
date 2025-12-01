@@ -98,6 +98,46 @@
     "errorAliasInUse": "Alias ini sudah digunakan.",
     "errorSomethingWentWrong": "Terjadi kesalahan. Silakan coba lagi."
   },
+  "AdminDashboard": {
+    "TopStats": {
+      "paidToday": "Dibayar Hari Ini",
+      "totalPayouts": "Total Pembayaran",
+      "usersPaid": "User Dibayar",
+      "processedToday": "Diproses Hari Ini",
+      "linksCreated": "Link Dibuat",
+      "newLinksToday": "Link Baru Hari Ini",
+      "blockedLinks": "Link Diblokir",
+      "blockedToday": "Diblokir Hari Ini"
+    },
+    "RecentWithdrawals": {
+      "title": "Penarikan Terbaru",
+      "noRequests": "Tidak ada permintaan pending",
+      "viewAll": "Lihat Semua Permintaan",
+      "filter": {
+        "title": "Filter Status",
+        "all": "Semua Permintaan",
+        "pending": "Hanya Pending",
+        "approved": "Hanya Disetujui",
+        "paid": "Hanya Dibayar"
+      },
+      "by": "oleh"
+    },
+    "NewUsers": {
+      "title": "Pengguna Baru",
+      "noUsers": "Tidak ada pengguna baru",
+      "manageUsers": "Kelola Pengguna",
+      "filter": {
+        "title": "Filter Pengguna",
+        "all": "Semua Pengguna",
+        "active": "Hanya Aktif",
+        "banned": "Hanya Banned"
+      },
+      "status": {
+        "active": "Aktif",
+        "banned": "Banned"
+      }
+    }
+  },
   "NotFound": {
     "title": "Halaman Tidak Ditemukan",
     "subtitle": "Maaf, kami tidak bisa menemukan halaman yang Anda cari.",

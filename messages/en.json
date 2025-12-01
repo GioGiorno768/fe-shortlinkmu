@@ -98,6 +98,46 @@
     "errorAliasInUse": "This alias is already in use.",
     "errorSomethingWentWrong": "An error occurred. Please try again."
   },
+  "AdminDashboard": {
+    "TopStats": {
+      "paidToday": "Paid Today",
+      "totalPayouts": "Total Payouts",
+      "usersPaid": "Users Paid",
+      "processedToday": "Processed Today",
+      "linksCreated": "Links Created",
+      "newLinksToday": "New Links Today",
+      "blockedLinks": "Blocked Links",
+      "blockedToday": "Blocked Today"
+    },
+    "RecentWithdrawals": {
+      "title": "Recent Withdrawals",
+      "noRequests": "No pending requests",
+      "viewAll": "View All Requests",
+      "filter": {
+        "title": "Filter Status",
+        "all": "All Requests",
+        "pending": "Pending Only",
+        "approved": "Approved Only",
+        "paid": "Paid Only"
+      },
+      "by": "by"
+    },
+    "NewUsers": {
+      "title": "New Users",
+      "noUsers": "No new users",
+      "manageUsers": "Manage Users",
+      "filter": {
+        "title": "Filter Users",
+        "all": "All Users",
+        "active": "Active Only",
+        "banned": "Banned Only"
+      },
+      "status": {
+        "active": "Active",
+        "banned": "Banned"
+      }
+    }
+  },
   "NotFound": {
     "title": "Page Not Found",
     "subtitle": "Sorry, we couldn't find the page you were looking for.",

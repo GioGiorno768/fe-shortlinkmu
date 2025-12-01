@@ -1,8 +1,8 @@
 // src/app/[locale]/(admin)/admin/dashboard/page.tsx
 "use client";
 
-import TopStatsCards from "@/components/dashboard/admin/TopStatsCards";
-import RecentActivities from "@/components/dashboard/admin/RecentActivities";
+import TopStatsCards from "@/components/dashboard/admin/dashboardAdmin/TopStatsCards";
+import RecentActivities from "@/components/dashboard/admin/dashboardAdmin/RecentActivities";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
 
 export default function AdminDashboard() {

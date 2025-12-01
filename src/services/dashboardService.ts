@@ -240,6 +240,7 @@ export const getAdminActivities = async (): Promise<{
         method: "Crypto (USDT)",
         status: "approved",
         date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        processed_by: "Admin A",
       },
       {
         id: "wd-4",
@@ -250,8 +251,9 @@ export const getAdminActivities = async (): Promise<{
         },
         amount: 500.0,
         method: "PayPal",
-        status: "approved",
+        status: "paid",
         date: new Date(Date.now() - 90000000).toISOString(),
+        processed_by: "Super Admin",
       },
       {
         id: "wd-5",
@@ -276,6 +278,7 @@ export const getAdminActivities = async (): Promise<{
         method: "Bank Transfer",
         status: "rejected",
         date: new Date(Date.now() - 100000000).toISOString(),
+        processed_by: "Admin B",
       },
       {
         id: "wd-7",
@@ -286,8 +289,9 @@ export const getAdminActivities = async (): Promise<{
         },
         amount: 45.0,
         method: "PayPal",
-        status: "approved",
+        status: "paid",
         date: new Date(Date.now() - 110000000).toISOString(),
+        processed_by: "Admin A",
       },
       {
         id: "wd-8",

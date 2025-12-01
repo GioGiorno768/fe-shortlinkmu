@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import type { AdminDashboardStats } from "@/types/type";
+import { useTranslations } from "next-intl";
 
 interface TopStatsCardsProps {
   data: AdminDashboardStats | null;
@@ -19,6 +20,7 @@ interface TopStatsCardsProps {
 }
 
 export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
+  const t = useTranslations("AdminDashboard.TopStats");
   const formatCurrency = (val: number) =>
     "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
   const formatNumber = (val: number) => val.toLocaleString("en-US");
@@ -27,9 +29,9 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
   const cards = [
     {
       id: "paid",
-      title: "Paid Today",
+      title: t("paidToday"),
       value: data ? formatCurrency(data.financial.paidToday) : "...",
-      subLabel: "Total Payouts",
+      subLabel: t("totalPayouts"),
       trend: data?.financial.trend,
       icon: CheckCircle2,
       // Emerald: Simbol Sukses/Uang
@@ -37,19 +39,19 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
     },
     {
       id: "users_paid",
-      title: "Users Paid",
+      title: t("usersPaid"),
       value: data ? formatNumber(data.financial.usersPaidToday) : "...",
-      subLabel: "Processed Today",
+      subLabel: t("processedToday"),
       trend: data?.financial.trend, // Pake trend financial juga
       icon: Users,
       // Blue: Simbol User
-      color: ["text-blue-600", "bg-blue-50", "border-blue-100"],
+      color: ["text-purple-600", "bg-purple-50", "border-purple-100"],
     },
     {
       id: "created",
-      title: "Links Created",
+      title: t("linksCreated"),
       value: data ? formatNumber(data.content.linksCreatedToday) : "...",
-      subLabel: "New Links Today",
+      subLabel: t("newLinksToday"),
       trend: data?.content.trend,
       icon: Link2,
       // Indigo: Simbol Konten
@@ -57,9 +59,9 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
     },
     {
       id: "blocked",
-      title: "Blocked Links",
+      title: t("blockedLinks"),
       value: data ? formatNumber(data.security.linksBlockedToday) : "...",
-      subLabel: "Blocked Today",
+      subLabel: t("blockedToday"),
       trend: data?.security.trend,
       icon: Ban,
       // Red: Simbol Bahaya
@@ -122,7 +124,7 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
                 </h3>
 
                 {/* Subtitle / Context */}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col justify-start items-start gap-1">
                   {card.trend !== undefined ? (
                     <div
                       className={clsx(
@@ -157,11 +159,11 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
             {/* Dekorasi Background Halus */}
             <div
               className={`absolute -bottom-8 -right-8 w-32 h-32 rounded-full opacity-5 pointer-events-none transition-transform duration-500 group-hover:scale-150 ${
-                card.title.includes("Paid")
-                  ? "bg-emerald-600"
-                  : card.title.includes("Users")
-                  ? "bg-blue-600"
-                  : card.title.includes("Created")
+                card.id === "paid"
+                  ? "bg-green-600"
+                  : card.id === "users_paid"
+                  ? "bg-purple-600"
+                  : card.id === "created"
                   ? "bg-indigo-600"
                   : "bg-red-600"
               }`}
