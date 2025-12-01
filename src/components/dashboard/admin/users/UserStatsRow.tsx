@@ -43,7 +43,7 @@ export default function UserStatsRow({ stats, isLoading }: UserStatsRowProps) {
       desc: "Login in 24h",
     },
     {
-      title: "Banned Users",
+      title: "Suspended Users",
       value: stats ? formatNumber(stats.suspendedUsers.count) : "...",
       trend: stats?.suspendedUsers.trend,
       icon: UserX,

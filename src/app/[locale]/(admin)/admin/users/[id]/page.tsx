@@ -45,11 +45,16 @@ export default function UserDetailPage({ params }: PageProps) {
     }
   }, [id]);
 
-  const handleToggleStatus = async () => {
+  const handleToggleStatus = async (reason?: string) => {
     if (!data) return;
 
-    const newStatus = data.status === "active" ? "suspended" : "active";
-    const success = await adminUserService.updateUserStatus(data.id, newStatus);
+    // If active -> suspend (process), if suspended -> active
+    const newStatus = data.status === "active" ? "process" : "active";
+    const success = await adminUserService.updateUserStatus(
+      data.id,
+      newStatus,
+      reason
+    );
 
     if (success) {
       setData((prev) => (prev ? { ...prev, status: newStatus } : null));

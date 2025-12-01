@@ -11,7 +11,7 @@ import { useAlert } from "@/hooks/useAlert";
 
 interface UserDetailHeaderProps {
   status: UserStatus;
-  onToggleStatus: () => Promise<void>;
+  onToggleStatus: (reason?: string) => Promise<void>;
 }
 
 export default function UserDetailHeader({
@@ -24,17 +24,18 @@ export default function UserDetailHeader({
   const [isLoading, setIsLoading] = useState(false);
 
   const isSuspended = status === "suspended";
+  const isProcess = status === "process";
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (reason?: string) => {
     setIsLoading(true);
     try {
-      await onToggleStatus();
+      await onToggleStatus(reason);
       showAlert(
         isSuspended
           ? "User account has been reactivated successfully."
-          : "User account has been suspended.",
+          : "User suspension request submitted.",
         "success",
-        isSuspended ? "Account Reactivated" : "Account Suspended"
+        isSuspended ? "Account Reactivated" : "Request Submitted"
       );
       setIsModalOpen(false);
     } catch (error) {
@@ -65,14 +66,21 @@ export default function UserDetailHeader({
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
+            disabled={isProcess}
             className={clsx(
               "flex-1 md:flex-none px-6 py-3 rounded-xl font-semibold text-[1.2em] transition-colors flex items-center justify-center gap-2 shadow-lg",
-              isSuspended
+              isProcess
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : isSuspended
                 ? "bg-green-600 text-white hover:bg-green-700 shadow-green-200"
                 : "bg-red-600 text-white hover:bg-red-700 shadow-red-200"
             )}
           >
-            {isSuspended ? (
+            {isProcess ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Processing...
+              </>
+            ) : isSuspended ? (
               <>
                 <CheckCircle2 className="w-5 h-5" /> Activate Account
               </>
@@ -99,6 +107,8 @@ export default function UserDetailHeader({
         cancelLabel="Cancel"
         type={isSuspended ? "success" : "danger"}
         isLoading={isLoading}
+        showReasonInput={!isSuspended}
+        reasonPlaceholder="Please provide a reason for suspension..."
       />
     </div>
   );

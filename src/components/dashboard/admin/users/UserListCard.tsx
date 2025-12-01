@@ -73,9 +73,6 @@ export default function UserListCard({
               {user.name}
             </h4>
             <p className="text-grays text-sm truncate">{user.email}</p>
-            <p className="text-xs text-slate-400 truncate mt-0.5">
-              @{user.username}
-            </p>
           </div>
         </div>
 
@@ -86,11 +83,15 @@ export default function UserListCard({
               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide",
               user.status === "active"
                 ? "bg-green-50 text-green-600 border border-green-200"
+                : user.status === "process"
+                ? "bg-yellow-50 text-yellow-600 border border-yellow-200"
                 : "bg-red-50 text-red-600 border border-red-200"
             )}
           >
             {user.status === "active" ? (
               <CheckCircle2 className="w-4 h-4" />
+            ) : user.status === "process" ? (
+              <Clock className="w-4 h-4" />
             ) : (
               <Ban className="w-4 h-4" />
             )}

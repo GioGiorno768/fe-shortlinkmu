@@ -130,11 +130,13 @@
         "title": "Filter Users",
         "all": "All Users",
         "active": "Active Only",
-        "banned": "Banned Only"
+        "suspended": "Suspended Only",
+        "process": "Processing Only"
       },
       "status": {
         "active": "Active",
-        "banned": "Banned"
+        "suspended": "Suspended",
+        "process": "Processing"
       }
     },
     "UserDetail": {

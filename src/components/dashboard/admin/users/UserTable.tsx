@@ -4,6 +4,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   ChevronDown,
   Filter,
   CheckCircle2,
@@ -49,6 +51,7 @@ export default function UserTable({
     { value: "all", label: "Semua Status" },
     { value: "active", label: "Aktif Aja" },
     { value: "suspended", label: "Yg Kena Suspend" },
+    { value: "process", label: "Lagi Diproses" },
   ];
 
   const currentFilterLabel =
@@ -160,6 +163,13 @@ export default function UserTable({
           <div className="flex gap-2">
             <button
               disabled={page === 1}
+              onClick={() => setPage(1)}
+              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <ChevronsLeft className="w-5 h-5 text-shortblack" />
+            </button>
+            <button
+              disabled={page === 1}
               onClick={() => setPage(page - 1)}
               className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
             >
@@ -171,6 +181,13 @@ export default function UserTable({
               className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
             >
               <ChevronRight className="w-5 h-5 text-shortblack" />
+            </button>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(totalPages)}
+              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <ChevronsRight className="w-5 h-5 text-shortblack" />
             </button>
           </div>
         </div>

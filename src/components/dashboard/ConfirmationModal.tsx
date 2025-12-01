@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -16,13 +18,15 @@ export type ConfirmType = "danger" | "warning" | "info" | "success";
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (reason?: string) => void;
   title: string;
   description: string;
   confirmLabel?: string;
   cancelLabel?: string;
   type?: ConfirmType;
   isLoading?: boolean;
+  showReasonInput?: boolean;
+  reasonPlaceholder?: string;
 }
 
 export default function ConfirmationModal({
@@ -35,7 +39,16 @@ export default function ConfirmationModal({
   cancelLabel = "Cancel",
   type = "danger",
   isLoading = false,
+  showReasonInput = false,
+  reasonPlaceholder = "Please provide a reason...",
 }: ConfirmationModalProps) {
+  const [reason, setReason] = useState("");
+
+  // Reset reason when modal opens/closes
+  useEffect(() => {
+    if (isOpen) setReason("");
+  }, [isOpen]);
+
   // Config Icon & Warna berdasarkan Tipe
   const config = {
     danger: {
@@ -103,6 +116,17 @@ export default function ConfirmationModal({
               {description}
             </p>
 
+            {showReasonInput && (
+              <div className="w-full px-4 mb-8">
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder={reasonPlaceholder}
+                  className="w-full p-4 text-[1.2em] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px] resize-none"
+                />
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-4 w-full">
               <button
@@ -113,8 +137,8 @@ export default function ConfirmationModal({
                 {cancelLabel}
               </button>
               <button
-                onClick={onConfirm}
-                disabled={isLoading}
+                onClick={() => onConfirm(reason)}
+                disabled={isLoading || (showReasonInput && !reason.trim())}
                 className={clsx(
                   "flex-1 py-4 rounded-xl text-[1.5em] font-bold text-white transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50",
                   currentConfig.btnColor

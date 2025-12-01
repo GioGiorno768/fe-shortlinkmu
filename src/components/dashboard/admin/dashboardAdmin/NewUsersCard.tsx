@@ -119,7 +119,8 @@ export default function NewUsersCard({
                   {[
                     { label: t("filter.all"), value: "all" },
                     { label: t("filter.active"), value: "active" },
-                    { label: t("filter.banned"), value: "suspended" },
+                    { label: t("filter.suspended"), value: "suspended" },
+                    { label: t("filter.process"), value: "process" },
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -196,12 +197,16 @@ export default function NewUsersCard({
                     "text-[1em] px-2 py-0.5 rounded-lg font-medium",
                     user.status === "active"
                       ? "bg-blue-50 text-blue-600"
+                      : user.status === "process"
+                      ? "bg-yellow-50 text-yellow-600"
                       : "bg-red-50 text-red-600"
                   )}
                 >
                   {user.status === "active"
                     ? t("status.active")
-                    : t("status.banned")}
+                    : user.status === "process"
+                    ? t("status.process")
+                    : t("status.suspended")}
                 </span>
               </div>
             </div>

@@ -51,7 +51,7 @@ export function useAdminUsers() {
   }, [search, statusFilter]);
 
   const toggleStatus = async (id: string, currentStatus: UserStatus) => {
-    const newStatus = currentStatus === "active" ? "suspended" : "active";
+    const newStatus = currentStatus === "active" ? "process" : "active";
     try {
       await adminUserService.updateUserStatus(id, newStatus);
       // Optimistic update
@@ -59,7 +59,7 @@ export function useAdminUsers() {
         prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))
       );
       showAlert(
-        `User ${newStatus === "active" ? "diaktifkan" : "disuspend"}.`,
+        `User ${newStatus === "active" ? "diaktifkan" : "sedang diproses"}.`,
         "success"
       );
     } catch (error) {

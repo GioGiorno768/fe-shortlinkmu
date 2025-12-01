@@ -65,9 +65,11 @@ export async function getUsers(
 
 export async function updateUserStatus(
   id: string,
-  status: UserStatus
+  status: UserStatus,
+  reason?: string
 ): Promise<boolean> {
   await new Promise((r) => setTimeout(r, 800));
+  console.log(`Updating user ${id} status to ${status}. Reason: ${reason}`);
   return true;
 }
 

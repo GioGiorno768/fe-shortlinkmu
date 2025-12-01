@@ -130,11 +130,13 @@
         "title": "Filter Pengguna",
         "all": "Semua Pengguna",
         "active": "Hanya Aktif",
-        "banned": "Hanya Banned"
+        "suspended": "Hanya Disuspend",
+        "process": "Hanya Diproses"
       },
       "status": {
         "active": "Aktif",
-        "banned": "Banned"
+        "suspended": "Disuspend",
+        "process": "Diproses"
       }
     },
     "UserDetail": {

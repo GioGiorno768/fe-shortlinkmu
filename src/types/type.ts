@@ -358,7 +358,7 @@ export interface AdminDashboardStats {
   };
 }
 
-export type UserStatus = "active" | "suspended";
+export type UserStatus = "active" | "suspended" | "process";
 
 export interface AdminUser {
   id: string;
@@ -411,7 +411,7 @@ export interface RecentUser {
   email: string;
   avatar: string;
   joinedAt: string; // ISO Date
-  status: "active" | "suspended";
+  status: UserStatus;
 }
 
 export interface UserDetailData extends AdminUser {
