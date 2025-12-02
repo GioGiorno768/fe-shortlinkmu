@@ -7,6 +7,10 @@ import BulkActionBar from "./BulkActionBar";
 import { Search, Loader2 } from "lucide-react";
 import type { AdminLink, AdminLinkFilters } from "@/types/type";
 import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
+import Pagination from "@/components/dashboard/Pagination";
+import MessageModal from "./MessageModal";
+import { useAlert } from "@/hooks/useAlert";
+import * as adminLinkService from "@/services/adminLinkService";
 
 interface LinkListProps {
   links: AdminLink[];
@@ -18,7 +22,16 @@ interface LinkListProps {
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
   selectAll: () => void;
-  handleBulkAction: (action: "activate" | "block") => Promise<void>;
+  handleBulkAction: (
+    action: "activate" | "block",
+    targetIds?: string[],
+    reason?: string
+  ) => Promise<void>;
+  deselectAll: () => void;
+  page: number;
+  totalPages: number;
+  setPage: (p: number) => void;
+  totalLinks: number;
 }
 
 export default function LinkList({
@@ -32,32 +45,69 @@ export default function LinkList({
   toggleSelect,
   selectAll,
   handleBulkAction,
+
+  deselectAll,
+  page,
+  totalPages,
+  setPage,
+  totalLinks,
 }: LinkListProps) {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     action: "activate" | "block" | null;
-  }>({ isOpen: false, action: null });
+    targetId: string | null;
+  }>({ isOpen: false, action: null, targetId: null });
+
+  const [messageModal, setMessageModal] = useState<{
+    isOpen: boolean;
+    linkId: string | null;
+    linkTitle?: string;
+  }>({ isOpen: false, linkId: null });
+
+  const { showAlert } = useAlert();
 
   const onBulkActionClick = (action: "activate" | "block") => {
-    setConfirmModal({ isOpen: true, action });
+    setConfirmModal({ isOpen: true, action, targetId: null });
   };
 
-  const onConfirmAction = async () => {
+  const onConfirmAction = async (reason?: string) => {
     if (confirmModal.action) {
-      await handleBulkAction(confirmModal.action);
-      setConfirmModal({ isOpen: false, action: null });
+      const ids = confirmModal.targetId ? [confirmModal.targetId] : undefined;
+      await handleBulkAction(confirmModal.action, ids, reason);
+      setConfirmModal({ isOpen: false, action: null, targetId: null });
     }
   };
 
-  // Single item action juga pake logic bulk biar dry (array 1 item)
-  // Tapi di hook lu udah handle bulk, jadi aman.
-  const onSingleAction = async (id: string, action: "activate" | "block") => {
-    // Hack dikit: select dulu itemnya, trus jalanin bulk action, trus reset
-    // Idealnya ada fungsi single update di service, tapi gini juga works
-    toggleSelect(id);
-    // Di real app, mending panggil API updateLinkStatus(id) langsung
-    // Untuk mock ini kita simulasi aja
-    console.log(`Action ${action} on ${id}`);
+  const onSingleAction = (id: string, action: "activate" | "block") => {
+    setConfirmModal({ isOpen: true, action, targetId: id });
+  };
+
+  const onMessageClick = (id: string) => {
+    const link = links.find((l) => l.id === id);
+    setMessageModal({
+      isOpen: true,
+      linkId: id,
+      linkTitle: link?.title || link?.shortUrl,
+    });
+  };
+
+  const handleSendMessage = async (
+    message: string,
+    type: "warning" | "announcement"
+  ) => {
+    if (!messageModal.linkId) return;
+
+    try {
+      await adminLinkService.sendMessageToUser(
+        messageModal.linkId,
+        message,
+        type
+      );
+      showAlert("Message sent successfully!", "success");
+      setMessageModal({ isOpen: false, linkId: null });
+    } catch (error) {
+      showAlert("Failed to send message.", "error");
+    }
   };
 
   return (
@@ -98,17 +148,27 @@ export default function LinkList({
               isSelected={selectedIds.has(link.id)}
               onToggleSelect={toggleSelect}
               onAction={onSingleAction} // Ini buat dropdown per item
+              onMessage={onMessageClick}
             />
           ))
         )}
       </div>
 
+      {/* PAGINATION */}
+      {!isLoading && links.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
+      )}
+
       {/* BULK ACTION BAR */}
       <BulkActionBar
         selectedCount={selectedIds.size}
-        totalVisible={links.length}
+        totalItems={totalLinks} // Use totalLinks instead of visible length
         onSelectAll={selectAll}
-        onDeselectAll={selectAll} // Logic toggle sama
+        onDeselectAll={deselectAll} // Logic toggle sama
         onAction={onBulkActionClick}
       />
 
@@ -117,15 +177,36 @@ export default function LinkList({
         isOpen={confirmModal.isOpen}
         title={
           confirmModal.action === "block"
-            ? "Block Selected Links?"
+            ? confirmModal.targetId
+              ? "Block This Link?"
+              : "Block Selected Links?"
+            : confirmModal.targetId
+            ? "Activate This Link?"
             : "Activate Selected Links?"
         }
-        description={`Are you sure you want to ${confirmModal.action} ${selectedIds.size} links? This action will affect visibility.`}
+        description={
+          confirmModal.targetId
+            ? `Are you sure you want to ${confirmModal.action} this link?`
+            : `Are you sure you want to ${confirmModal.action} ${selectedIds.size} links? This action will affect visibility.`
+        }
         confirmLabel="Yes, Confirm"
         type={confirmModal.action === "block" ? "danger" : "info"}
         onConfirm={onConfirmAction}
-        onClose={() => setConfirmModal({ isOpen: false, action: null })}
+        onClose={() =>
+          setConfirmModal({ isOpen: false, action: null, targetId: null })
+        }
         isLoading={isLoading} // Reuse loading state
+        showReasonInput={confirmModal.action === "block"}
+        reasonPlaceholder="Please provide a reason for blocking..."
+      />
+
+      {/* MESSAGE MODAL */}
+      <MessageModal
+        isOpen={messageModal.isOpen}
+        onClose={() => setMessageModal({ isOpen: false, linkId: null })}
+        onSend={handleSendMessage}
+        linkTitle={messageModal.linkTitle}
+        isLoading={isLoading}
       />
     </div>
   );

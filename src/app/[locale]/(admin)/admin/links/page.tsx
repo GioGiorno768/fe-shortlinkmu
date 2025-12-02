@@ -17,7 +17,11 @@ export default function AdminLinksPage() {
     selectedIds,
     toggleSelect,
     selectAll,
+    deselectAll,
     handleBulkAction,
+    page,
+    totalPages,
+    setPage,
   } = useAdminLinks();
 
   return (
@@ -35,7 +39,12 @@ export default function AdminLinksPage() {
         selectedIds={selectedIds}
         toggleSelect={toggleSelect}
         selectAll={selectAll}
+        deselectAll={deselectAll}
         handleBulkAction={handleBulkAction}
+        page={page}
+        totalPages={totalPages}
+        setPage={setPage}
+        totalLinks={stats.totalLinks}
       />
     </div>
   );

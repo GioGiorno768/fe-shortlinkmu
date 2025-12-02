@@ -22,6 +22,7 @@ export default function LinkFilters({ filters, setFilters }: LinkFiltersProps) {
       title: "Sort By",
       key: "sort",
       options: [
+        { label: "All Links", value: "default" },
         { label: "Newest Created", value: "newest" },
         { label: "Oldest Created", value: "oldest" },
         { label: "Highest Views", value: "most_views" },
@@ -55,7 +56,17 @@ export default function LinkFilters({ filters, setFilters }: LinkFiltersProps) {
   ];
 
   const handleSelect = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value });
+    if (key === "sort" && value === "default") {
+      // Reset all filters
+      setFilters({
+        sort: "default", // Keep as default to show "All Links" selected
+        status: "all",
+        adsLevel: "all",
+        search: filters.search, // Keep search
+      });
+    } else {
+      setFilters({ ...filters, [key]: value });
+    }
     setIsOpen(false);
   };
 
@@ -93,7 +104,7 @@ export default function LinkFilters({ filters, setFilters }: LinkFiltersProps) {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute top-full right-0 mt-2 w-[280px] bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden flex flex-col"
+            className="absolute top-full right-0 mt-2 w-[280px] bg-white rounded-xl shadow-xl border border-gray-100 z-10 overflow-hidden flex flex-col"
           >
             <div
               onWheel={(e) => e.stopPropagation()}

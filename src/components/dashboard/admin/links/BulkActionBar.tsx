@@ -5,7 +5,7 @@ import { CheckSquare, Square, Ban, CheckCircle2, X } from "lucide-react";
 
 interface BulkActionBarProps {
   selectedCount: number;
-  totalVisible: number;
+  totalItems: number;
   onSelectAll: () => void;
   onDeselectAll: () => void; // Buat reset
   onAction: (action: "activate" | "block") => void;
@@ -13,7 +13,7 @@ interface BulkActionBarProps {
 
 export default function BulkActionBar({
   selectedCount,
-  totalVisible,
+  totalItems,
   onSelectAll,
   onDeselectAll, // Pake selectAll() di hook yg logicnya toggle
   onAction,
@@ -39,7 +39,7 @@ export default function BulkActionBar({
                 onClick={onSelectAll}
                 className="text-slate-400 hover:text-white text-[1.2em] underline ml-2"
               >
-                {selectedCount === totalVisible ? "Deselect All" : "Select All"}
+                {selectedCount === totalItems ? "Deselect All" : "Select All"}
               </button>
             </div>
 

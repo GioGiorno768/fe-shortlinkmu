@@ -67,6 +67,7 @@ export async function getLinks(
   // 4. Sorting Complex
   if (filters.sort) {
     switch (filters.sort) {
+      case "default":
       case "newest":
         filtered.sort(
           (a, b) =>
@@ -99,15 +100,48 @@ export async function getLinks(
   const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return { data, totalPages };
+  return { data, totalPages };
+}
+
+export async function getAllLinkIds(
+  filters: AdminLinkFilters
+): Promise<string[]> {
+  await new Promise((r) => setTimeout(r, 400));
+  let filtered = [...MOCK_LINKS];
+
+  if (filters.search) {
+    const s = filters.search.toLowerCase();
+    filtered = filtered.filter(
+      (l) =>
+        l.shortUrl.toLowerCase().includes(s) ||
+        l.originalUrl.toLowerCase().includes(s) ||
+        l.alias?.toLowerCase().includes(s) ||
+        l.owner.name.toLowerCase().includes(s) ||
+        l.owner.username.toLowerCase().includes(s)
+    );
+  }
+
+  if (filters.status && filters.status !== "all") {
+    filtered = filtered.filter((l) => l.status === filters.status);
+  }
+
+  if (filters.adsLevel && filters.adsLevel !== "all") {
+    filtered = filtered.filter((l) => l.adsLevel === filters.adsLevel);
+  }
+
+  return filtered.map((l) => l.id);
 }
 
 // Bulk Action
 export async function bulkUpdateLinkStatus(
   ids: string[],
-  status: "active" | "disabled"
+  status: "active" | "disabled",
+  reason?: string
 ): Promise<boolean> {
   await new Promise((r) => setTimeout(r, 800));
-  console.log(`Bulk update ${ids.length} links to ${status}`);
+  console.log(
+    `Bulk update ${ids.length} links to ${status}. Reason: ${reason || "N/A"}`
+  );
   return true;
 }
 
@@ -137,5 +171,15 @@ export async function updateLinkStatus(
 export async function deleteLinks(ids: string[]): Promise<boolean> {
   await new Promise((r) => setTimeout(r, 800));
   console.log(`Deleting links: ${ids.join(", ")}`);
+  return true;
+}
+
+export async function sendMessageToUser(
+  linkId: string,
+  message: string,
+  type: "warning" | "announcement"
+): Promise<boolean> {
+  await new Promise((r) => setTimeout(r, 1000));
+  console.log(`Sending ${type} message for link ${linkId}: ${message}`);
   return true;
 }
