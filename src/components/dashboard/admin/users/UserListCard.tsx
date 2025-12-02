@@ -17,12 +17,10 @@ import type { AdminUser, UserStatus } from "@/types/type";
 
 interface UserListCardProps {
   user: AdminUser;
-  onToggleStatus: (id: string, status: UserStatus) => void;
 }
 
 export default function UserListCard({
   user,
-  onToggleStatus,
 }: UserListCardProps) {
   const getInitials = (name: string) => {
     return name

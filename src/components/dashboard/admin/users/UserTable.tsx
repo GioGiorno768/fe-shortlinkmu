@@ -148,7 +148,6 @@ export default function UserTable({
             <UserListCard
               key={user.id}
               user={user}
-              onToggleStatus={onToggleStatus}
             />
           ))
         )}

@@ -394,15 +394,59 @@ export interface LoginLog {
 export interface RecentWithdrawal {
   id: string;
   user: {
+    id: string; // Butuh ID buat link ke detail
     name: string;
     email: string;
     avatar: string;
+    level: string; // Buat badge level
   };
   amount: number;
-  method: string; // PayPal, Bank Transfer, etc.
-  status: "pending" | "approved" | "paid" | "rejected";
-  date: string; // ISO Date
-  processed_by?: string; // Admin name who approved/paid
+  method: string;
+  accountNumber: string; // Tambahan info rekening
+  status: "pending" | "approved" | "completed" | "rejected";
+  date: string;
+
+  // 👇 FIELD BARU
+  proofUrl?: string; // Link GDrive/Bukti
+  rejectionReason?: string; // Alasan penolakan
+  riskScore: "safe" | "medium" | "high"; // Fraud detection
+}
+
+export interface FraudInfo {
+  ipAddress: string;
+  device: string;
+  location: string;
+  riskScore: "safe" | "medium" | "high";
+  riskFactors: string[];
+}
+
+export interface WithdrawalDetail extends RecentWithdrawal {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    level: string;
+    walletBalance: number; // New
+  };
+  history: Transaction[];
+  fraudInfo: FraudInfo;
+  fee: number;
+  netAmount: number;
+}
+
+// 👇 Filter Khusus Withdrawal
+export interface AdminWithdrawalFilters {
+  search?: string;
+  status?: string; // pending, approved, completed, rejected
+  sort?: string; // newest, oldest
+  level?: string; // beginner, mythic, all
+}
+
+export interface AdminWithdrawalStats {
+  paidToday: { amount: number; count: number };
+  highestWithdrawal: { amount: number; user: string };
+  totalUsersPaid: { count: number; trend: number };
 }
 
 export interface RecentUser {

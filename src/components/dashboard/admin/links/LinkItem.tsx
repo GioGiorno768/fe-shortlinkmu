@@ -46,9 +46,11 @@ export default function LinkItem({
     });
 
   return (
+    // 1. Container Utama: Clickable (Trigger Selection)
     <div
+      onClick={() => onToggleSelect(link.id)}
       className={clsx(
-        "bg-white rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-md group relative overflow-hidden",
+        "bg-white rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-md group relative overflow-hidden cursor-pointer",
         isSelected
           ? "border-bluelight ring-1 ring-bluelight bg-blue-50/10"
           : "border-gray-100"
@@ -56,18 +58,18 @@ export default function LinkItem({
     >
       {/* HEADER SECTION */}
       <div className="p-5 flex items-start gap-4">
-        {/* Checkbox Custom */}
-        <button
-          onClick={() => onToggleSelect(link.id)}
+        {/* Checkbox Indicator (Visual Only) */}
+        {/* Ganti button jadi div biar gak double action */}
+        <div
           className={clsx(
             "mt-1 w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
             isSelected
               ? "bg-bluelight border-bluelight text-white"
-              : "border-gray-300 hover:border-bluelight"
+              : "border-gray-300 group-hover:border-bluelight"
           )}
         >
           {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-        </button>
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
@@ -80,9 +82,12 @@ export default function LinkItem({
                 </p>
               )}
               <div className="flex items-center gap-2">
+                {/* 2. Link Short URL: Stop Propagation biar gak trigger select pas diklik */}
                 <a
                   href={`https://${link.shortUrl}`}
                   target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="text-[1.6em] font-bold text-bluelight hover:underline truncate"
                 >
                   {link.shortUrl}
@@ -102,11 +107,15 @@ export default function LinkItem({
               </div>
             </div>
 
-            {/* Action Dropdown */}
-            <div className="relative" ref={menuRef}>
+            {/* 3. Action Dropdown: Stop Propagation */}
+            <div
+              className="relative"
+              ref={menuRef}
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-grays hover:bg-slate-50 rounded-lg"
+                className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
               >
                 <MoreHorizontal className="w-5 h-5" />
               </button>
@@ -162,7 +171,16 @@ export default function LinkItem({
           <div className="flex items-center gap-2 text-[1.2em] text-grays mb-4 group/link">
             <LinkIcon className="w-3.5 h-3.5 shrink-0" />
             <p className="truncate max-w-[80%]">{link.originalUrl}</p>
-            <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+            {/* Optional: Kalau External Link diklik, jangan select row */}
+            <a
+              href={link.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="opacity-0 group-hover/link:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded"
+            >
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
 
           <div className="h-px bg-gray-100 w-full mb-4" />

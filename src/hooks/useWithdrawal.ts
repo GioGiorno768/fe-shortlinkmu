@@ -30,7 +30,7 @@ export function useWithdrawal() {
       setIsLoading(true);
       try {
         const [statsData, methodData] = await Promise.all([
-          withdrawalService.getWithdrawalStats(),
+          withdrawalService.getUserWithdrawalStats(),
           withdrawalService.getPrimaryPaymentMethod(),
         ]);
         setStats(statsData);

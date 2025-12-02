@@ -45,7 +45,6 @@ export default function LinkList({
   toggleSelect,
   selectAll,
   handleBulkAction,
-
   deselectAll,
   page,
   totalPages,
