@@ -33,7 +33,7 @@ export default function WithdrawalFilters({ filters, setFilters }: Props) {
         { label: "All Status", value: "all" },
         { label: "Pending", value: "pending" },
         { label: "Approved", value: "approved" },
-        { label: "Paid / Completed", value: "completed" },
+        { label: "Paid", value: "paid" },
         { label: "Rejected", value: "rejected" },
       ],
     },

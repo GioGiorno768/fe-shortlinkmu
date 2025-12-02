@@ -39,7 +39,7 @@ export default function WithdrawalHistoryTab({ history }: Props) {
                 <span
                   className={clsx(
                     "px-2 py-1 rounded text-[0.85em] font-bold capitalize",
-                    item.status === "completed"
+                    item.status === "paid"
                       ? "bg-green-100 text-green-700"
                       : item.status === "rejected"
                       ? "bg-red-100 text-red-700"

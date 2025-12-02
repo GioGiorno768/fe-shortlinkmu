@@ -95,7 +95,7 @@ export default function WithdrawalDetailPage({
         <div
           className={clsx(
             "px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-[1.1em] self-start md:self-auto",
-            data.status === "completed"
+            data.status === "paid"
               ? "bg-green-100 text-green-700"
               : data.status === "approved"
               ? "bg-blue-100 text-blue-700"
@@ -104,7 +104,7 @@ export default function WithdrawalDetailPage({
               : "bg-yellow-100 text-yellow-700"
           )}
         >
-          {data.status === "completed" ? (
+          {data.status === "paid" ? (
             <CheckCircle2 className="w-5 h-5" />
           ) : data.status === "approved" ? (
             <ThumbsUp className="w-5 h-5" />

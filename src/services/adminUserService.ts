@@ -113,7 +113,7 @@ export async function getUserDetail(
         amount: 25.5,
         method: "DANA",
         account: "0812****7890",
-        status: "completed",
+        status: "paid",
       },
       {
         id: "wd-2",

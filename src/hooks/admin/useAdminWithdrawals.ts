@@ -54,10 +54,10 @@ export function useAdminWithdrawals() {
     try {
       // Logic Toggle Status:
       // Pending -> Approved
-      // Approved -> Completed
-      const nextStatus = currentStatus === "pending" ? "approved" : "completed";
+      // Approved -> Paid
+      const nextStatus = currentStatus === "pending" ? "approved" : "paid";
 
-      await withdrawalService.updateTransactionStatus(id, nextStatus);
+      await withdrawalService.updateTransactionStatus(id, nextStatus as any);
 
       // Optimistic Update
       setTransactions((prev) =>
@@ -68,7 +68,7 @@ export function useAdminWithdrawals() {
       if (nextStatus === "approved") {
         showAlert("Withdrawal approved. Ready to pay.", "info");
       } else {
-        showAlert("Withdrawal marked as Paid/Completed.", "success");
+        showAlert("Withdrawal marked as Paid.", "success");
       }
     } catch (e) {
       showAlert("Error updating status.", "error");
@@ -103,13 +103,13 @@ export function useAdminWithdrawals() {
     try {
       // 1. Save Proof
       await withdrawalService.saveProofLink(id, url);
-      // 2. Update Status to Completed
-      await withdrawalService.updateTransactionStatus(id, "completed");
+      // 2. Update Status to Paid
+      await withdrawalService.updateTransactionStatus(id, "paid");
 
       // Optimistic Update
       setTransactions((prev) =>
         prev.map((t) =>
-          t.id === id ? { ...t, status: "completed", proofUrl: url } : t
+          t.id === id ? { ...t, status: "paid", proofUrl: url } : t
         )
       );
       showAlert("Payment completed & proof attached!", "success");

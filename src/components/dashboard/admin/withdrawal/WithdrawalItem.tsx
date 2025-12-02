@@ -62,7 +62,7 @@ export default function WithdrawalItem({
         <div
           className={clsx(
             "mt-1 w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-            trx.status === "completed"
+            trx.status === "paid"
               ? "bg-green-100 text-green-600"
               : trx.status === "approved"
               ? "bg-blue-100 text-blue-600"
@@ -71,7 +71,7 @@ export default function WithdrawalItem({
               : "bg-yellow-100 text-yellow-600"
           )}
         >
-          {trx.status === "completed" ? (
+          {trx.status === "paid" ? (
             <CheckCircle2 className="w-5 h-5" />
           ) : trx.status === "approved" ? (
             <ThumbsUp className="w-5 h-5" />
@@ -97,7 +97,7 @@ export default function WithdrawalItem({
                 <span
                   className={clsx(
                     "px-2 py-0.5 rounded text-[1em] font-bold uppercase tracking-wide",
-                    trx.status === "completed"
+                    trx.status === "paid"
                       ? "bg-green-100 text-green-700"
                       : trx.status === "approved"
                       ? "bg-blue-100 text-blue-700"

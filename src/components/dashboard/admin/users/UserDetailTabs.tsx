@@ -142,12 +142,12 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
                         <div
                           className={clsx(
                             "p-2 rounded-full",
-                            tx.status === "completed"
+                            tx.status === "paid"
                               ? "bg-green-100 text-green-600"
                               : "bg-red-100 text-red-600"
                           )}
                         >
-                          {tx.status === "completed" ? (
+                          {tx.status === "paid" ? (
                             <CheckCircle2 className="w-5 h-5" />
                           ) : (
                             <XCircle className="w-5 h-5" />
@@ -167,7 +167,7 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
                       <span
                         className={clsx(
                           "text-[1.1em] font-bold px-3 py-1 rounded-lg uppercase",
-                          tx.status === "completed"
+                          tx.status === "paid"
                             ? "bg-green-50 text-green-600"
                             : "bg-red-50 text-red-600"
                         )}

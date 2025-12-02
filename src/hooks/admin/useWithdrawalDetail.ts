@@ -57,10 +57,8 @@ export function useWithdrawalDetail(id: string) {
     if (!data) return;
     try {
       await withdrawalService.saveProofLink(data.id, proofUrl);
-      await withdrawalService.updateTransactionStatus(data.id, "completed");
-      setData((prev) =>
-        prev ? { ...prev, status: "completed", proofUrl } : null
-      );
+      await withdrawalService.updateTransactionStatus(data.id, "paid");
+      setData((prev) => (prev ? { ...prev, status: "paid", proofUrl } : null));
       showAlert("Payment completed & proof attached!", "success");
     } catch (error) {
       showAlert("Failed to process payment.", "error");

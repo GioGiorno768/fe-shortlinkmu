@@ -137,7 +137,7 @@ export interface Transaction {
   amount: number;
   method: string; // cth: "PayPal"
   account: string; // cth: "kevin***@gmail.com"
-  status: "pending" | "approved" | "completed" | "rejected" | "cancelled";
+  status: "pending" | "approved" | "rejected" | "paid" | "cancelled";
   txId?: string; // ID referensi transfer
 }
 
@@ -403,7 +403,7 @@ export interface RecentWithdrawal {
   amount: number;
   method: string;
   accountNumber: string; // Tambahan info rekening
-  status: "pending" | "approved" | "completed" | "rejected" | "paid";
+  status: "pending" | "approved" | "rejected" | "paid";
   date: string;
 
   // 👇 FIELD BARU
@@ -439,7 +439,7 @@ export interface WithdrawalDetail extends RecentWithdrawal {
 // 👇 Filter Khusus Withdrawal
 export interface AdminWithdrawalFilters {
   search?: string;
-  status?: string; // pending, approved, completed, rejected
+  status?: string; // pending, approved, paid, rejected
   sort?: string; // newest, oldest
   level?: string; // beginner, mythic, all
 }

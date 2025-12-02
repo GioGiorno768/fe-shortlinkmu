@@ -1,294 +1,249 @@
-// src/services/withdrawalService.ts
 import type {
+  RecentWithdrawal,
   WithdrawalStats,
   AdminWithdrawalStats,
-  RecentWithdrawal,
-  PaymentMethod,
-  Transaction,
   AdminWithdrawalFilters,
   WithdrawalDetail,
 } from "@/types/type";
 
-interface TransactionParams {
-  page?: number;
-  search?: string;
-}
-
 // MOCK DATA
-const MOCK_TRANSACTIONS: RecentWithdrawal[] = Array.from(
-  { length: 15 },
+const MOCK_WITHDRAWALS: RecentWithdrawal[] = Array.from(
+  { length: 20 },
   (_, i) => ({
-    id: `trx-${i}`,
+    id: `WTH-${1000 + i}`,
     user: {
-      id: `user-${i}`,
-      name: i % 2 === 0 ? `Agus Setiawan ${i}` : `Siti Nurhaliza ${i}`,
-      email: `user${i}@gmail.com`,
-      avatar: `https://avatar.iran.liara.run/public/${i + 20}`,
+      id: `usr-${i}`,
+      name: `User ${i}`,
+      email: `user${i}@example.com`,
+      avatar: `https://avatar.iran.liara.run/public/${i + 1}`,
       level: i % 5 === 0 ? "mythic" : "beginner",
     },
-    amount: parseFloat((Math.random() * 100 + 10).toFixed(2)),
-    method: i % 3 === 0 ? "BCA" : "PayPal",
-    accountNumber: i % 3 === 0 ? "1234567890" : "user@paypal.com",
+    amount: (i + 1) * 10.5,
+    method: i % 2 === 0 ? "PayPal" : "Bank Transfer",
+    accountNumber: i % 2 === 0 ? "kevin***@gmail.com" : "1234567890",
     status:
-      i === 0
-        ? "pending"
-        : i === 1
-        ? "completed"
-        : i === 2
-        ? "rejected"
-        : "pending",
-    date: new Date(Date.now() - i * 3600000).toISOString(),
-    riskScore: i === 3 ? "high" : "safe",
-    proofUrl: i === 1 ? "https://drive.google.com/file/d/xxxx" : undefined,
-    rejectionReason: i === 2 ? "Nomor rekening tidak valid" : undefined,
+      i === 0 ? "pending" : i === 1 ? "paid" : i === 2 ? "rejected" : "pending",
+    date: new Date(Date.now() - i * 86400000).toISOString(),
+    proofUrl: i === 1 ? "https://example.com/proof.jpg" : undefined,
+    rejectionReason: i === 2 ? "Invalid account details provided." : undefined,
+    riskScore: i % 10 === 0 ? "high" : "safe",
+    processed_by: i !== 0 ? "Admin Kevin" : undefined,
   })
 );
 
-// 👇 UPDATE FUNGSI INI
 export async function getWithdrawals(
   page: number = 1,
-  filters: AdminWithdrawalFilters
+  filters?: AdminWithdrawalFilters
 ): Promise<{ data: RecentWithdrawal[]; totalPages: number }> {
-  await new Promise((r) => setTimeout(r, 600));
+  await new Promise((resolve) => setTimeout(resolve, 800));
 
-  let filtered = [...MOCK_TRANSACTIONS];
+  let data = [...MOCK_WITHDRAWALS];
 
-  // 1. Search (ID, Name, Email)
-  if (filters.search) {
-    const s = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (t) =>
-        t.id.toLowerCase().includes(s) ||
-        t.user.name.toLowerCase().includes(s) ||
-        t.user.email.toLowerCase().includes(s)
+  if (filters?.search) {
+    const q = filters.search.toLowerCase();
+    data = data.filter(
+      (w) =>
+        w.user.name.toLowerCase().includes(q) ||
+        w.user.email.toLowerCase().includes(q) ||
+        w.id.toLowerCase().includes(q)
     );
   }
 
-  // 2. Filter Status
-  if (filters.status && filters.status !== "all") {
-    filtered = filtered.filter((t) => t.status === filters.status);
+  if (filters?.status && filters.status !== "all") {
+    data = data.filter((w) => w.status === filters.status);
   }
 
-  // 3. Filter Level User
-  if (filters.level && filters.level !== "all") {
-    filtered = filtered.filter((t) => t.user.level === filters.level);
+  if (filters?.level && filters.level !== "all") {
+    data = data.filter((w) => w.user.level === filters.level);
   }
 
-  // 4. Sort
-  if (filters.sort === "oldest") {
-    filtered.sort(
+  if (filters?.sort === "oldest") {
+    data.sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
   } else {
-    // Default Newest
-    filtered.sort(
+    data.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  // Pagination Logic
+  const limit = 10;
+  const totalPages = Math.ceil(data.length / limit);
+  const startIndex = (page - 1) * limit;
+  const paginatedData = data.slice(startIndex, startIndex + limit);
 
-  return { data, totalPages };
+  return {
+    data: paginatedData,
+    totalPages,
+  };
 }
 
 export async function getWithdrawalStats(): Promise<AdminWithdrawalStats> {
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
   return {
-    paidToday: { amount: 1250.5, count: 45 },
+    paidToday: { amount: 1250.0, count: 15 },
+    highestWithdrawal: { amount: 500.0, user: "Sultan01" },
     totalUsersPaid: { count: 120, trend: 12 },
-    highestWithdrawal: { amount: 150.0, user: "Sultan Andara" },
   };
-}
-
-export async function getUserWithdrawalStats(): Promise<WithdrawalStats> {
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    availableBalance: 154.2,
-    pendingWithdrawn: 12.5,
-    totalWithdrawn: 450.0,
-  };
-}
-
-// Action Updates
-export async function updateTransactionStatus(
-  id: string,
-  status: string,
-  reason?: string
-): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 800));
-  console.log(`Update ${id} to ${status}. Reason: ${reason}`);
-  return true;
 }
 
 export async function saveProofLink(id: string, url: string): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 800));
-  console.log(`Saved proof for ${id}: ${url}`);
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  console.log(`Saving proof for ${id}: ${url}`);
   return true;
 }
 
-export async function getPrimaryPaymentMethod(): Promise<PaymentMethod | null> {
-  // NANTI GANTI: fetch('/api/user/payment-methods/primary')
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    provider: "PayPal",
-    accountName: "Kevin Ragil",
-    accountNumber: "kevinragil768@gmail.com",
-  };
+export async function updateTransactionStatus(
+  id: string,
+  status: "approved" | "rejected" | "paid",
+  reasonOrProof?: string
+): Promise<boolean> {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log(`Updating ${id} to ${status}`, reasonOrProof);
+  return true;
 }
 
 export async function getWithdrawalDetail(
   id: string
-): Promise<WithdrawalDetail | null> {
-  await new Promise((r) => setTimeout(r, 800));
+): Promise<WithdrawalDetail> {
+  await new Promise((resolve) => setTimeout(resolve, 800));
 
-  // Cari di MOCK_TRANSACTIONS dulu
-  const basic =
-    MOCK_TRANSACTIONS.find((t) => t.id === id) || MOCK_TRANSACTIONS[0];
-
-  if (!basic) return null;
+  // Mock detail data
+  const base = MOCK_WITHDRAWALS.find((w) => w.id === id) || MOCK_WITHDRAWALS[0];
 
   return {
-    ...basic,
+    ...base,
     user: {
-      ...basic.user,
-      walletBalance: 154.2, // Mock balance
+      ...base.user,
+      walletBalance: 150.25,
     },
     fee: 0.5,
-    netAmount: basic.amount - 0.5,
+    netAmount: base.amount - 0.5,
     history: [
       {
         id: "WTH-005",
-        date: "2025-11-18T10:00:00Z",
+        date: new Date(Date.now() - 100000000).toISOString(),
         amount: 12.5,
         method: "PayPal",
         account: "kevin***@gmail.com",
-        status: "completed",
+        status: "paid",
       },
       {
         id: "WTH-004",
-        date: "2025-11-15T14:30:00Z",
+        date: new Date(Date.now() - 200000000).toISOString(),
         amount: 50.0,
         method: "Bank BCA",
         account: "1234****",
-        status: "completed",
+        status: "paid",
         txId: "TRX123",
+      },
+      {
+        id: "WTH-003",
+        date: new Date(Date.now() - 300000000).toISOString(),
+        amount: 25.0,
+        method: "PayPal",
+        account: "kevin***@gmail.com",
+        status: "rejected",
       },
     ],
     fraudInfo: {
       ipAddress: "192.168.1.10",
       device: "Chrome on Windows 10",
       location: "Jakarta, Indonesia",
-      riskScore: basic.riskScore,
+      riskScore: base.riskScore,
       riskFactors:
-        basic.riskScore === "high"
-          ? ["Multiple accounts linked", "Suspicious IP"]
+        base.riskScore === "high"
+          ? ["Multiple accounts detected", "Suspicious IP range"]
           : [],
     },
   };
 }
 
-export async function sendMessageToUser(
-  withdrawalId: string,
-  message: string,
-  type: "warning" | "announcement"
-): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 1000));
-  console.log(
-    `Sending ${type} message for withdrawal ${withdrawalId}: ${message}`
-  );
-  return true;
+export async function getTransactionHistory(
+  params: string | { page: number; search: string }
+): Promise<any> {
+  await new Promise((resolve) => setTimeout(resolve, 600));
+
+  // Handle Admin/User overload (simplified for mock)
+  if (typeof params === "string") {
+    // Admin usage: params is userId
+    return [
+      {
+        id: "TX-101",
+        date: "2024-02-20T10:00:00Z",
+        amount: 50.0,
+        method: "PayPal",
+        account: "user@example.com",
+        status: "paid",
+      },
+      {
+        id: "TX-102",
+        date: "2024-01-15T14:30:00Z",
+        amount: 120.5,
+        method: "Bank Transfer",
+        account: "1234567890",
+        status: "paid",
+      },
+    ];
+  } else {
+    // User usage: params is { page, search }
+    return {
+      data: [
+        {
+          id: "TX-201",
+          date: new Date().toISOString(),
+          amount: 25.0,
+          method: "PayPal",
+          account: "user@example.com",
+          status: "pending",
+        },
+        {
+          id: "TX-202",
+          date: new Date(Date.now() - 86400000).toISOString(),
+          amount: 100.0,
+          method: "Bank BCA",
+          account: "1234567890",
+          status: "paid",
+        },
+      ],
+      totalPages: 1,
+    };
+  }
 }
 
-export async function getTransactionHistory(
-  params: TransactionParams
-): Promise<{ data: Transaction[]; totalPages: number }> {
-  // NANTI GANTI:
-  // const q = new URLSearchParams({ page: params.page, search: params.search });
-  // const res = await fetch(`/api/withdrawal/transactions?${q}`);
+// --- USER FACING FUNCTIONS ---
 
-  await new Promise((r) => setTimeout(r, 800));
+export async function getUserWithdrawalStats(): Promise<WithdrawalStats> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return {
+    availableBalance: 150.75,
+    pendingWithdrawn: 25.0,
+    totalWithdrawn: 1250.0,
+  };
+}
 
-  // Data Dummy Statis
-  const allTransactions: Transaction[] = [
-    {
-      id: "WTH-005",
-      date: "2025-11-18T10:00:00Z",
-      amount: 12.5,
-      method: "PayPal",
-      account: "kevin***@gmail.com",
-      status: "pending",
-    },
-    {
-      id: "WTH-004",
-      date: "2025-11-15T14:30:00Z",
-      amount: 50.0,
-      method: "Bank BCA",
-      account: "1234****",
-      status: "completed",
-      txId: "TRX123",
-    },
-    {
-      id: "WTH-003",
-      date: "2025-11-10T09:15:00Z",
-      amount: 25.0,
-      method: "PayPal",
-      account: "kevin***@gmail.com",
-      status: "rejected",
-    },
-    {
-      id: "WTH-002",
-      date: "2025-11-05T11:00:00Z",
-      amount: 100.0,
-      method: "DANA",
-      account: "0812****",
-      status: "completed",
-      txId: "TRX124",
-    },
-    {
-      id: "WTH-001",
-      date: "2025-11-01T08:00:00Z",
-      amount: 15.0,
-      method: "OVO",
-      account: "0812****",
-      status: "completed",
-      txId: "TRX125",
-    },
-    // ... tambah data dummy lainnya
-  ];
-
-  // Simulasi Filter & Pagination di "Backend"
-  const searchLower = (params.search || "").toLowerCase();
-  const filtered = allTransactions.filter(
-    (tx) =>
-      tx.id.toLowerCase().includes(searchLower) ||
-      tx.method.toLowerCase().includes(searchLower)
-  );
-
-  const itemsPerPage = 5;
-  const page = params.page || 1;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedData = filtered.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
-
-  return { data: paginatedData, totalPages: totalPages || 1 };
+export async function getPrimaryPaymentMethod() {
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  return {
+    id: "pm-1",
+    provider: "PayPal",
+    accountNumber: "user@example.com",
+    accountName: "User Name",
+  };
 }
 
 export async function requestWithdrawal(
   amount: number,
-  method: PaymentMethod
+  method: any
 ): Promise<boolean> {
-  // NANTI GANTI: fetch POST ke '/api/withdrawal/request'
-  await new Promise((r) => setTimeout(r, 1500));
-  if (amount < 2) throw new Error("Minimum withdrawal is $2.00");
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  console.log("Requested withdrawal:", amount, method);
   return true;
 }
 
-export async function cancelWithdrawal(txId: string): Promise<boolean> {
-  // NANTI GANTI: fetch POST ke `/api/withdrawal/${txId}/cancel`
-  await new Promise((r) => setTimeout(r, 1000));
+export async function cancelWithdrawal(id: string): Promise<boolean> {
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  console.log("Cancelled withdrawal:", id);
   return true;
 }

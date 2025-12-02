@@ -178,7 +178,7 @@ export default function TransactionTable({
 
                     {/* 5. Status Badge (Updated with Approved logic) */}
                     <td className="px-6 py-5 text-center">
-                      {trx.status === "completed" ? (
+                      {trx.status === "paid" ? (
                         <div className="flex flex-col items-center">
                           <span className="inline-flex items-center gap-1 text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full text-[0.85em]">
                             <CheckCircle2 className="w-3.5 h-3.5" /> Paid
@@ -279,7 +279,7 @@ export default function TransactionTable({
                                   <Link2 className="w-4 h-4" /> Attach Proof
                                 </button>
 
-                                {/* Reject (Cuma bisa kalau belum Completed/Rejected) */}
+                                {/* Reject (Cuma bisa kalau belum Paid/Rejected) */}
                                 {(trx.status === "pending" ||
                                   trx.status === "approved") && (
                                   <button
