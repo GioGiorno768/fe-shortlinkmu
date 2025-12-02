@@ -24,6 +24,7 @@ export default function DashboardLayout({
   const t = useTranslations("Dashboard"); // Hook translate jalan di sini
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   // SWITCH MENU BERDASARKAN ROLE
   // Member -> getMemberMenu
@@ -79,7 +80,9 @@ export default function DashboardLayout({
 
         <DashboardFooter />
       </main>
-      <MobileBottomBar isSidebarOpen={isMobileOpen} />
+      {pathname?.startsWith("/admin") && (
+        <MobileBottomBar isSidebarOpen={isMobileOpen} />
+      )}
     </div>
   );
 }

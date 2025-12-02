@@ -403,13 +403,14 @@ export interface RecentWithdrawal {
   amount: number;
   method: string;
   accountNumber: string; // Tambahan info rekening
-  status: "pending" | "approved" | "completed" | "rejected";
+  status: "pending" | "approved" | "completed" | "rejected" | "paid";
   date: string;
 
   // 👇 FIELD BARU
   proofUrl?: string; // Link GDrive/Bukti
   rejectionReason?: string; // Alasan penolakan
   riskScore: "safe" | "medium" | "high"; // Fraud detection
+  processed_by?: string;
 }
 
 export interface FraudInfo {
@@ -504,4 +505,32 @@ export interface AdminLink {
   expiredAt?: string;
   status: LinkStatus;
   adsLevel: string; // "level1", "noAds", dll
+}
+
+// 👇 TIPE DATA ABUSE REPORT
+export type ReportStatus = "pending" | "resolved" | "ignored";
+export type ReportReason = "phishing" | "spam" | "adult" | "scam" | "other";
+
+export interface AbuseReport {
+  id: string;
+  targetLink: {
+    id: string;
+    shortUrl: string;
+    originalUrl: string;
+    owner: string; // Username pemilik link
+  };
+  reporter: {
+    ip: string; // Biasanya pelapor itu anonim/guest
+    name?: string; // Kalau user login
+  };
+  reason: ReportReason;
+  description: string; // Pesan dari pelapor
+  status: ReportStatus;
+  date: string;
+}
+
+export interface AdminReportStats {
+  pendingCount: number;
+  resolvedToday: number;
+  totalReports: number;
 }
