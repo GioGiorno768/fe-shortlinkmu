@@ -459,12 +459,23 @@ export interface RecentUser {
   status: UserStatus;
 }
 
+export interface UserMessage {
+  id: string;
+  subject: string;
+  message: string;
+  type: "warning" | "info";
+  category: NotificationCategory;
+  sentAt: string;
+  isRead: boolean;
+}
+
 export interface UserDetailData extends AdminUser {
   phoneNumber: string;
   bio?: string;
   paymentMethods: SavedPaymentMethod[];
   withdrawalHistory: Transaction[];
   loginHistory: LoginLog[];
+  messageHistory: UserMessage[];
 }
 
 // --- ADMIN LINK MANAGEMENT TYPES ---
@@ -533,4 +544,25 @@ export interface AdminReportStats {
   pendingCount: number;
   resolvedToday: number;
   totalReports: number;
+}
+
+// --- ADMIN ANNOUNCEMENT TYPES ---
+
+export interface AdminAnnouncement {
+  id: string;
+  title: string;
+  desc: string;
+  cta: string;
+  link: string;
+  icon: string; // Store icon name as string (e.g., "Sparkles")
+  theme: "blue" | "purple" | "orange";
+  status: "active" | "inactive" | "scheduled";
+  createdAt: string;
+  scheduledFor?: string; // ISO Date string for scheduled publication
+}
+
+export interface AdminAnnouncementStats {
+  activeCount: number;
+  totalCount: number;
+  scheduledCount: number;
 }

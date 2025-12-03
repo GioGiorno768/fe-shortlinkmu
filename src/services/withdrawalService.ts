@@ -7,6 +7,15 @@ import type {
 } from "@/types/type";
 
 // MOCK DATA
+const LEVEL_WEIGHTS: Record<string, number> = {
+  beginner: 1,
+  rookie: 2,
+  elite: 3,
+  pro: 4,
+  master: 5,
+  mythic: 6,
+};
+
 const MOCK_WITHDRAWALS: RecentWithdrawal[] = Array.from(
   { length: 20 },
   (_, i) => ({
@@ -53,19 +62,32 @@ export async function getWithdrawals(
     data = data.filter((w) => w.status === filters.status);
   }
 
-  if (filters?.level && filters.level !== "all") {
-    data = data.filter((w) => w.user.level === filters.level);
-  }
+  // Filter Level (Strict match removed, handled in sort)
+  // if (filters?.level && filters.level !== "all") { ... }
 
-  if (filters?.sort === "oldest") {
-    data.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  } else {
-    data.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  }
+  data.sort((a, b) => {
+    // 1. Primary Sort: Level (if selected)
+    if (filters?.level === "highest" || filters?.level === "lowest") {
+      const weightA = LEVEL_WEIGHTS[a.user.level.toLowerCase()] || 0;
+      const weightB = LEVEL_WEIGHTS[b.user.level.toLowerCase()] || 0;
+
+      if (weightA !== weightB) {
+        return filters.level === "highest"
+          ? weightB - weightA
+          : weightA - weightB;
+      }
+    }
+
+    // 2. Secondary Sort: Date
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+
+    if (filters?.sort === "oldest") {
+      return dateA - dateB;
+    } else {
+      return dateB - dateA; // newest
+    }
+  });
 
   // Pagination Logic
   const limit = 10;

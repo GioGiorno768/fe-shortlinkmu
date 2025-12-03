@@ -17,10 +17,14 @@ import type { AdminUser, UserStatus } from "@/types/type";
 
 interface UserListCardProps {
   user: AdminUser;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
 export default function UserListCard({
   user,
+  isSelected,
+  onClick,
 }: UserListCardProps) {
   const getInitials = (name: string) => {
     return name
@@ -49,7 +53,15 @@ export default function UserListCard({
   const formatCurrency = (val: number) => "$" + val.toFixed(2);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <div
+      onClick={onClick}
+      className={clsx(
+        "bg-white rounded-2xl border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group cursor-pointer relative",
+        isSelected
+          ? "border-bluelight ring-2 ring-bluelight/20 bg-blue-50/30"
+          : "border-gray-100 hover:border-blue-200"
+      )}
+    >
       {/* HEADER SECTION */}
       <div className="p-6 flex flex-col md:flex-row items-center gap-6">
         {/* User Identity */}
@@ -75,7 +87,12 @@ export default function UserListCard({
         </div>
 
         {/* Status Badge */}
-        <div className="shrink-0">
+        <div className="shrink-0 flex items-center gap-4">
+          {isSelected && (
+            <div className="p-1.5 bg-blue-50 rounded-full animate-in zoom-in duration-200">
+              <CheckCircle2 className="w-6 h-6 text-bluelight fill-blue-50" />
+            </div>
+          )}
           <span
             className={clsx(
               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wide",
@@ -102,7 +119,8 @@ export default function UserListCard({
           {/* Detail Link Button */}
           <Link
             href={`/admin/users/${user.id}`}
-            className="px-4 py-2.5 rounded-xl text-bluelight bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-2 font-medium text-sm"
+            onClick={(e) => e.stopPropagation()}
+            className="px-4 py-2.5 rounded-xl text-bluelight bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-2 font-medium text-sm relative z-20"
           >
             <span>Detail</span>
             <ArrowRight className="w-4 h-4" />

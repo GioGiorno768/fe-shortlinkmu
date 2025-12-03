@@ -36,7 +36,7 @@ interface GetUsersParams {
 
 export async function getUsers(
   params: GetUsersParams
-): Promise<{ data: AdminUser[]; totalPages: number }> {
+): Promise<{ data: AdminUser[]; totalPages: number; totalCount: number }> {
   await new Promise((r) => setTimeout(r, 600));
 
   let filtered = [...MOCK_USERS];
@@ -60,7 +60,29 @@ export async function getUsers(
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  return { data, totalPages };
+  return { data, totalPages, totalCount: filtered.length };
+}
+
+export async function getAllUserIds(params: GetUsersParams): Promise<string[]> {
+  await new Promise((r) => setTimeout(r, 600));
+
+  let filtered = [...MOCK_USERS];
+
+  if (params.search) {
+    const s = params.search.toLowerCase();
+    filtered = filtered.filter(
+      (u) =>
+        u.name.toLowerCase().includes(s) ||
+        u.email.toLowerCase().includes(s) ||
+        u.username.toLowerCase().includes(s)
+    );
+  }
+
+  if (params.status && params.status !== "all") {
+    filtered = filtered.filter((u) => u.status === params.status);
+  }
+
+  return filtered.map((u) => u.id);
 }
 
 export async function getUserStats(): Promise<AdminUserStats> {
@@ -150,6 +172,38 @@ export async function getUserDetail(
         status: "failed", // Suspicious login
       },
     ],
+    messageHistory: [
+      {
+        id: "msg-1",
+        subject: "Peringatan Pelanggaran TOS",
+        message:
+          "Kami mendeteksi aktivitas mencurigakan pada akun Anda. Mohon segera verifikasi identitas Anda untuk menghindari penangguhan akun.",
+        type: "warning",
+        category: "account",
+        sentAt: new Date(Date.now() - 86400000).toISOString(),
+        isRead: true,
+      },
+      {
+        id: "msg-2",
+        subject: "Fitur Baru: Withdrawal Otomatis",
+        message:
+          "Halo! Kami baru saja merilis fitur withdrawal otomatis. Sekarang Anda bisa menarik dana kapan saja tanpa menunggu persetujuan manual.",
+        type: "info",
+        category: "payment",
+        sentAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        isRead: false,
+      },
+      {
+        id: "msg-3",
+        subject: "Bonus Referral Bulan Ini",
+        message:
+          "Selamat! Anda mendapatkan bonus referral sebesar $5.00 karena telah mengundang 10 teman aktif bulan ini.",
+        type: "info",
+        category: "event",
+        sentAt: new Date(Date.now() - 86400000 * 7).toISOString(),
+        isRead: true,
+      },
+    ],
   };
 }
 
@@ -164,4 +218,21 @@ export async function updateUserStatus(
   if (user) {
     user.status = status;
   }
+}
+
+export async function sendNotification(
+  userIds: string[],
+  subject: string,
+  message: string,
+  type: "warning" | "info"
+): Promise<void> {
+  // NANTI GANTI: fetch('/api/admin/users/notify', { method: 'POST', body: ... })
+  console.log(
+    `Sending [${type.toUpperCase()}] notification to ${userIds.length} users:`,
+    {
+      subject,
+      message,
+    }
+  );
+  await new Promise((r) => setTimeout(r, 1000)); // Simulasi loading
 }

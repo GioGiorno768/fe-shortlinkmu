@@ -10,10 +10,15 @@ import {
   XCircle,
   Smartphone,
   Landmark,
+  Filter,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import clsx from "clsx";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useFormatter } from "next-intl";
 import type { UserDetailData } from "@/types/type";
+import UserMessageHistory from "./UserMessageHistory";
 
 interface UserDetailTabsProps {
   data: UserDetailData;
@@ -25,6 +30,14 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<
     "overview" | "finance" | "security"
   >("overview");
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  const sortedHistory = [...data.withdrawalHistory].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+  });
 
   // Helper for currency
   const formatCurrency = (v: number) =>
@@ -32,7 +45,7 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
 
   return (
     <div className="lg:col-span-2">
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden min-h-[600px]">
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden min-h-[550px] h-full">
         {/* Tabs */}
         <div className="flex border-b border-gray-100 px-8">
           {[
@@ -59,24 +72,8 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
         <div className="p-8">
           {/* === TAB OVERVIEW === */}
           {activeTab === "overview" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="bg-blue-50 border border-blue-100 p-6 rounded-2xl">
-                <h4 className="text-[1.4em] font-bold text-blue-800 mb-2">
-                  {t("overview.title")}
-                </h4>
-                <p className="text-[1.2em] text-blue-600 leading-relaxed">
-                  {t.rich("overview.description", {
-                    year: new Date(data.joinedAt).getFullYear(),
-                    links: data.stats.totalLinks,
-                    bold: (chunks) => <strong>{chunks}</strong>,
-                  })}
-                </p>
-              </div>
-
-              {/* Placeholder for charts or more stats */}
-              <div className="h-64 bg-slate-50 rounded-2xl border border-dashed border-gray-200 flex items-center justify-center text-grays">
-                <p>Activity Chart Placeholder</p>
-              </div>
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <UserMessageHistory messages={data.messageHistory} />
             </div>
           )}
 
@@ -128,54 +125,127 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
 
               {/* Recent Withdrawals */}
               <div>
-                <h4 className="text-[1.4em] font-bold text-shortblack mb-4 flex items-center gap-2">
-                  <History className="w-5 h-5 text-bluelight" />{" "}
-                  {t("finance.withdrawalHistory")}
-                </h4>
-                <div className="space-y-3">
-                  {data.withdrawalHistory.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex justify-between items-center p-4 hover:bg-slate-50 rounded-xl transition-colors border border-gray-100"
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-[1.4em] font-bold text-shortblack flex items-center gap-2">
+                    <History className="w-5 h-5 text-bluelight" />{" "}
+                    {t("finance.withdrawalHistory")}
+                  </h4>
+
+                  {/* Sort Dropdown */}
+                  <div className="relative z-20">
+                    <button
+                      onClick={() => setIsSortOpen(!isSortOpen)}
+                      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-[1.1em] font-medium text-shortblack hover:bg-gray-50 transition-colors shadow-sm"
                     >
-                      <div className="flex items-center gap-4">
-                        <div
+                      <Filter className="w-4 h-4 text-grays" />
+                      <span className="text-grays">Sort:</span>
+                      <span className="font-bold text-bluelight">
+                        {sortOrder === "newest" ? "Terbaru" : "Terlama"}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-grays transition-transform ${
+                          isSortOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    <AnimatePresence>
+                      {isSortOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setIsSortOpen(false)}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-30"
+                          >
+                            {[
+                              { id: "newest", label: "Terbaru" },
+                              { id: "oldest", label: "Terlama" },
+                            ].map((option) => (
+                              <button
+                                key={option.id}
+                                onClick={() => {
+                                  setSortOrder(
+                                    option.id as "newest" | "oldest"
+                                  );
+                                  setIsSortOpen(false);
+                                }}
+                                className={clsx(
+                                  "flex items-center justify-between w-full px-4 py-2.5 rounded-lg text-[1.1em] transition-colors text-left",
+                                  sortOrder === option.id
+                                    ? "bg-blue-50 text-bluelight font-semibold"
+                                    : "text-shortblack hover:bg-gray-50"
+                                )}
+                              >
+                                <span>{option.label}</span>
+                                {sortOrder === option.id && (
+                                  <Check className="w-4 h-4" />
+                                )}
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </div>
+
+                <div
+                  onWheel={(e) => e.stopPropagation()}
+                  className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar"
+                >
+                  {sortedHistory.length === 0 ? (
+                    <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-gray-200 text-grays">
+                      No withdrawal history found.
+                    </div>
+                  ) : (
+                    sortedHistory.map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="flex justify-between items-center p-4 hover:bg-slate-50 rounded-xl transition-colors border border-gray-100"
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={clsx(
+                              "p-2 rounded-full",
+                              tx.status === "paid"
+                                ? "bg-green-100 text-green-600"
+                                : "bg-red-100 text-red-600"
+                            )}
+                          >
+                            {tx.status === "paid" ? (
+                              <CheckCircle2 className="w-5 h-5" />
+                            ) : (
+                              <XCircle className="w-5 h-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-shortblack text-[1.2em]">
+                              {formatCurrency(tx.amount)} via {tx.method}
+                            </p>
+                            <p className="text-grays text-[1.1em]">
+                              {format.dateTime(new Date(tx.date), {
+                                dateStyle: "medium",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+                        <span
                           className={clsx(
-                            "p-2 rounded-full",
+                            "text-[1.1em] font-bold px-3 py-1 rounded-lg uppercase",
                             tx.status === "paid"
-                              ? "bg-green-100 text-green-600"
-                              : "bg-red-100 text-red-600"
+                              ? "bg-green-50 text-green-600"
+                              : "bg-red-50 text-red-600"
                           )}
                         >
-                          {tx.status === "paid" ? (
-                            <CheckCircle2 className="w-5 h-5" />
-                          ) : (
-                            <XCircle className="w-5 h-5" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-bold text-shortblack text-[1.2em]">
-                            {formatCurrency(tx.amount)} via {tx.method}
-                          </p>
-                          <p className="text-grays text-[1.1em]">
-                            {format.dateTime(new Date(tx.date), {
-                              dateStyle: "medium",
-                            })}
-                          </p>
-                        </div>
+                          {tx.status}
+                        </span>
                       </div>
-                      <span
-                        className={clsx(
-                          "text-[1.1em] font-bold px-3 py-1 rounded-lg uppercase",
-                          tx.status === "paid"
-                            ? "bg-green-50 text-green-600"
-                            : "bg-red-50 text-red-600"
-                        )}
-                      >
-                        {tx.status}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -202,7 +272,10 @@ export default function UserDetailTabs({ data }: UserDetailTabsProps) {
                   {t("security.loginActivity")}
                 </h4>
 
-                <div className="border border-gray-100 rounded-2xl overflow-hidden">
+                <div
+                  onWheel={(e) => e.stopPropagation()}
+                  className="border border-gray-100 rounded-2xl overflow-hidden max-h-[500px] overflow-y-auto custom-scrollbar"
+                >
                   {data.loginHistory.map((log, i) => (
                     <div
                       key={log.id}

@@ -52,12 +52,8 @@ export default function WithdrawalFilters({ filters, setFilters }: Props) {
       icon: User,
       options: [
         { label: "All Levels", value: "all" },
-        { label: "Beginner", value: "beginner" },
-        { label: "Rookie", value: "rookie" },
-        { label: "Elite", value: "elite" },
-        { label: "Pro", value: "pro" },
-        { label: "Master", value: "master" },
-        { label: "Mythic", value: "mythic" },
+        { label: "Highest Level", value: "highest" },
+        { label: "Lowest Level", value: "lowest" },
       ],
     },
   ];

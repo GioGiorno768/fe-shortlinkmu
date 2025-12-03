@@ -28,6 +28,10 @@ interface UserTableProps {
   statusFilter: string;
   setStatusFilter: (s: string) => void;
   onToggleStatus: (id: string, status: UserStatus) => void;
+  // Selection Props
+  selectedIds: Set<string>;
+  onToggleSelection: (id: string) => void;
+  onSelectAll: () => void;
 }
 
 export default function UserTable({
@@ -41,6 +45,9 @@ export default function UserTable({
   statusFilter,
   setStatusFilter,
   onToggleStatus,
+  selectedIds,
+  onToggleSelection,
+  onSelectAll,
 }: UserTableProps) {
   // Filter Dropdown State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -57,6 +64,8 @@ export default function UserTable({
   const currentFilterLabel =
     filterOptions.find((o) => o.value === statusFilter)?.label ||
     "Semua Status";
+
+  const isAllSelected = users.length > 0 && selectedIds.size === users.length;
 
   return (
     <div className="space-y-6 font-figtree">
@@ -148,6 +157,8 @@ export default function UserTable({
             <UserListCard
               key={user.id}
               user={user}
+              isSelected={selectedIds.has(user.id)}
+              onClick={() => onToggleSelection(user.id)}
             />
           ))
         )}
