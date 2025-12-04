@@ -27,12 +27,15 @@ export default function ManageUsersPage() {
     toggleStatus,
     // Selection
     selectedIds,
+    isAllSelected, // <--- New State
     toggleSelection,
     selectAll,
     clearSelection,
     sendMessage,
     isSending,
   } = useAdminUsers();
+
+  const selectedCount = isAllSelected ? totalCount : selectedIds.size;
 
   return (
     <div className="space-y-8 pb-10 text-[10px]">
@@ -55,17 +58,18 @@ export default function ManageUsersPage() {
         onToggleStatus={toggleStatus}
         // Selection Props
         selectedIds={selectedIds}
+        isAllSelected={isAllSelected} // <--- Pass Prop
         onToggleSelection={toggleSelection}
         onSelectAll={selectAll} // Masih dipake buat logic internal kalo perlu, tapi UI nya udah pindah
       />
 
       {/* 3. Bulk Action Bar */}
       <UserSelectionBar
-        selectedCount={selectedIds.size}
+        selectedCount={selectedCount} // <--- Use calculated count
         onClear={clearSelection}
         onSendMessage={() => setIsModalOpen(true)}
         onSelectAll={selectAll}
-        isAllSelected={totalCount > 0 && selectedIds.size === totalCount}
+        isAllSelected={isAllSelected} // <--- Pass Prop (Update UserSelectionBar if needed, but logic is handled by count)
       />
 
       {/* 4. Send Message Modal */}
@@ -76,7 +80,7 @@ export default function ManageUsersPage() {
           await sendMessage(subject, message, type);
           setIsModalOpen(false);
         }}
-        recipientCount={selectedIds.size}
+        recipientCount={selectedCount} // <--- Use calculated count
         isSending={isSending}
       />
     </div>

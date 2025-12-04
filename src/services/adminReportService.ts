@@ -70,3 +70,10 @@ export async function ignoreReport(reportId: string): Promise<boolean> {
   console.log(`Ignoring report ${reportId}`);
   return true;
 }
+
+// Action: Mark Resolved (Tanpa Block)
+export async function resolveReport(reportId: string): Promise<boolean> {
+  await new Promise((r) => setTimeout(r, 600));
+  console.log(`Resolving report ${reportId}`);
+  return true;
+}

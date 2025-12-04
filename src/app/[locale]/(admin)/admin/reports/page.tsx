@@ -12,7 +12,7 @@ export default function AbuseReportsPage() {
     isLoading,
     filter,
     setFilter,
-    handleBlock,
+    handleResolve,
     handleIgnore,
     page,
     setPage,
@@ -68,7 +68,7 @@ export default function AbuseReportsPage() {
       <ReportList
         reports={reports}
         isLoading={isLoading}
-        onBlock={handleBlock}
+        onResolve={handleResolve}
         onIgnore={handleIgnore}
       />
 

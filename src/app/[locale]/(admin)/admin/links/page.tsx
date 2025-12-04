@@ -14,7 +14,8 @@ export default function AdminLinksPage() {
     setSearch,
     filters,
     setFilters,
-    selectedIds,
+    selectedItems,
+    isAllSelected, // <--- New State
     toggleSelect,
     selectAll,
     deselectAll,
@@ -22,6 +23,7 @@ export default function AdminLinksPage() {
     page,
     totalPages,
     setPage,
+    totalCount,
   } = useAdminLinks();
 
   return (
@@ -36,7 +38,8 @@ export default function AdminLinksPage() {
         setSearch={setSearch}
         filters={filters}
         setFilters={setFilters}
-        selectedIds={selectedIds}
+        selectedItems={selectedItems}
+        isAllSelected={isAllSelected} // <--- Pass Prop
         toggleSelect={toggleSelect}
         selectAll={selectAll}
         deselectAll={deselectAll}
@@ -44,7 +47,7 @@ export default function AdminLinksPage() {
         page={page}
         totalPages={totalPages}
         setPage={setPage}
-        totalLinks={stats.totalLinks}
+        totalCount={totalCount}
       />
     </div>
   );

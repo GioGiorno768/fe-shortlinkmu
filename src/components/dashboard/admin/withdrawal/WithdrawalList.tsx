@@ -23,7 +23,6 @@ interface Props {
   onApprove: (id: string, currentStatus: string) => void;
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
-  onPayWithProof: (id: string, url: string) => void;
 }
 
 export default function WithdrawalList({
@@ -39,13 +38,12 @@ export default function WithdrawalList({
   onApprove,
   onReject,
   onAddProof,
-  onPayWithProof,
 }: Props) {
   const { showAlert } = useAlert();
 
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    type: "reject" | "proof" | "pay" | null; // Added "pay"
+    type: "reject" | "proof" | null; // Removed "pay"
     id: string | null;
   }>({ isOpen: false, type: null, id: null });
 
@@ -57,8 +55,6 @@ export default function WithdrawalList({
     try {
       if (modalState.type === "reject") {
         await onReject(modalState.id, value);
-      } else if (modalState.type === "pay") {
-        await onPayWithProof(modalState.id, value);
       } else {
         await onAddProof(modalState.id, value);
       }
@@ -109,8 +105,8 @@ export default function WithdrawalList({
               openRejectModal={(id) =>
                 setModalState({ isOpen: true, type: "reject", id })
               }
-              openPayModal={(id) =>
-                setModalState({ isOpen: true, type: "pay", id })
+              openProofModal={(id) =>
+                setModalState({ isOpen: true, type: "proof", id })
               }
             />
           ))

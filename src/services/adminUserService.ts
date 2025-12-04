@@ -90,9 +90,12 @@ export async function getUserStats(): Promise<AdminUserStats> {
   await new Promise((r) => setTimeout(r, 500));
 
   return {
-    totalUsers: { count: 12450, trend: 12.5 }, // +12.5% user baru
-    activeToday: { count: 850, trend: 5.2 }, // User aktif naik
-    suspendedUsers: { count: 45, trend: -2.4 }, // Suspended user turun (bagus)
+    totalUsers: { count: MOCK_USERS.length, trend: 12.5 }, // +12.5% user baru
+    activeToday: { count: Math.floor(MOCK_USERS.length * 0.8), trend: 5.2 }, // User aktif naik
+    suspendedUsers: {
+      count: MOCK_USERS.filter((u) => u.status === "suspended").length,
+      trend: -2.4,
+    }, // Suspended user turun (bagus)
   };
 }
 
@@ -220,19 +223,28 @@ export async function updateUserStatus(
   }
 }
 
-export async function sendNotification(
-  userIds: string[],
-  subject: string,
-  message: string,
-  type: "warning" | "info"
-): Promise<void> {
+export async function sendNotification(params: {
+  userIds: string[];
+  selectAll: boolean;
+  filters?: { search: string; status: string };
+  subject: string;
+  message: string;
+  type: "warning" | "info";
+}): Promise<void> {
   // NANTI GANTI: fetch('/api/admin/users/notify', { method: 'POST', body: ... })
-  console.log(
-    `Sending [${type.toUpperCase()}] notification to ${userIds.length} users:`,
-    {
-      subject,
-      message,
-    }
-  );
+  const { userIds, selectAll, filters, subject, message, type } = params;
+
+  if (selectAll) {
+    console.log(
+      `Sending [${type.toUpperCase()}] notification to ALL USERS matching filters:`,
+      filters
+    );
+  } else {
+    console.log(
+      `Sending [${type.toUpperCase()}] notification to ${userIds.length} users.`
+    );
+  }
+
+  console.log("Content:", { subject, message });
   await new Promise((r) => setTimeout(r, 1000)); // Simulasi loading
 }

@@ -19,8 +19,9 @@ interface LinkListProps {
   setSearch: (s: string) => void;
   filters: AdminLinkFilters;
   setFilters: (f: AdminLinkFilters) => void;
-  selectedIds: Set<string>;
-  toggleSelect: (id: string) => void;
+  selectedItems: Map<string, string>;
+  isAllSelected: boolean; // <--- New Prop
+  toggleSelect: (id: string, status: string) => void;
   selectAll: () => void;
   handleBulkAction: (
     action: "activate" | "block",
@@ -31,7 +32,7 @@ interface LinkListProps {
   page: number;
   totalPages: number;
   setPage: (p: number) => void;
-  totalLinks: number;
+  totalCount: number; // <--- Updated Prop Name
 }
 
 export default function LinkList({
@@ -41,7 +42,8 @@ export default function LinkList({
   setSearch,
   filters,
   setFilters,
-  selectedIds,
+  selectedItems,
+  isAllSelected, // <--- Destructure
   toggleSelect,
   selectAll,
   handleBulkAction,
@@ -49,7 +51,7 @@ export default function LinkList({
   page,
   totalPages,
   setPage,
-  totalLinks,
+  totalCount,
 }: LinkListProps) {
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -109,6 +111,32 @@ export default function LinkList({
     }
   };
 
+  const selectedCount = isAllSelected ? totalCount : selectedItems.size;
+
+  // Logic Button Visibility
+  let showActivate = false;
+  let showBlock = false;
+
+  if (isAllSelected) {
+    // Kalo Select All: Cek Filter
+    if (filters.status === "disabled") {
+      showActivate = true;
+    } else if (filters.status === "active") {
+      showBlock = true;
+    }
+    // Kalo status 'all', gak muncul apa2 (sesuai request)
+  } else {
+    // Kalo Manual Select: Cek isi Map
+    const statuses = Array.from(selectedItems.values());
+    const allDisabled =
+      statuses.length > 0 && statuses.every((s) => s === "disabled");
+    const allActive =
+      statuses.length > 0 && statuses.every((s) => s === "active");
+
+    if (allDisabled) showActivate = true;
+    if (allActive) showBlock = true;
+  }
+
   return (
     <div className="space-y-6 font-figtree">
       {/* TOOLBAR */}
@@ -144,7 +172,7 @@ export default function LinkList({
             <LinkItem
               key={link.id}
               link={link}
-              isSelected={selectedIds.has(link.id)}
+              isSelected={isAllSelected || selectedItems.has(link.id)} // <--- Update Logic
               onToggleSelect={toggleSelect}
               onAction={onSingleAction} // Ini buat dropdown per item
               onMessage={onMessageClick}
@@ -164,11 +192,14 @@ export default function LinkList({
 
       {/* BULK ACTION BAR */}
       <BulkActionBar
-        selectedCount={selectedIds.size}
-        totalItems={totalLinks} // Use totalLinks instead of visible length
+        selectedCount={selectedCount} // <--- Use calculated count
+        totalItems={totalCount} // Use totalCount instead of visible length
         onSelectAll={selectAll}
         onDeselectAll={deselectAll} // Logic toggle sama
         onAction={onBulkActionClick}
+        isAllSelected={isAllSelected} // <--- Pass Prop
+        showActivate={showActivate}
+        showBlock={showBlock}
       />
 
       {/* CONFIRMATION MODAL */}
@@ -186,7 +217,7 @@ export default function LinkList({
         description={
           confirmModal.targetId
             ? `Are you sure you want to ${confirmModal.action} this link?`
-            : `Are you sure you want to ${confirmModal.action} ${selectedIds.size} links? This action will affect visibility.`
+            : `Are you sure you want to ${confirmModal.action} ${selectedItems.size} links? This action will affect visibility.`
         }
         confirmLabel="Yes, Confirm"
         type={confirmModal.action === "block" ? "danger" : "info"}

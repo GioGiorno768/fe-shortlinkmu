@@ -4,13 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldAlert,
   ExternalLink,
-  Ban,
-  Check,
+  CheckCircle2,
+  XCircle,
   Clock,
   User,
   Flag,
-  CheckCircle2,
-  XCircle,
 } from "lucide-react";
 import clsx from "clsx";
 import type { AbuseReport } from "@/types/type";
@@ -20,21 +18,20 @@ import { useState } from "react";
 interface Props {
   reports: AbuseReport[];
   isLoading: boolean;
-  onBlock: (reportId: string, linkId: string) => void;
+  onResolve: (reportId: string) => void;
   onIgnore: (reportId: string) => void;
 }
 
 export default function ReportList({
   reports,
   isLoading,
-  onBlock,
+  onResolve,
   onIgnore,
 }: Props) {
   const [confirm, setConfirm] = useState<{
     isOpen: boolean;
-    type: "block" | "ignore" | null;
+    type: "resolve" | "ignore" | null;
     reportId: string | null;
-    linkId?: string;
   }>({ isOpen: false, type: null, reportId: null });
 
   const formatDate = (d: string) =>
@@ -46,8 +43,8 @@ export default function ReportList({
     });
 
   const handleConfirm = () => {
-    if (confirm.type === "block" && confirm.reportId && confirm.linkId) {
-      onBlock(confirm.reportId, confirm.linkId);
+    if (confirm.type === "resolve" && confirm.reportId) {
+      onResolve(confirm.reportId);
     } else if (confirm.type === "ignore" && confirm.reportId) {
       onIgnore(confirm.reportId);
     }
@@ -156,14 +153,13 @@ export default function ReportList({
                   onClick={() =>
                     setConfirm({
                       isOpen: true,
-                      type: "block",
+                      type: "resolve",
                       reportId: report.id,
-                      linkId: report.targetLink.id,
                     })
                   }
-                  className="flex-1 md:w-40 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-[1.1em] flex items-center justify-center gap-2 shadow-lg shadow-red-200 transition-all hover:-translate-y-0.5"
+                  className="flex-1 md:w-40 px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-[1.1em] flex items-center justify-center gap-2 shadow-lg shadow-green-200 transition-all hover:-translate-y-0.5"
                 >
-                  <Ban className="w-4 h-4" /> Block Link
+                  <CheckCircle2 className="w-4 h-4" /> Mark Resolved
                 </button>
                 <button
                   onClick={() =>
@@ -175,7 +171,7 @@ export default function ReportList({
                   }
                   className="flex-1 md:w-40 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 text-grays font-bold text-[1.1em] flex items-center justify-center gap-2 transition-colors"
                 >
-                  <Check className="w-4 h-4" /> Ignore
+                  <XCircle className="w-4 h-4" /> Ignore
                 </button>
               </div>
             )}
@@ -187,19 +183,19 @@ export default function ReportList({
       <ConfirmationModal
         isOpen={confirm.isOpen}
         title={
-          confirm.type === "block"
-            ? "Block this Dangerous Link?"
+          confirm.type === "resolve"
+            ? "Mark Report as Resolved?"
             : "Ignore this Report?"
         }
         description={
-          confirm.type === "block"
-            ? "This will disable the link immediately and mark the report as resolved. User will not be able to access it."
-            : "Are you sure this link is safe? The report will be marked as resolved/ignored."
+          confirm.type === "resolve"
+            ? "This will mark the report as resolved without blocking the link. Ensure you have taken necessary actions manually."
+            : "Are you sure you want to ignore this report? It will be marked as ignored."
         }
         confirmLabel={
-          confirm.type === "block" ? "Yes, Block Link" : "Yes, Ignore Report"
+          confirm.type === "resolve" ? "Yes, Resolve" : "Yes, Ignore"
         }
-        type={confirm.type === "block" ? "danger" : "info"}
+        type={confirm.type === "resolve" ? "success" : "info"}
         onConfirm={handleConfirm}
         onClose={() =>
           setConfirm({ isOpen: false, type: null, reportId: null })

@@ -117,14 +117,15 @@ export default function UserListCard({
         {/* Actions */}
         <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-end border-t md:border-t-0 border-gray-100 pt-4 md:pt-0 mt-4 md:mt-0">
           {/* Detail Link Button */}
-          <Link
+          {/* Detail Link Button - HIDDEN (Super Admin Only) */}
+          {/* <Link
             href={`/admin/users/${user.id}`}
             onClick={(e) => e.stopPropagation()}
             className="px-4 py-2.5 rounded-xl text-bluelight bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-2 font-medium text-sm relative z-20"
           >
             <span>Detail</span>
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </Link> */}
         </div>
       </div>
 

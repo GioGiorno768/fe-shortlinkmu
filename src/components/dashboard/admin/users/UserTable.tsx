@@ -30,6 +30,7 @@ interface UserTableProps {
   onToggleStatus: (id: string, status: UserStatus) => void;
   // Selection Props
   selectedIds: Set<string>;
+  isAllSelected: boolean; // <--- New Prop
   onToggleSelection: (id: string) => void;
   onSelectAll: () => void;
 }
@@ -46,6 +47,7 @@ export default function UserTable({
   setStatusFilter,
   onToggleStatus,
   selectedIds,
+  isAllSelected, // <--- Destructure
   onToggleSelection,
   onSelectAll,
 }: UserTableProps) {
@@ -65,7 +67,7 @@ export default function UserTable({
     filterOptions.find((o) => o.value === statusFilter)?.label ||
     "Semua Status";
 
-  const isAllSelected = users.length > 0 && selectedIds.size === users.length;
+  // const isAllSelected = users.length > 0 && selectedIds.size === users.length; // REMOVE THIS LOCAL CALC
 
   return (
     <div className="space-y-6 font-figtree">
@@ -157,7 +159,7 @@ export default function UserTable({
             <UserListCard
               key={user.id}
               user={user}
-              isSelected={selectedIds.has(user.id)}
+              isSelected={isAllSelected || selectedIds.has(user.id)} // <--- Update Logic
               onClick={() => onToggleSelection(user.id)}
             />
           ))

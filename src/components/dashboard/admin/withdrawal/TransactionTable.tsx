@@ -276,7 +276,8 @@ export default function TransactionTable({
                                   }}
                                   className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg text-blue-600 font-medium text-[0.95em] flex items-center gap-2"
                                 >
-                                  <Link2 className="w-4 h-4" /> Attach Proof
+                                  <Link2 className="w-4 h-4" /> Send Payment
+                                  Proof
                                 </button>
 
                                 {/* Reject (Cuma bisa kalau belum Paid/Rejected) */}

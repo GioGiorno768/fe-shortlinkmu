@@ -38,16 +38,15 @@ export function useAdminReports() {
     setPage(1);
   }, [filter]);
 
-  const handleBlock = async (reportId: string, linkId: string) => {
+  const handleResolve = async (reportId: string) => {
     try {
-      await reportService.blockLinkFromReport(reportId, linkId);
-      // Optimistic Update: Tandai report ini sebagai resolved
+      await reportService.resolveReport(reportId);
       setReports((prev) =>
         prev.map((r) => (r.id === reportId ? { ...r, status: "resolved" } : r))
       );
-      showAlert("Link diblokir & laporan diselesaikan.", "success");
+      showAlert("Laporan ditandai selesai.", "success");
     } catch (e) {
-      showAlert("Gagal memblokir link.", "error");
+      showAlert("Gagal menyelesaikan laporan.", "error");
     }
   };
 
@@ -59,7 +58,7 @@ export function useAdminReports() {
       );
       showAlert("Laporan diabaikan.", "info");
     } catch (e) {
-      showAlert("Error.", "error");
+      showAlert("Gagal mengabaikan laporan.", "error");
     }
   };
 
@@ -69,7 +68,7 @@ export function useAdminReports() {
     isLoading,
     filter,
     setFilter,
-    handleBlock,
+    handleResolve,
     handleIgnore,
     page,
     setPage,

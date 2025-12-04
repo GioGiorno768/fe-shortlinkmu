@@ -28,15 +28,16 @@ interface WithdrawalItemProps {
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
   // Modal triggers
+  // Modal triggers
   openRejectModal: (id: string) => void;
-  openPayModal: (id: string) => void; // Added
+  openProofModal: (id: string) => void; // Added
 }
 
 export default function WithdrawalItem({
   trx,
   onApprove,
   openRejectModal,
-  openPayModal,
+  openProofModal,
 }: WithdrawalItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,7 +56,7 @@ export default function WithdrawalItem({
     });
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md group relative overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md group relative ">
       {/* HEADER SECTION */}
       <div className="p-5 flex items-start gap-4">
         {/* Status Icon Indicator */}
@@ -124,7 +125,7 @@ export default function WithdrawalItem({
               )}
               {trx.status === "approved" && (
                 <button
-                  onClick={() => openPayModal(trx.id)}
+                  onClick={() => onApprove(trx.id, trx.status)}
                   className="px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
                 >
                   <Send className="w-4 h-4" /> Pay Now
@@ -156,6 +157,17 @@ export default function WithdrawalItem({
                       </a>
 
                       <div className="h-px bg-gray-100 my-1" />
+
+                      {/* Send Payment Proof (Optional) */}
+                      <button
+                        onClick={() => {
+                          openProofModal(trx.id);
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg text-blue-600 font-medium text-[1.1em] flex items-center gap-2"
+                      >
+                        <Link2 className="w-4 h-4" /> Send Payment Proof
+                      </button>
 
                       {/* Reject */}
                       {(trx.status === "pending" ||
@@ -252,6 +264,15 @@ export default function WithdrawalItem({
                 </a>
               </div>
             )}
+
+            {/* Send Payment Proof Option (Dropdown) */}
+            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1 hidden">
+              {/* This is just a placeholder to ensure I didn't miss the dropdown content logic which is actually inside the main return block above.
+                   Wait, the dropdown is defined around line 135. Let me check the file content again.
+                   Ah, I see the dropdown content is inside the `isMenuOpen` block.
+                   I need to target the "Attach Proof" button inside the dropdown.
+               */}
+            </div>
           </div>
         </div>
       </div>

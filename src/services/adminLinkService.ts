@@ -36,7 +36,7 @@ const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
 export async function getLinks(
   page: number = 1,
   filters: AdminLinkFilters
-): Promise<{ data: AdminLink[]; totalPages: number }> {
+): Promise<{ data: AdminLink[]; totalPages: number; totalCount: number }> {
   await new Promise((r) => setTimeout(r, 600));
 
   let filtered = [...MOCK_LINKS];
@@ -99,58 +99,41 @@ export async function getLinks(
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  return { data, totalPages };
-  return { data, totalPages };
-}
-
-export async function getAllLinkIds(
-  filters: AdminLinkFilters
-): Promise<string[]> {
-  await new Promise((r) => setTimeout(r, 400));
-  let filtered = [...MOCK_LINKS];
-
-  if (filters.search) {
-    const s = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (l) =>
-        l.shortUrl.toLowerCase().includes(s) ||
-        l.originalUrl.toLowerCase().includes(s) ||
-        l.alias?.toLowerCase().includes(s) ||
-        l.owner.name.toLowerCase().includes(s) ||
-        l.owner.username.toLowerCase().includes(s)
-    );
-  }
-
-  if (filters.status && filters.status !== "all") {
-    filtered = filtered.filter((l) => l.status === filters.status);
-  }
-
-  if (filters.adsLevel && filters.adsLevel !== "all") {
-    filtered = filtered.filter((l) => l.adsLevel === filters.adsLevel);
-  }
-
-  return filtered.map((l) => l.id);
+  return { data, totalPages, totalCount: filtered.length };
 }
 
 // Bulk Action
-export async function bulkUpdateLinkStatus(
-  ids: string[],
-  status: "active" | "disabled",
-  reason?: string
-): Promise<boolean> {
+export async function bulkUpdateLinkStatus(params: {
+  ids: string[];
+  selectAll: boolean;
+  filters?: AdminLinkFilters;
+  status: "active" | "disabled";
+  reason?: string;
+}): Promise<boolean> {
   await new Promise((r) => setTimeout(r, 800));
-  console.log(
-    `Bulk update ${ids.length} links to ${status}. Reason: ${reason || "N/A"}`
-  );
+  const { ids, selectAll, filters, status, reason } = params;
+
+  if (selectAll) {
+    console.log(
+      `Bulk update ALL links matching filters to ${status}. Reason: ${
+        reason || "N/A"
+      }`,
+      filters
+    );
+  } else {
+    console.log(
+      `Bulk update ${ids.length} links to ${status}. Reason: ${reason || "N/A"}`
+    );
+  }
   return true;
 }
 
 export async function getLinkStats(): Promise<AdminLinkStats> {
   await new Promise((r) => setTimeout(r, 500));
   return {
-    totalLinks: 15420,
-    newToday: 125,
-    disabledLinks: 45,
+    totalLinks: MOCK_LINKS.length,
+    newToday: Math.floor(MOCK_LINKS.length * 0.1), // 10% new
+    disabledLinks: MOCK_LINKS.filter((l) => l.status === "disabled").length,
   };
 }
 

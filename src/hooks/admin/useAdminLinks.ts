@@ -13,6 +13,7 @@ export function useAdminLinks() {
     disabledLinks: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0); // <--- Total filtered links
 
   // Pagination & Filters
   const [page, setPage] = useState(1);
@@ -26,7 +27,10 @@ export function useAdminLinks() {
   });
 
   // Bulk Selection State
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Map<string, string>>(
+    new Map()
+  );
+  const [isAllSelected, setIsAllSelected] = useState(false); // <--- New State
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -37,6 +41,7 @@ export function useAdminLinks() {
       ]);
       setLinks(linksData.data);
       setTotalPages(linksData.totalPages);
+      setTotalCount(linksData.totalCount); // <--- Set Total Count
       setStats(statsData);
     } catch (error) {
       console.error(error);
@@ -57,36 +62,41 @@ export function useAdminLinks() {
   // Reset page when filters or search change
   useEffect(() => {
     setPage(1);
+    setSelectedItems(new Map());
+    setIsAllSelected(false); // Reset select all
   }, [filters, search]);
 
   // Bulk Actions Logic
-  const toggleSelect = (id: string) => {
-    const newSelected = new Set(selectedIds);
+  const toggleSelect = (id: string, status: string) => {
+    if (isAllSelected) {
+      setIsAllSelected(false);
+      setSelectedItems(new Map([[id, status]]));
+      return;
+    }
+
+    const newSelected = new Map(selectedItems);
     if (newSelected.has(id)) newSelected.delete(id);
-    else newSelected.add(id);
-    setSelectedIds(newSelected);
+    else newSelected.set(id, status);
+    setSelectedItems(newSelected);
   };
 
-  const selectAll = async () => {
-    if (selectedIds.size === stats.totalLinks) {
-      setSelectedIds(new Set()); // Deselect all
+  const selectAll = () => {
+    if (isAllSelected) {
+      setIsAllSelected(false);
+      setSelectedItems(new Map());
     } else {
-      // Fetch ALL IDs matching current filters
-      try {
-        const allIds = await adminLinkService.getAllLinkIds({
-          ...filters,
-          search,
-        });
-        setSelectedIds(new Set(allIds));
-      } catch (error) {
-        console.error("Failed to select all:", error);
-        showAlert("Failed to select all links", "error");
-      }
+      setIsAllSelected(true);
+      setSelectedItems(new Map());
+      showAlert(
+        `Mode Select All aktif: ${totalCount} links terpilih.`,
+        "success"
+      );
     }
   };
 
   const deselectAll = () => {
-    setSelectedIds(new Set());
+    setSelectedItems(new Map());
+    setIsAllSelected(false);
   };
 
   const handleBulkAction = async (
@@ -95,14 +105,27 @@ export function useAdminLinks() {
     reason?: string
   ) => {
     const status = action === "activate" ? "active" : "disabled";
-    const idsToUpdate = targetIds || Array.from(selectedIds);
+    const idsToUpdate = targetIds || Array.from(selectedItems.keys());
 
-    if (idsToUpdate.length === 0) return;
+    if (idsToUpdate.length === 0 && !isAllSelected) return;
 
     try {
-      await adminLinkService.bulkUpdateLinkStatus(idsToUpdate, status, reason);
-      showAlert(`Success! ${idsToUpdate.length} links ${status}.`, "success");
-      if (!targetIds) setSelectedIds(new Set()); // Reset selection only if bulk action
+      await adminLinkService.bulkUpdateLinkStatus({
+        ids: idsToUpdate,
+        selectAll: isAllSelected && !targetIds, // Only true if not targeting specific IDs
+        filters: { ...filters, search },
+        status,
+        reason,
+      });
+
+      const count =
+        isAllSelected && !targetIds ? totalCount : idsToUpdate.length;
+      showAlert(`Success! ${count} links ${status}.`, "success");
+
+      if (!targetIds) {
+        setSelectedItems(new Map());
+        setIsAllSelected(false);
+      }
       fetchData(); // Refresh data
     } catch (error) {
       showAlert("Action failed.", "error");
@@ -120,11 +143,13 @@ export function useAdminLinks() {
     setSearch,
     filters,
     setFilters,
-    selectedIds,
+    selectedItems,
+    isAllSelected, // <--- Export new state
     toggleSelect,
     selectAll,
     handleBulkAction,
     refreshData: fetchData,
     deselectAll,
+    totalCount, // <--- Export
   };
 }

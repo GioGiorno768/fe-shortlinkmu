@@ -22,7 +22,7 @@ import { useClickOutside } from "@/hooks/useClickOutside";
 interface LinkItemProps {
   link: AdminLink;
   isSelected: boolean;
-  onToggleSelect: (id: string) => void;
+  onToggleSelect: (id: string, status: string) => void;
   onAction: (id: string, action: "block" | "activate") => void;
   onMessage: (id: string) => void;
 }
@@ -48,28 +48,17 @@ export default function LinkItem({
   return (
     // 1. Container Utama: Clickable (Trigger Selection)
     <div
-      onClick={() => onToggleSelect(link.id)}
+      onClick={() => onToggleSelect(link.id, link.status)}
       className={clsx(
         "bg-white rounded-2xl border shadow-sm transition-all duration-300 hover:shadow-md group relative overflow-hidden cursor-pointer",
         isSelected
-          ? "border-bluelight ring-1 ring-bluelight bg-blue-50/10"
-          : "border-gray-100"
+          ? "border-bluelight ring-2 ring-bluelight/20 bg-blue-50/30"
+          : "border-gray-100 hover:border-blue-200"
       )}
     >
       {/* HEADER SECTION */}
       <div className="p-5 flex items-start gap-4">
-        {/* Checkbox Indicator (Visual Only) */}
-        {/* Ganti button jadi div biar gak double action */}
-        <div
-          className={clsx(
-            "mt-1 w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
-            isSelected
-              ? "bg-bluelight border-bluelight text-white"
-              : "border-gray-300 group-hover:border-bluelight"
-          )}
-        >
-          {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-        </div>
+        {/* Checkbox Removed */}
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
@@ -107,63 +96,72 @@ export default function LinkItem({
               </div>
             </div>
 
-            {/* 3. Action Dropdown: Stop Propagation */}
-            <div
-              className="relative"
-              ref={menuRef}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
+            {/* Right Side: Dropdown & Selection Indicator */}
+            <div className="flex items-center gap-3 shrink-0">
+              {/* Selection Indicator */}
+              {isSelected && (
+                <div className="p-1.5 bg-blue-50 rounded-full animate-in zoom-in duration-200">
+                  <CheckCircle2 className="w-6 h-6 text-bluelight fill-blue-50" />
+                </div>
+              )}
+              {/* 3. Action Dropdown: Stop Propagation */}
+              <div
+                className="relative"
+                ref={menuRef}
+                onClick={(e) => e.stopPropagation()}
               >
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              <AnimatePresence>
-                {isMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
-                  >
-                    <button
-                      onClick={() => {
-                        onAction(
-                          link.id,
-                          link.status === "active" ? "block" : "activate"
-                        );
-                        setIsMenuOpen(false);
-                      }}
-                      className={clsx(
-                        "w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2",
-                        link.status === "active"
-                          ? "text-red-600 hover:bg-red-50"
-                          : "text-green-600 hover:bg-green-50"
-                      )}
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
                     >
-                      {link.status === "active" ? (
-                        <>
-                          <Ban className="w-4 h-4" /> Block Link
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" /> Activate Link
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        onMessage(link.id);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2 text-shortblack hover:bg-slate-50"
-                    >
-                      <MessageSquare className="w-4 h-4" /> Message User
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      <button
+                        onClick={() => {
+                          onAction(
+                            link.id,
+                            link.status === "active" ? "block" : "activate"
+                          );
+                          setIsMenuOpen(false);
+                        }}
+                        className={clsx(
+                          "w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2",
+                          link.status === "active"
+                            ? "text-red-600 hover:bg-red-50"
+                            : "text-green-600 hover:bg-green-50"
+                        )}
+                      >
+                        {link.status === "active" ? (
+                          <>
+                            <Ban className="w-4 h-4" /> Block Link
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" /> Activate Link
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          onMessage(link.id);
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2 text-shortblack hover:bg-slate-50"
+                      >
+                        <MessageSquare className="w-4 h-4" /> Message User
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
 
@@ -186,8 +184,8 @@ export default function LinkItem({
           <div className="h-px bg-gray-100 w-full mb-4" />
 
           {/* Details Row */}
+          {/* Details Row - HIDDEN (Super Admin Only) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-[1.2em]">
-            {/* Owner */}
             <div className="flex items-center gap-3">
               <Image
                 src={link.owner.avatarUrl}
@@ -206,7 +204,6 @@ export default function LinkItem({
               </div>
             </div>
 
-            {/* Stats */}
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-grays">
                 <BarChart3 className="w-3.5 h-3.5" /> Views:{" "}
@@ -218,7 +215,6 @@ export default function LinkItem({
               </p>
             </div>
 
-            {/* Dates */}
             <div className="space-y-1 text-grays">
               <p className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5" /> Created:{" "}
@@ -232,7 +228,6 @@ export default function LinkItem({
               )}
             </div>
 
-            {/* Ads Info */}
             <div className="flex items-center">
               <span
                 className={clsx(

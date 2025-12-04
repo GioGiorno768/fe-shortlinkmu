@@ -21,6 +21,7 @@ export function useAdminUsers() {
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isAllSelected, setIsAllSelected] = useState(false); // <--- New State
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function useAdminUsers() {
   useEffect(() => {
     setPage(1);
     setSelectedIds(new Set());
+    setIsAllSelected(false); // Reset select all
   }, [search, statusFilter]);
 
   const toggleStatus = async (id: string, currentStatus: UserStatus) => {
@@ -76,6 +78,16 @@ export function useAdminUsers() {
 
   // --- SELECTION HANDLERS ---
   const toggleSelection = (id: string) => {
+    if (isAllSelected) {
+      // If we were in "Select All" mode, clicking one row breaks it.
+      // Strategy: Deselect everything, then select just this one?
+      // Or: Just turn off "Select All" and start fresh?
+      // Let's just turn off Select All and select this one.
+      setIsAllSelected(false);
+      setSelectedIds(new Set([id]));
+      return;
+    }
+
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
       newSelected.delete(id);
@@ -85,27 +97,25 @@ export function useAdminUsers() {
     setSelectedIds(newSelected);
   };
 
-  const selectAll = async () => {
-    // If all currently filtered users are selected, deselect all
-    if (selectedIds.size === totalCount && totalCount > 0) {
+  const selectAll = () => {
+    if (isAllSelected) {
+      // Deselect All
+      setIsAllSelected(false);
       setSelectedIds(new Set());
     } else {
-      // Select ALL users matching filter (across all pages)
-      try {
-        const allIds = await adminUserService.getAllUserIds({
-          search,
-          status: statusFilter,
-        });
-        setSelectedIds(new Set(allIds));
-        showAlert(`${allIds.length} user terpilih.`, "success");
-      } catch (error) {
-        showAlert("Gagal memilih semua user.", "error");
-      }
+      // Select All (Virtual)
+      setIsAllSelected(true);
+      setSelectedIds(new Set()); // Clear manual IDs because "All" covers it
+      showAlert(
+        `Mode Select All aktif: ${totalCount} user terpilih.`,
+        "success"
+      );
     }
   };
 
   const clearSelection = () => {
     setSelectedIds(new Set());
+    setIsAllSelected(false);
   };
 
   const sendMessage = async (
@@ -115,13 +125,17 @@ export function useAdminUsers() {
   ) => {
     setIsSending(true);
     try {
-      await adminUserService.sendNotification(
-        Array.from(selectedIds),
+      await adminUserService.sendNotification({
+        userIds: Array.from(selectedIds),
+        selectAll: isAllSelected,
+        filters: { search, status: statusFilter },
         subject,
         message,
-        type
-      );
-      showAlert(`Pesan terkirim ke ${selectedIds.size} user!`, "success");
+        type,
+      });
+
+      const count = isAllSelected ? totalCount : selectedIds.size;
+      showAlert(`Pesan dikirim ke ${count} user!`, "success");
       clearSelection();
     } catch (error) {
       showAlert("Gagal mengirim pesan.", "error");
@@ -145,6 +159,7 @@ export function useAdminUsers() {
     toggleStatus,
     // Selection
     selectedIds,
+    isAllSelected, // <--- Export new state
     toggleSelection,
     selectAll,
     clearSelection,
