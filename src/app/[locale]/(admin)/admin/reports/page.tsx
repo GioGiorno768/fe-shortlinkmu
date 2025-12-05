@@ -22,7 +22,7 @@ export default function AbuseReportsPage() {
   return (
     <div className="space-y-8 pb-10 font-figtree text-[12px]">
       {/* 1. Simple Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-5 bg-white rounded-2xl border border-red-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-red-50 text-red-600 rounded-xl">
             <ShieldAlert className="w-6 h-6" />

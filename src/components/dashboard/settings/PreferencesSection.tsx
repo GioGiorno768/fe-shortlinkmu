@@ -38,10 +38,12 @@ const LANGUAGE_OPTIONS = [
 
 interface PreferencesSectionProps {
   initialData: UserPreferences | null;
+  type?: "user" | "admin";
 }
 
 export default function PreferencesSection({
   initialData,
+  type = "user",
 }: PreferencesSectionProps) {
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -50,7 +52,7 @@ export default function PreferencesSection({
   const currentLocale = useLocale();
 
   // Panggil Logic dari Hook
-  const { savePreferences, isSaving } = usePreferencesLogic();
+  const { savePreferences, isSaving } = usePreferencesLogic(type);
 
   const [isPending, startTransition] = useTransition();
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
@@ -184,7 +186,7 @@ export default function PreferencesSection({
                 onClick={() => setIsCurrencyOpen(!isCurrencyOpen)}
                 className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 bg-white text-shortblack flex items-center gap-3 hover:border-bluelight transition-all focus:ring-2 focus:ring-bluelight/50"
               >
-                <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden shrink-0 border border-gray-100">
                   <Image
                     src={`https://flagcdn.com/${activeCurrency.countryCode}.svg`}
                     alt={activeCurrency.code}
@@ -227,7 +229,7 @@ export default function PreferencesSection({
                             : "text-shortblack hover:bg-gray-50"
                         )}
                       >
-                        <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden flex-shrink-0 border border-gray-100">
+                        <div className="relative w-8 h-6 shadow-sm rounded-md overflow-hidden shrink-0 border border-gray-100">
                           <Image
                             src={`https://flagcdn.com/${curr.countryCode}.svg`}
                             alt={curr.label}
@@ -345,7 +347,7 @@ export default function PreferencesSection({
                   onClick={() =>
                     handlePrivacyToggle(item.key as keyof PrivacySettings)
                   }
-                  className={`relative w-14 h-8 rounded-full transition-colors duration-300 flex-shrink-0 ${
+                  className={`relative w-14 h-8 rounded-full transition-colors duration-300 shrink-0 ${
                     isActive ? "bg-bluelight" : "bg-gray-300"
                   }`}
                 >

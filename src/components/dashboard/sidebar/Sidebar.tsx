@@ -29,7 +29,10 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const t = useTranslations("Dashboard");
-  const { user, isLoading } = useUser();
+  // Determine user type based on role
+  const userType =
+    role === "super-admin" || role === "admin" ? "admin" : "user";
+  const { user, isLoading } = useUser(userType);
 
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const userPopupRef = useRef<HTMLDivElement>(null);

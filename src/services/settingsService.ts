@@ -127,3 +127,44 @@ export async function updateUserPreferences(
   await new Promise((r) => setTimeout(r, 1000));
   return data;
 }
+// ==========================================
+// 5. ADMIN SERVICES (New)
+// ==========================================
+export async function getAdminProfile(): Promise<UserProfile> {
+  await new Promise((r) => setTimeout(r, 500));
+  return {
+    name: "Super Admin",
+    email: "admin@shortlinku.com",
+    phone: "08129999999",
+    avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
+    username: "Administrator",
+  };
+}
+
+export async function updateAdminProfile(
+  data: UserProfile
+): Promise<UserProfile> {
+  await new Promise((r) => setTimeout(r, 1000));
+  return data;
+}
+
+export async function getAdminPreferences(): Promise<UserPreferences> {
+  await new Promise((r) => setTimeout(r, 500));
+  return {
+    language: "en",
+    currency: "USD",
+    timezone: "UTC",
+    privacy: {
+      loginAlert: true,
+      cookieConsent: true,
+      saveLoginInfo: true,
+    },
+  };
+}
+
+export async function updateAdminPreferences(
+  data: UserPreferences
+): Promise<UserPreferences> {
+  await new Promise((r) => setTimeout(r, 1000));
+  return data;
+}

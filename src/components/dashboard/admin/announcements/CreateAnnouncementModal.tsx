@@ -138,7 +138,7 @@ export default function CreateAnnouncementModal({
           >
             <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col md:flex-row max-h-[90vh]">
               {/* LEFT: Form */}
-              <div className="flex-1 p-8 overflow-y-auto">
+              <div onWheel={(e) => e.stopPropagation()} className="flex-1 p-8 overflow-y-auto">
                 <div className="flex justify-between items-center mb-8">
                   <h2 className="text-[2em] font-bold text-shortblack">
                     {initialData ? "Edit Announcement" : "New Announcement"}
@@ -227,7 +227,7 @@ export default function CreateAnnouncementModal({
                     <label className="block text-[1.4em] font-medium text-shortblack mb-2">
                       Icon
                     </label>
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap">
                       {ICONS.map((item) => (
                         <button
                           key={item.name}

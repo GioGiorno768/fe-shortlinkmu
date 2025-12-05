@@ -13,14 +13,18 @@ import type {
 // =======================
 // 1. HOOK PROFILE
 // =======================
-export function useProfileLogic() {
+export function useProfileLogic(type: "user" | "admin" = "user") {
   const { showAlert } = useAlert();
   const [isUpdating, setIsUpdating] = useState(false);
 
   const updateProfile = async (data: UserProfile) => {
     setIsUpdating(true);
     try {
-      await settingsService.updateUserProfile(data);
+      if (type === "admin") {
+        await settingsService.updateAdminProfile(data);
+      } else {
+        await settingsService.updateUserProfile(data);
+      }
       showAlert("Profil berhasil diperbarui!", "success");
       return true;
     } catch (error) {
@@ -34,6 +38,12 @@ export function useProfileLogic() {
 
   return { updateProfile, isUpdating };
 }
+
+// ... (Security and Payment hooks remain unchanged) ...
+
+// =======================
+// 4. HOOK PREFERENCES
+// =======================
 
 // =======================
 // 2. HOOK SECURITY (Ini yang tadi kurang)
@@ -152,17 +162,18 @@ export function usePaymentLogic(initialMethods: SavedPaymentMethod[]) {
   };
 }
 
-// =======================
-// 4. HOOK PREFERENCES (Ini yang tadi kurang)
-// =======================
-export function usePreferencesLogic() {
+export function usePreferencesLogic(type: "user" | "admin" = "user") {
   const { showAlert } = useAlert();
   const [isSaving, setIsSaving] = useState(false);
 
   const savePreferences = async (data: UserPreferences) => {
     setIsSaving(true);
     try {
-      await settingsService.updateUserPreferences(data);
+      if (type === "admin") {
+        await settingsService.updateAdminPreferences(data);
+      } else {
+        await settingsService.updateUserPreferences(data);
+      }
       showAlert("Pengaturan disimpan!", "success");
       return true;
     } catch (error) {

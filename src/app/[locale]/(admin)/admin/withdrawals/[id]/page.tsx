@@ -125,7 +125,7 @@ export default function WithdrawalDetailPage({
 
           {/* ACTION BAR */}
           {data.status === "pending" && (
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex gap-4">
+            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4">
               <button
                 onClick={handleApprove}
                 className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[1.1em] shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2"

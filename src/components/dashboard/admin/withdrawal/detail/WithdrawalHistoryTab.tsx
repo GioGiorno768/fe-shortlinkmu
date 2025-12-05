@@ -1,65 +1,54 @@
+"use client";
+
+import { useState } from "react";
 import { WithdrawalDetail } from "@/types/type";
-import clsx from "clsx";
+import WithdrawalHistoryItem from "./WithdrawalHistoryItem";
+import Pagination from "@/components/dashboard/Pagination";
+import { Clock } from "lucide-react";
 
 interface Props {
   history: WithdrawalDetail["history"];
 }
 
+const ITEMS_PER_PAGE = 8;
+
 export default function WithdrawalHistoryTab({ history }: Props) {
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentItems = history.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  if (history.length === 0) {
+    return (
+      <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-dashed border-gray-300">
+        <Clock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-[1.6em] font-bold text-shortblack">
+          No History Yet
+        </h3>
+        <p className="text-gray-400 text-[1.2em]">
+          This user has no previous withdrawal transactions.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-100 text-grays text-[0.9em]">
-            <th className="py-3 px-4 font-medium">Date</th>
-            <th className="py-3 px-4 font-medium">Amount</th>
-            <th className="py-3 px-4 font-medium">Method</th>
-            <th className="py-3 px-4 font-medium">Status</th>
-          </tr>
-        </thead>
-        <tbody className="text-[0.95em]">
-          {history.map((item) => (
-            <tr
-              key={item.id}
-              className="border-b border-gray-50 last:border-0 hover:bg-slate-50"
-            >
-              <td className="py-3 px-4 text-grays">{formatDate(item.date)}</td>
-              <td className="py-3 px-4 font-bold text-shortblack">
-                ${item.amount}
-              </td>
-              <td className="py-3 px-4 text-shortblack">{item.method}</td>
-              <td className="py-3 px-4">
-                <span
-                  className={clsx(
-                    "px-2 py-1 rounded text-[0.85em] font-bold capitalize",
-                    item.status === "paid"
-                      ? "bg-green-100 text-green-700"
-                      : item.status === "rejected"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  )}
-                >
-                  {item.status}
-                </span>
-              </td>
-            </tr>
-          ))}
-          {history.length === 0 && (
-            <tr>
-              <td colSpan={4} className="py-8 text-center text-grays">
-                No history available.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {currentItems.map((item) => (
+          <WithdrawalHistoryItem key={item.id} item={item} />
+        ))}
+      </div>
+
+      {totalPages > 1 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
     </div>
   );
 }

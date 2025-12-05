@@ -11,10 +11,14 @@ import { useProfileLogic } from "@/hooks/useSettings"; // Pake Hook baru
 
 interface ProfileSectionProps {
   initialData: UserProfile | null;
+  type?: "user" | "admin";
 }
 
-export default function ProfileSection({ initialData }: ProfileSectionProps) {
-  const { updateProfile, isUpdating } = useProfileLogic();
+export default function ProfileSection({
+  initialData,
+  type = "user",
+}: ProfileSectionProps) {
+  const { updateProfile, isUpdating } = useProfileLogic(type);
 
   // State Modal Avatar
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);

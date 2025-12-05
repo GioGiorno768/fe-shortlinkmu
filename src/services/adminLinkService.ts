@@ -49,8 +49,7 @@ export async function getLinks(
         l.shortUrl.toLowerCase().includes(s) ||
         l.originalUrl.toLowerCase().includes(s) ||
         l.alias?.toLowerCase().includes(s) ||
-        l.owner.name.toLowerCase().includes(s) ||
-        l.owner.username.toLowerCase().includes(s)
+        l.title?.toLowerCase().includes(s)
     );
   }
 

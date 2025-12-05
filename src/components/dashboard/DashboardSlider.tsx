@@ -7,6 +7,7 @@ import { ArrowRight, Loader2 } from "lucide-react"; // Icon lain dihapus karena 
 import { Link } from "@/i18n/routing";
 import clsx from "clsx";
 import type { DashboardSlide } from "@/types/type"; // Import tipe yang tadi
+import { useUser } from "@/hooks/useUser";
 
 interface DashboardSliderProps {
   slides: DashboardSlide[];
@@ -38,8 +39,16 @@ const getTheme = (theme: string) => {
 
 // Terima props 'slides'
 export default function DashboardSlider({ slides }: DashboardSliderProps) {
+  const { user } = useUser(); // 1. Ambil data user
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState(1);
+
+  // 2. Fungsi Helper buat Replace Placeholder
+  const formatText = (text: string) => {
+    if (!text) return "";
+    // Replace {{name}} dengan user.name atau "User"
+    return text.replace(/\{\{name\}\}/g, user?.name || "User");
+  };
 
   const nextSlide = useCallback(() => {
     setDirection(1);
@@ -140,10 +149,10 @@ export default function DashboardSlider({ slides }: DashboardSliderProps) {
               </div>
 
               <h2 className="text-[2.4em] font-bold leading-tight tracking-tight line-clamp-2">
-                {currentSlide.title}
+                {formatText(currentSlide.title)}
               </h2>
               <p className="text-[1.5em] opacity-90 max-w-lg leading-snug line-clamp-3">
-                {currentSlide.desc}
+                {formatText(currentSlide.desc)}
               </p>
 
               <div className="pt-2">
@@ -154,14 +163,14 @@ export default function DashboardSlider({ slides }: DashboardSliderProps) {
                     theme.button
                   )}
                 >
-                  {currentSlide.cta}
+                  {formatText(currentSlide.cta)}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>
 
             {/* Ilustrasi (Hidden di Mobile) */}
-            <div className="hidden sm:block w-1/3 flex-shrink-0 text-right opacity-20">
+            <div className="hidden sm:block w-1/3 shrink-0 text-right opacity-20">
               <Icon className="w-32 h-32 ml-auto" />
             </div>
           </div>

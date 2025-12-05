@@ -1,6 +1,3 @@
-// src/components/dashboard/MobileBottomBar.tsx
-"use client";
-
 import { useState, useRef, useEffect, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,19 +7,27 @@ import {
   Check,
   TrendingUp,
   CreditCard,
-  Loader2, // Tambah loader icon
+  Loader2,
+  Info,
+  Users,
+  AlertTriangle,
+  Clock,
+  Banknote,
 } from "lucide-react";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import clsx from "clsx";
-import { useHeader } from "@/hooks/useHeader"; // <--- 1. IMPORT HOOK
+import { useHeader } from "@/hooks/useHeader";
+import { Role, HeaderStats, AdminHeaderStats } from "@/types/type";
 
 interface MobileBottomBarProps {
   isSidebarOpen: boolean;
+  role?: Role;
 }
 
 export default function MobileBottomBar({
   isSidebarOpen,
+  role = "member",
 }: MobileBottomBarProps) {
   const [activePopup, setActivePopup] = useState<"lang" | "wallet" | null>(
     null
@@ -33,8 +38,10 @@ export default function MobileBottomBar({
   const [isPending, startTransition] = useTransition();
   const barRef = useRef<HTMLDivElement>(null);
 
+  const isAdmin = role === "admin" || role === "super-admin";
+
   // 2. PANGGIL DATA REAL-TIME
-  const { stats, isLoading } = useHeader();
+  const { stats, isLoading } = useHeader(role);
 
   // Helper Format Currency
   const formatCurrency = (val?: number) => {
@@ -76,26 +83,54 @@ export default function MobileBottomBar({
   };
 
   // 3. GUNAKAN DATA DINAMIS DARI HOOK
-  const walletData = [
+  // Data Member
+  const memberStats = stats as HeaderStats;
+  const memberWalletData = [
     {
       label: "Balance",
-      value: formatCurrency(stats?.balance),
+      value: formatCurrency(memberStats?.balance),
       icon: Wallet,
       color: "text-bluelight",
     },
     {
       label: "Payout",
-      value: formatCurrency(stats?.payout),
+      value: formatCurrency(memberStats?.payout),
       icon: CreditCard,
       color: "text-green-600",
     },
     {
       label: "CPM",
-      value: formatCurrency(stats?.cpm),
+      value: formatCurrency(memberStats?.cpm),
       icon: TrendingUp,
       color: "text-orange-500",
     },
   ];
+
+  // Data Admin
+  const adminStats = stats as AdminHeaderStats;
+  const adminInfoData = [
+    {
+      label: "Pending Withdrawals",
+      value: adminStats?.pendingWithdrawals?.toString() || "0",
+      icon: Clock,
+      color: "text-orange-500",
+    },
+    {
+      label: "Reported Links",
+      value: adminStats?.abuseReports?.toString() || "0",
+      icon: AlertTriangle,
+      color: "text-red-500",
+    },
+    {
+      label: "New Users Today",
+      value: adminStats?.newUsers?.toString() || "0",
+      icon: Users,
+      color: "text-bluelight",
+    },
+  ];
+
+  const popupData = isAdmin ? adminInfoData : memberWalletData;
+  const popupTitle = isAdmin ? "Admin Overview" : "Quick Stats";
 
   return (
     <AnimatePresence>
@@ -145,24 +180,26 @@ export default function MobileBottomBar({
               </motion.div>
             )}
 
-            {/* Wallet Popup (UPDATED) */}
+            {/* Wallet / Admin Info Popup (UPDATED) */}
             {activePopup === "wallet" && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="absolute bottom-[75px] right-0 w-[220px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
+                className="absolute bottom-[75px] right-0 w-[240px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden pointer-events-auto"
               >
                 <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
                   <span className="text-[1.1em] font-bold text-grays uppercase tracking-wider">
-                    Quick Stats
+                    {popupTitle}
                   </span>
-                  <Link
-                    href="/withdrawal"
-                    className="text-[1.1em] text-bluelight font-semibold hover:underline"
-                  >
-                    Withdraw
-                  </Link>
+                  {!isAdmin && (
+                    <Link
+                      href="/withdrawal"
+                      className="text-[1.1em] text-bluelight font-semibold hover:underline"
+                    >
+                      Withdraw
+                    </Link>
+                  )}
                 </div>
                 <div className="p-1.5 divide-y divide-gray-50">
                   {/* Logic Loading State */}
@@ -171,7 +208,7 @@ export default function MobileBottomBar({
                       <Loader2 className="w-6 h-6 animate-spin text-bluelight" />
                     </div>
                   ) : (
-                    walletData.map((item, idx) => (
+                    popupData.map((item, idx) => (
                       <div
                         key={idx}
                         className="flex items-center justify-between p-2.5"
@@ -200,8 +237,9 @@ export default function MobileBottomBar({
             )}
           </AnimatePresence>
 
-          {/* === THE BAR ITSELF (Tetap sama) === */}
+          {/* === THE BAR ITSELF === */}
           <div className="w-full max-w-lg bg-white/90 backdrop-blur-md border border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-[2.5em] p-1.5 px-6 flex items-center justify-between gap-4 pointer-events-auto relative">
+            {/* Left Button: Language */}
             <button
               onClick={() => togglePopup("lang")}
               className={clsx(
@@ -221,16 +259,30 @@ export default function MobileBottomBar({
               </div>
             </button>
 
-            <Link href="/new-link" className="relative -top-5">
+            {/* Center Button: New Link (Member) or Withdrawal (Admin) */}
+            <Link
+              href={isAdmin ? "/admin/withdrawals" : "/new-link"}
+              className="relative -top-5"
+            >
               <motion.div
                 whileTap={{ scale: 0.9 }}
                 whileHover={{ scale: 1.05, y: -2 }}
-                className="w-14 h-14 rounded-full bg-gradient-to-br from-bluelight to-blue-600 shadow-xl shadow-blue-500/30 flex items-center justify-center text-white border-[3px] border-white ring-1 ring-blue-100"
+                className={clsx(
+                  "w-14 h-14 rounded-full shadow-xl flex items-center justify-center text-white border-[3px] border-white ring-1",
+                  isAdmin
+                    ? "bg-gradient-to-br from-orange-400 to-red-500 shadow-orange-500/30 ring-orange-100"
+                    : "bg-gradient-to-br from-bluelight to-blue-600 shadow-blue-500/30 ring-blue-100"
+                )}
               >
-                <Link2 className="w-6 h-6" strokeWidth={2.5} />
+                {isAdmin ? (
+                  <Banknote className="w-6 h-6" strokeWidth={2.5} />
+                ) : (
+                  <Link2 className="w-6 h-6" strokeWidth={2.5} />
+                )}
               </motion.div>
             </Link>
 
+            {/* Right Button: Wallet (Member) or Info (Admin) */}
             <button
               onClick={() => togglePopup("wallet")}
               className={clsx(
@@ -246,7 +298,11 @@ export default function MobileBottomBar({
                   activePopup === "wallet" ? "bg-blue-50" : "bg-transparent"
                 )}
               >
-                <Wallet className="w-5 h-5" strokeWidth={2.5} />
+                {isAdmin ? (
+                  <Info className="w-5 h-5" strokeWidth={2.5} />
+                ) : (
+                  <Wallet className="w-5 h-5" strokeWidth={2.5} />
+                )}
               </div>
             </button>
           </div>

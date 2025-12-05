@@ -115,10 +115,11 @@ export default function WithdrawalItem({
             {/* Actions Area: Button + Dropdown */}
             <div className="flex items-center gap-2">
               {/* PRIMARY ACTION BUTTON (Outside Dropdown) */}
+              {/* PRIMARY ACTION BUTTON (Outside Dropdown) - DESKTOP ONLY */}
               {trx.status === "pending" && (
                 <button
                   onClick={() => onApprove(trx.id, trx.status)}
-                  className="px-4 py-2 rounded-xl font-bold text-[0.9em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
+                  className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
                 >
                   <ThumbsUp className="w-4 h-4" /> Approve
                 </button>
@@ -126,7 +127,7 @@ export default function WithdrawalItem({
               {trx.status === "approved" && (
                 <button
                   onClick={() => onApprove(trx.id, trx.status)}
-                  className="px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all flex items-center gap-1.5"
+                  className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
                 >
                   <Send className="w-4 h-4" /> Pay Now
                 </button>
@@ -275,6 +276,26 @@ export default function WithdrawalItem({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* MOBILE ACTION BUTTON (Bottom Full Width) */}
+      <div className="md:hidden px-5 pb-5 pt-0">
+        {trx.status === "pending" && (
+          <button
+            onClick={() => onApprove(trx.id, trx.status)}
+            className="w-full py-3 rounded-xl font-bold text-[1em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <ThumbsUp className="w-5 h-5" /> Approve Withdrawal
+          </button>
+        )}
+        {trx.status === "approved" && (
+          <button
+            onClick={() => onApprove(trx.id, trx.status)}
+            className="w-full py-3 rounded-xl font-bold text-[1em] bg-green-600 hover:bg-green-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Send className="w-5 h-5" /> Process Payment
+          </button>
+        )}
       </div>
     </div>
   );

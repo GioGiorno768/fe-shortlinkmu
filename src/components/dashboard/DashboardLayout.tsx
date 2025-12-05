@@ -80,9 +80,7 @@ export default function DashboardLayout({
 
         <DashboardFooter />
       </main>
-      {pathname?.startsWith("/admin") && (
-        <MobileBottomBar isSidebarOpen={isMobileOpen} />
-      )}
+      <MobileBottomBar isSidebarOpen={isMobileOpen} role={role} />
     </div>
   );
 }

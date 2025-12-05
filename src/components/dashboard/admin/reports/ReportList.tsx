@@ -9,6 +9,7 @@ import {
   Clock,
   User,
   Flag,
+  Loader2,
 } from "lucide-react";
 import clsx from "clsx";
 import type { AbuseReport } from "@/types/type";
@@ -53,7 +54,9 @@ export default function ReportList({
 
   if (isLoading)
     return (
-      <div className="p-10 text-center text-grays">Loading reports...</div>
+      <div className="flex justify-center py-20">
+        <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+      </div>
     );
   if (reports.length === 0)
     return (
@@ -148,7 +151,7 @@ export default function ReportList({
 
             {/* ACTION KANAN */}
             {report.status === "pending" && (
-              <div className="flex flex-row md:flex-col gap-3 shrink-0 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
+              <div className="flex flex-col gap-3 shrink-0 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
                 <button
                   onClick={() =>
                     setConfirm({
