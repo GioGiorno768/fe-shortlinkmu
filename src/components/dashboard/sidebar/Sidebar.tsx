@@ -178,7 +178,7 @@ export default function Sidebar({
           </div>
 
           {/* Menu Items (List Utama) */}
-          <nav className="mt-[1em] px-[1em] pb-24 overflow-y-auto h-[calc(100vh-100px)] custom-scrollbar-minimal">
+          <nav onWheel={(e) => e.stopPropagation()} className="mt-[1em] px-[1em] pb-24 overflow-y-auto h-[calc(100vh-100px)] custom-scrollbar-minimal">
             {menuItems.map((item, index) => {
               if (item.isHeader) {
                 if (isCollapsed)

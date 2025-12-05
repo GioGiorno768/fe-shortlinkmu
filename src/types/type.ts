@@ -566,3 +566,12 @@ export interface AdminAnnouncementStats {
   totalCount: number;
   scheduledCount: number;
 }
+
+// --- SUPER ADMIN TYPES ---
+
+export interface SuperAdminStats {
+  totalAdmins: number;
+  serverStatus: string;
+  totalRevenue: number;
+  systemLogs: number;
+}

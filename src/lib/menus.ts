@@ -83,18 +83,39 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
     { icon: Database, label: "Database & Backup", href: "/admin/database" },
   ];
 
-  // 3. ACCOUNT (Semua Punya)
-  // const accountMenu: NavItem[] = [
-  //   { label: "ACCOUNT", isHeader: true },
-  //   { icon: Settings, label: "My Profile Settings", href: "/admin/profile" },
-  // ];
-
   // LOGIC PENGGABUNGAN:
   if (role === "super-admin") {
-    // Super Admin = Operational + Core System + Account
-    return [...operationalMenu, ...coreSystemMenu];
+    // Super Admin punya route SENDIRI untuk operational
+    const superAdminOperationalMenu: NavItem[] = [
+      { label: "OPERATIONAL", isHeader: true },
+      {
+        icon: LayoutDashboard,
+        label: "Dashboard",
+        href: "/super-admin/dashboard",
+      },
+      { icon: Users, label: "Manage Users", href: "/super-admin/manage-user" }, // Folder udah ada
+      { icon: LinkIcon, label: "Manage Links", href: "/super-admin/links" },
+      {
+        icon: Wallet,
+        label: "Withdrawals",
+        href: "/super-admin/withdrawals",
+      },
+      {
+        icon: ShieldAlert,
+        label: "Abuse Reports",
+        href: "/super-admin/reports",
+      },
+      {
+        icon: FileText,
+        label: "Announcements",
+        href: "/super-admin/announcements",
+      },
+    ];
+
+    // Super Admin = Operational (Special Routes) + Core System
+    return [...superAdminOperationalMenu, ...coreSystemMenu];
   }
 
-  // Admin Biasa = Operational + Account (GAK ADA Ads Config)
+  // Admin Biasa = Operational (Admin Routes) -> GAK ADA Core System
   return [...operationalMenu];
 };
