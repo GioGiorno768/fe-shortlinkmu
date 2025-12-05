@@ -63,31 +63,57 @@ export default function UserListCard({
       )}
     >
       {/* HEADER SECTION */}
-      <div className="p-6 flex flex-col md:flex-row items-center gap-6">
-        {/* User Identity */}
-        <div className="flex items-center gap-4 flex-1 w-full md:w-auto">
-          <div className="w-14 h-14 rounded-full bg-gray-100 relative overflow-hidden border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-gray-500 font-bold text-lg">
-            {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl}
-                alt={user.name}
-                fill
-                className="object-cover"
-              />
-            ) : (
-              <span>{getInitials(user.name)}</span>
-            )}
+      <div className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+        {/* User Identity & Mobile Status */}
+        <div className="flex items-center justify-between w-full md:w-auto md:flex-1">
+          <div className="flex items-center gap-3 md:gap-4 min-w-0">
+            <div className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-gray-100 relative overflow-hidden border-2 border-white shadow-sm shrink-0 flex items-center justify-center text-gray-500 font-bold text-xs md:text-lg">
+              {user.avatarUrl ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <span>{getInitials(user.name)}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h4 className="font-bold text-sm md:text-base text-shortblack truncate">
+                {user.name}
+              </h4>
+              <p className="text-grays text-xs md:text-sm truncate">
+                {user.email}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h4 className="font-bold text-base text-shortblack truncate">
-              {user.name}
-            </h4>
-            <p className="text-grays text-sm truncate">{user.email}</p>
+
+          {/* Mobile Status Badge */}
+          <div className="md:hidden shrink-0 ml-2">
+            <span
+              className={clsx(
+                "inline-flex items-center justify-center w-8 h-8 rounded-full",
+                user.status === "active"
+                  ? "bg-green-50 text-green-600"
+                  : user.status === "process"
+                  ? "bg-yellow-50 text-yellow-600"
+                  : "bg-red-50 text-red-600"
+              )}
+            >
+              {user.status === "active" ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : user.status === "process" ? (
+                <Clock className="w-5 h-5" />
+              ) : (
+                <Ban className="w-5 h-5" />
+              )}
+            </span>
           </div>
         </div>
 
-        {/* Status Badge */}
-        <div className="shrink-0 flex items-center gap-4">
+        {/* Desktop Status Badge */}
+        <div className="hidden md:flex shrink-0 items-center gap-4">
           {isSelected && (
             <div className="p-1.5 bg-blue-50 rounded-full animate-in zoom-in duration-200">
               <CheckCircle2 className="w-6 h-6 text-bluelight fill-blue-50" />
@@ -114,79 +140,78 @@ export default function UserListCard({
           </span>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3 shrink-0 w-full md:w-auto justify-end border-t md:border-t-0 border-gray-100 pt-4 md:pt-0 mt-4 md:mt-0">
-          {/* Detail Link Button */}
-          {/* Detail Link Button - HIDDEN (Super Admin Only) */}
-          {/* <Link
-            href={`/admin/users/${user.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="px-4 py-2.5 rounded-xl text-bluelight bg-blue-50 hover:bg-blue-100 transition-colors flex items-center gap-2 font-medium text-sm relative z-20"
-          >
-            <span>Detail</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link> */}
+        {/* Actions (Desktop Only or Hidden) */}
+        <div className="hidden md:flex items-center gap-3 shrink-0 w-full md:w-auto justify-end">
+          {/* ... actions ... */}
         </div>
       </div>
 
       {/* STATS CONTENT (Always Visible) */}
       <div className="overflow-hidden bg-slate-50/50 border-t border-gray-100">
-        <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {/* Stat 1: Links */}
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-blue-100 rounded-lg text-blue-600">
-              <LinkIcon className="w-5 h-5" />
+          <div className="flex items-start gap-2 md:gap-3">
+            <div className="p-2 md:p-2.5 bg-blue-100 rounded-lg text-blue-600 shrink-0">
+              <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <div>
-              <p className="text-grays text-sm mb-0.5">Total Links</p>
-              <p className="font-bold text-shortblack text-base">
+            <div className="min-w-0">
+              <p className="text-grays text-xs md:text-sm mb-0.5 truncate">
+                Total Links
+              </p>
+              <p className="font-bold text-shortblack text-sm md:text-base truncate">
                 {user.stats.totalLinks}
               </p>
             </div>
           </div>
 
           {/* Stat 2: Views */}
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-purple-100 rounded-lg text-purple-600">
-              <Eye className="w-5 h-5" />
+          <div className="flex items-start gap-2 md:gap-3">
+            <div className="p-2 md:p-2.5 bg-purple-100 rounded-lg text-purple-600 shrink-0">
+              <Eye className="w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <div>
-              <p className="text-grays text-sm mb-0.5">Total Views</p>
-              <p className="font-bold text-shortblack text-base">
+            <div className="min-w-0">
+              <p className="text-grays text-xs md:text-sm mb-0.5 truncate">
+                Total Views
+              </p>
+              <p className="font-bold text-shortblack text-sm md:text-base truncate">
                 {user.stats.totalViews.toLocaleString()}
               </p>
             </div>
           </div>
 
           {/* Stat 3: Wallet */}
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-green-100 rounded-lg text-green-600">
-              <Wallet className="w-5 h-5" />
+          <div className="flex items-start gap-2 md:gap-3">
+            <div className="p-2 md:p-2.5 bg-green-100 rounded-lg text-green-600 shrink-0">
+              <Wallet className="w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <div>
-              <p className="text-grays text-sm mb-0.5">Wallet</p>
-              <p className="font-bold text-shortblack text-base">
+            <div className="min-w-0">
+              <p className="text-grays text-xs md:text-sm mb-0.5 truncate">
+                Wallet
+              </p>
+              <p className="font-bold text-shortblack text-sm md:text-base truncate">
                 {formatCurrency(user.stats.walletBalance)}
               </p>
             </div>
           </div>
 
           {/* Stat 4: Last Login */}
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-orange-100 rounded-lg text-orange-600">
-              <Clock className="w-5 h-5" />
+          <div className="flex items-start gap-2 md:gap-3">
+            <div className="p-2 md:p-2.5 bg-orange-100 rounded-lg text-orange-600 shrink-0">
+              <Clock className="w-4 h-4 md:w-5 md:h-5" />
             </div>
-            <div>
-              <p className="text-grays text-sm mb-0.5">Last Login</p>
-              <p className="font-bold text-shortblack text-base">
+            <div className="min-w-0">
+              <p className="text-grays text-xs md:text-sm mb-0.5 truncate">
+                Last Login
+              </p>
+              <p className="font-bold text-shortblack text-sm md:text-base truncate">
                 {formatDateTime(user.lastLogin)}
               </p>
             </div>
           </div>
 
           {/* Stat 5: Joined At */}
-          <div className="col-span-2 md:col-span-4 flex items-center gap-2 text-grays text-sm pt-2 border-t border-gray-200/50 mt-2">
-            <Calendar className="w-4 h-4" />
+          <div className="col-span-2 md:col-span-4 flex items-center gap-2 text-grays text-xs md:text-sm pt-2 border-t border-gray-200/50 mt-1 md:mt-2">
+            <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>Joined on {formatDate(user.joinedAt)}</span>
           </div>
         </div>

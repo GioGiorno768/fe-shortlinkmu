@@ -84,15 +84,15 @@ export default function LinkFilters({ filters, setFilters }: LinkFiltersProps) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border border-gray-200 hover:bg-slate-50 transition-colors text-shortblack font-medium text-[1.3em] min-w-[200px] justify-between shadow-sm"
+        className="flex items-center gap-3 px-5 py-3 rounded-xl bg-blues border border-blue-100 text-[1.4em] font-medium text-shortblack hover:bg-blue-50 transition-colors w-full sm:w-auto justify-between min-w-[200px]"
       >
         <div className="flex items-center gap-2 overflow-hidden">
-          <Filter className="w-4 h-4 text-bluelight shrink-0" />
+          <Filter className="w-5 h-5 text-bluelight shrink-0" />
           <span className="truncate">{activeLabels || "Filters"}</span>
         </div>
         <ChevronDown
           className={clsx(
-            "w-4 h-4 text-grays transition-transform",
+            "w-5 h-5 text-grays transition-transform duration-200",
             isOpen && "rotate-180"
           )}
         />

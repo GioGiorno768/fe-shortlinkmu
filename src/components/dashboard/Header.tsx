@@ -57,7 +57,9 @@ export default function Header({
       icon: (
         <span className="solar--wallet-linear w-[2.8em] h-[2.8em] bg-bluelight" />
       ),
-      value: formatCurrency(userStats?.balance),
+      value: formatCurrency(
+        (userStats as import("@/types/type").HeaderStats)?.balance
+      ),
       color: "text-shortblack",
     },
     {
@@ -65,7 +67,9 @@ export default function Header({
       icon: (
         <span className="hugeicons--money-send-circle w-[2.3em] h-[2.3em] bg-bluelight" />
       ),
-      value: formatCurrency(userStats?.payout),
+      value: formatCurrency(
+        (userStats as import("@/types/type").HeaderStats)?.payout
+      ),
       color: "text-shortblack",
     },
     {
@@ -73,7 +77,9 @@ export default function Header({
       icon: (
         <span className="icon-park-outline--click-tap w-[2.5em] h-[2.5em] bg-bluelight" />
       ),
-      value: formatCurrency(userStats?.cpm),
+      value: formatCurrency(
+        (userStats as import("@/types/type").HeaderStats)?.cpm
+      ),
       color: "text-shortblack",
     },
   ];

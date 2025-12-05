@@ -77,14 +77,19 @@ export default function WithdrawalFilters({ filters, setFilters }: Props) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={clsx(
-          "flex items-center gap-2 px-4 py-3 rounded-xl border transition-all duration-200 min-w-[130px] justify-between group",
+          "flex items-center gap-3 px-5 py-3 rounded-xl border transition-all duration-200 min-w-[130px] justify-between group w-full sm:w-auto",
           isOpen || activeCount > 0
             ? "bg-shortblack text-white border-shortblack shadow-lg shadow-shortblack/20"
-            : "bg-white border-gray-200 text-shortblack hover:border-shortblack/30"
+            : "bg-blues border-blue-100 text-shortblack hover:bg-blue-50"
         )}
       >
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4" />
+          <Filter
+            className={clsx(
+              "w-5 h-5",
+              isOpen || activeCount > 0 ? "text-white" : "text-bluelight"
+            )}
+          />
           <span className="font-bold text-[1.1em]">Filter</span>
           {activeCount > 0 && (
             <span className="bg-bluelight text-white text-[0.8em] font-bold px-1.5 py-0.5 rounded-md text-center min-w-[20px]">
@@ -94,8 +99,9 @@ export default function WithdrawalFilters({ filters, setFilters }: Props) {
         </div>
         <ChevronDown
           className={clsx(
-            "w-4 h-4 transition-transform",
-            isOpen && "rotate-180"
+            "w-5 h-5 transition-transform duration-200",
+            isOpen && "rotate-180",
+            isOpen || activeCount > 0 ? "text-white" : "text-grays"
           )}
         />
       </button>

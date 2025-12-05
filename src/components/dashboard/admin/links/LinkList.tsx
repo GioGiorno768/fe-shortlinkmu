@@ -140,21 +140,26 @@ export default function LinkList({
   return (
     <div className="space-y-6 font-figtree">
       {/* TOOLBAR */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {/* Search */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
-          <input
-            type="text"
-            placeholder="Search link, alias, or title..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-[1.4em] text-shortblack"
-          />
-        </div>
+      {/* TOOLBAR */}
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        <h3 className="text-[1.8em] font-bold text-shortblack">Manage Links</h3>
 
-        {/* Filter */}
-        <LinkFilters filters={filters} setFilters={setFilters} />
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          {/* Filter */}
+          <LinkFilters filters={filters} setFilters={setFilters} />
+
+          {/* Search */}
+          <div className="relative flex-1 sm:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
+            <input
+              type="text"
+              placeholder="Search link, alias, or title..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-[1.4em] text-shortblack transition-all"
+            />
+          </div>
+        </div>
       </div>
 
       {/* LIST */}
