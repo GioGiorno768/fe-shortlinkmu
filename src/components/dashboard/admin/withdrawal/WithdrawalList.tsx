@@ -23,6 +23,7 @@ interface Props {
   onApprove: (id: string, currentStatus: string) => void;
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
+  onPayWithProof: (id: string, url: string) => Promise<void>;
 }
 
 export default function WithdrawalList({
@@ -38,6 +39,7 @@ export default function WithdrawalList({
   onApprove,
   onReject,
   onAddProof,
+  onPayWithProof,
 }: Props) {
   const { showAlert } = useAlert();
 
