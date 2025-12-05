@@ -50,7 +50,7 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-8">
+    <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
       {/* First Page */}
       <button
         onClick={() => onPageChange(1)}
@@ -72,7 +72,7 @@ export default function Pagination({
       </button>
 
       {/* Page Numbers */}
-      <div className="flex items-center gap-1 mx-2">
+      <div className="flex flex-wrap items-center justify-center gap-1 mx-2">
         {pages.map((page, index) => (
           <button
             key={index}

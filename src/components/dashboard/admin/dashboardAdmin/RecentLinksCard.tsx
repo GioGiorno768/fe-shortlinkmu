@@ -4,35 +4,37 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   MoreHorizontal,
   ArrowUpRight,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Banknote,
+  Calendar,
   Copy,
   Check,
+  Link2,
+  Eye,
+  DollarSign,
+  Globe,
 } from "lucide-react";
 import clsx from "clsx";
-import type { RecentWithdrawal } from "@/types/type";
+import type { AdminLink } from "@/types/type";
 import { Link, useRouter } from "@/i18n/routing";
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
-interface RecentWithdrawalsCardProps {
-  withdrawals: RecentWithdrawal[];
+interface RecentLinksCardProps {
+  links: AdminLink[];
   isLoading: boolean;
   currentFilter?: string;
   onFilterChange?: (filter: string) => void;
-  onApprove?: (id: string) => void;
 }
 
-export default function RecentWithdrawalsCard({
-  withdrawals,
+export default function RecentLinksCard({
+  links,
   isLoading,
   currentFilter = "all",
   onFilterChange,
-  onApprove,
-}: RecentWithdrawalsCardProps) {
-  const t = useTranslations("AdminDashboard.RecentWithdrawals");
+}: RecentLinksCardProps) {
+  // Fallback translation or use existing if available.
+  // For now assuming we might need to add keys, but I'll use hardcoded text for new parts if keys missing.
+  // Using "AdminDashboard.RecentLinks" scope if possible, or generic.
+  const t = useTranslations("AdminDashboard");
   const router = useRouter();
   const [activeDropdown, setActiveDropdown] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -53,9 +55,6 @@ export default function RecentWithdrawalsCard({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  const formatCurrency = (val: number) =>
-    "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -79,13 +78,6 @@ export default function RecentWithdrawalsCard({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleApprove = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (onApprove) {
-      onApprove(id);
-    }
-  };
-
   const handleFilterClick = (filter: string) => {
     if (onFilterChange) {
       onFilterChange(filter);
@@ -94,7 +86,7 @@ export default function RecentWithdrawalsCard({
   };
 
   // Limit to 7 items
-  const displayedWithdrawals = withdrawals.slice(0, 7);
+  const displayedLinks = links.slice(0, 7);
 
   if (isLoading) {
     return (
@@ -104,14 +96,14 @@ export default function RecentWithdrawalsCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.2 }}
+      transition={{ delay: 0.3 }}
       className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm relative flex flex-col h-full text-[10px]"
     >
       <div className="flex items-center justify-between mb-6 shrink-0">
         <h3 className="text-[2em] md:text-[2em] font-bold text-shortblack">
-          {t("title")}
+          Recent Links
         </h3>
         <div className="relative">
           <button
@@ -131,13 +123,13 @@ export default function RecentWithdrawalsCard({
               >
                 <div className="p-2">
                   <div className="px-3 py-2 text-[1.4em] font-semibold text-grays border-b border-gray-50 mb-1">
-                    {t("filter.title")}
+                    Filter Status
                   </div>
                   {[
-                    { label: t("filter.all"), value: "all" },
-                    { label: t("filter.pending"), value: "pending" },
-                    { label: t("filter.approved"), value: "approved" },
-                    { label: t("filter.paid"), value: "paid" },
+                    { label: "All Links", value: "all" },
+                    { label: "Active", value: "active" },
+                    { label: "Disabled", value: "disabled" },
+                    { label: "Expired", value: "expired" },
                   ].map((item) => (
                     <button
                       key={item.value}
@@ -163,91 +155,89 @@ export default function RecentWithdrawalsCard({
         onWheel={(e) => e.stopPropagation()}
         className="space-y-3 overflow-y-auto pr-2 h-[400px] scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent"
       >
-        {displayedWithdrawals.length === 0 ? (
+        {displayedLinks.length === 0 ? (
           <p className="text-center text-grays py-8 text-[1.4em]">
-            {t("noRequests")}
+            No recent links found.
           </p>
         ) : (
-          displayedWithdrawals.map((wd) => (
+          displayedLinks.map((link) => (
             <div
-              key={wd.id}
-              onClick={() => router.push(`/admin/withdrawals?id=${wd.id}`)}
-              className="flex items-center justify-between p-3 md:p-4 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer border border-transparent hover:border-gray-100 relative"
+              key={link.id}
+              onClick={() =>
+                router.push(`/admin/links?search=${link.shortUrl}`)
+              }
+              className="flex md:items-center items-start md:flex-row flex-col justify-between md:p-4 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer border border-transparent hover:border-gray-100 relative"
             >
               <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 overflow-hidden shrink-0">
-                  <img
-                    src={wd.user.avatar}
-                    alt={wd.user.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 overflow-hidden shrink-0">
+                  <Link2 className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="text-[1.4em] md:text-[1.6em] font-bold text-shortblack group-hover:text-bluelight transition-colors truncate">
-                      {wd.user.name}
+                      {link.shortUrl}
                     </h4>
                     <button
-                      onClick={(e) => handleCopy(e, wd.id, wd.id)}
+                      onClick={(e) => handleCopy(e, link.shortUrl, link.id)}
                       className="text-gray-400 hover:text-blue-500 transition-colors shrink-0"
-                      title="Copy Transaction ID"
+                      title="Copy Short URL"
                     >
-                      {copiedId === wd.id ? (
+                      {copiedId === link.id ? (
                         <Check className="w-3 h-3 text-green-500" />
                       ) : (
                         <Copy className="w-3 h-3" />
                       )}
                     </button>
                   </div>
-                  <div className="flex items-center gap-2 text-[1.2em] md:text-[1.4em] text-grays mt-0.5">
-                    <span className="capitalize truncate max-w-[80px]">
-                      {wd.method}
-                    </span>
-                    <span>•</span>
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopy(e, link.originalUrl, link.id);
+                    }}
+                    className="flex items-center gap-2 mt-1.5 w-full max-w-[280px]"
+                  >
+                    <input
+                      type="text"
+                      readOnly
+                      value={link.originalUrl}
+                      className="flex-1 bg-gray-50 border border-gray-100 rounded-lg px-2 py-1 text-[1.1em] text-grays focus:outline-none truncate min-w-0"
+                    />
                     <span
-                      title={formatFullDate(wd.date)}
-                      className="whitespace-nowrap"
+                      title={formatFullDate(link.createdAt)}
+                      className="whitespace-nowrap text-[1.1em] text-grays shrink-0"
                     >
-                      {formatDate(wd.date)}
+                      {formatDate(link.createdAt)}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="text-right flex items-center gap-3 shrink-0 ml-2">
-                <div className="flex flex-col items-end">
-                  <p className="text-[1.4em] md:text-[1.6em] font-bold text-shortblack">
-                    {formatCurrency(wd.amount)}
-                  </p>
+              <div className="text-right flex items-center gap-3 shrink-0 md:ml-2 px-4 md:px-0 ml-9">
+                <div className="flex md:flex-col flex-row gap-2 items-end">
+                  <div className="flex items-center gap-3 text-[1.2em] md:text-[1.4em] font-medium text-shortblack">
+                    <span className="flex items-center gap-1" title="Views">
+                      <Eye className="w-3 h-3 text-grays" /> {link.views}
+                    </span>
+                    <span
+                      className="flex items-center gap-1 text-green-600"
+                      title="Earnings"
+                    >
+                      <DollarSign className="w-3 h-3" /> {link.earnings}
+                    </span>
+                  </div>
+
                   <div
                     className={clsx(
                       "inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[1.2em] font-medium mt-1",
-                      wd.status === "pending"
-                        ? "bg-yellow-50 text-yellow-600"
-                        : wd.status === "approved"
+                      link.status === "active"
                         ? "bg-blue-50 text-blue-600"
-                        : wd.status === "paid"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-red-50 text-red-600"
+                        : link.status === "disabled"
+                        ? "bg-red-50 text-red-600"
+                        : "bg-gray-100 text-gray-600"
                     )}
                   >
-                    {wd.status === "pending" && <Clock className="w-3 h-3" />}
-                    {wd.status === "approved" && (
-                      <CheckCircle2 className="w-3 h-3" />
-                    )}
-                    {wd.status === "paid" && <Banknote className="w-3 h-3" />}
-                    {wd.status === "rejected" && (
-                      <XCircle className="w-3 h-3" />
-                    )}
-                    <span className="capitalize hidden sm:inline">
-                      {wd.status}
-                    </span>
+                    <span className="capitalize">{link.status}</span>
                   </div>
-                  {wd.processed_by && (
-                    <span className="text-[1em] text-grays mt-0.5 hidden sm:inline-block">
-                      {t("by")} {wd.processed_by}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -256,10 +246,10 @@ export default function RecentWithdrawalsCard({
       </div>
 
       <Link
-        href="/admin/withdrawals"
+        href="/admin/links"
         className="w-full mt-4 py-3 text-[1.4em] md:text-[1.6em] font-medium text-grays hover:text-bluelight hover:bg-blue-50 rounded-xl transition-all flex items-center justify-center gap-2 shrink-0"
       >
-        <span>{t("viewAll")}</span>
+        <span>Manage Links</span>
         <ArrowUpRight className="w-4 h-4" />
       </Link>
     </motion.div>

@@ -13,6 +13,7 @@ export function useAdminDashboard() {
   const [activities, setActivities] = useState<{
     withdrawals: RecentWithdrawal[];
     users: RecentUser[];
+    links: import("@/types/type").AdminLink[];
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

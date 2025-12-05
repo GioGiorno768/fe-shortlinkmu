@@ -17,6 +17,7 @@ export default function AdminDashboard() {
       <RecentActivities
         withdrawals={activities?.withdrawals || []}
         users={activities?.users || []}
+        links={activities?.links || []}
         isLoading={isLoading}
       />
     </div>

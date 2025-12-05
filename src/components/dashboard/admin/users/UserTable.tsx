@@ -2,10 +2,6 @@
 
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   ChevronDown,
   Filter,
   CheckCircle2,
@@ -16,6 +12,7 @@ import clsx from "clsx";
 import type { AdminUser, UserStatus } from "@/types/type";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import UserListCard from "./UserListCard";
+import Pagination from "@/components/dashboard/Pagination";
 
 interface UserTableProps {
   users: AdminUser[];
@@ -166,43 +163,13 @@ export default function UserTable({
         )}
       </div>
 
-      {/* FOOTER PAGINATION */}
-      {totalPages > 1 && (
-        <div className="p-6 bg-white rounded-3xl border border-gray-100 flex justify-end items-center gap-4">
-          <span className="text-[1.4em] text-grays font-medium">
-            Page {page} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(1)}
-              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <ChevronsLeft className="w-5 h-5 text-shortblack" />
-            </button>
-            <button
-              disabled={page === 1}
-              onClick={() => setPage(page - 1)}
-              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <ChevronLeft className="w-5 h-5 text-shortblack" />
-            </button>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage(page + 1)}
-              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <ChevronRight className="w-5 h-5 text-shortblack" />
-            </button>
-            <button
-              disabled={page === totalPages}
-              onClick={() => setPage(totalPages)}
-              className="p-2 rounded-lg border border-gray-200 hover:bg-slate-50 disabled:opacity-50"
-            >
-              <ChevronsRight className="w-5 h-5 text-shortblack" />
-            </button>
-          </div>
-        </div>
+      {/* PAGINATION */}
+      {!isLoading && users.length > 0 && (
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

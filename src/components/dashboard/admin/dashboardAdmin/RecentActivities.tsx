@@ -1,12 +1,13 @@
 "use client";
 
-import type { RecentWithdrawal, RecentUser } from "@/types/type";
+import type { RecentWithdrawal, RecentUser, AdminLink } from "@/types/type";
 import RecentWithdrawalsCard from "./RecentWithdrawalsCard";
-import NewUsersCard from "./NewUsersCard";
+import RecentLinksCard from "./RecentLinksCard";
 
 interface RecentActivitiesProps {
   withdrawals: RecentWithdrawal[];
   users: RecentUser[];
+  links?: AdminLink[]; // Optional for now to avoid breaking if not passed immediately
   isLoading: boolean;
   currentWithdrawalFilter?: string;
   onWithdrawalFilterChange?: (filter: string) => void;
@@ -18,6 +19,7 @@ interface RecentActivitiesProps {
 export default function RecentActivities({
   withdrawals,
   users,
+  links = [],
   isLoading,
   currentWithdrawalFilter = "all",
   onWithdrawalFilterChange,
@@ -34,8 +36,8 @@ export default function RecentActivities({
         onFilterChange={onWithdrawalFilterChange}
         onApprove={onApproveWithdrawal}
       />
-      <NewUsersCard
-        users={users}
+      <RecentLinksCard
+        links={links}
         isLoading={isLoading}
         currentFilter={currentUserFilter}
         onFilterChange={onUserFilterChange}

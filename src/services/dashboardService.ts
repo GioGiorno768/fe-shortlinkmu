@@ -201,6 +201,7 @@ export const getAdminStats = async (): Promise<AdminDashboardStats> => {
 export const getAdminActivities = async (): Promise<{
   withdrawals: import("@/types/type").RecentWithdrawal[];
   users: import("@/types/type").RecentUser[];
+  links: import("@/types/type").AdminLink[];
 }> => {
   await new Promise((r) => setTimeout(r, 1000));
   return {
@@ -404,5 +405,23 @@ export const getAdminActivities = async (): Promise<{
         status: "active",
       },
     ],
+    links: Array.from({ length: 10 }, (_, i) => ({
+      id: `link-${i}`,
+      title: `Link ${i}`,
+      shortUrl: `short.link/xyz${i}`,
+      originalUrl: `https://example.com/long/url/${i}`,
+      owner: {
+        id: `user-${i}`,
+        name: `User ${i}`,
+        username: `user${i}`,
+        email: `user${i}@example.com`,
+        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`,
+      },
+      views: Math.floor(Math.random() * 1000),
+      earnings: parseFloat((Math.random() * 10).toFixed(2)),
+      createdAt: new Date(Date.now() - i * 3600000).toISOString(),
+      status: i % 5 === 0 ? "disabled" : "active",
+      adsLevel: "level1",
+    })),
   };
 };
