@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import type { CountryStat } from "@/types/type";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface TopCountriesCardProps {
   data: CountryStat[] | null;

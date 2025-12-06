@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Filter,
   Search,

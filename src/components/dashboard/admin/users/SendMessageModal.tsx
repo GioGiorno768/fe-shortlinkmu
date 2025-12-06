@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, Send, AlertTriangle, Megaphone, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
 
 interface SendMessageModalProps {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import TitleSection from "@/components/landing/TitleSection";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Banknote, DollarSign, Globe, Search, Wallet } from "lucide-react";
 import Image from "next/image"; // Impor 'Image' dari 'next/image'
 
@@ -220,3 +220,4 @@ export default function PayoutRates() {
     </main>
   );
 }
+

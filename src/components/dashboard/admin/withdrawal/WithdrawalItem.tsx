@@ -18,7 +18,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import type { RecentWithdrawal } from "@/types/type";
 import { useClickOutside } from "@/hooks/useClickOutside";
 

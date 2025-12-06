@@ -1,7 +1,7 @@
 // src/app/[locale]/(member)/ads-info/page.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   Check,
   X as XIcon,
@@ -222,3 +222,4 @@ export default function AdsInfoPage() {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
 "use client"; // Perlu untuk framer-motion dan event handler
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ArrowLeft, Link as LinkIcon, Lock, Mail } from "lucide-react";
 // --- UBAH INI ---
 import { Link } from "@/i18n/routing";
@@ -196,3 +196,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

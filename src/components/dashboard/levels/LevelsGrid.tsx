@@ -1,7 +1,7 @@
 // src/components/dashboard/levels/LevelsGrid.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   Shield,
   Star,

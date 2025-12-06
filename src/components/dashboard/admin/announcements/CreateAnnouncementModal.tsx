@@ -10,7 +10,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import type { AdminAnnouncement } from "@/types/type";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 // --- CONSTANTS ---
 const ICONS = [

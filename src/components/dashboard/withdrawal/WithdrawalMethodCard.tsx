@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react"; // Tambah useState
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   Settings,
   AlertTriangle,

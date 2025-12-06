@@ -3,7 +3,7 @@
 
 import { useTranslations } from "next-intl";
 import { Loader2, Globe, Facebook, Twitter, User, Link2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import type { ReferrerStat } from "@/types/type";
 
 interface TopReferrersCardProps {

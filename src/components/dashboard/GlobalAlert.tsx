@@ -1,7 +1,7 @@
 "use client";
 
 import { useAlert } from "@/hooks/useAlert";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 import { useEffect } from "react";
 

@@ -10,7 +10,7 @@ import {
   Globe,
   AlertCircle,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import type { ActivityLog } from "@/types/type";
 
 interface ActivityItemProps {

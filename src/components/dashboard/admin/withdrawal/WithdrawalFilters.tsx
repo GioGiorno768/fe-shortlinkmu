@@ -9,7 +9,7 @@ import {
   User,
   Activity,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AdminWithdrawalFilters } from "@/types/type";

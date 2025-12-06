@@ -14,7 +14,7 @@ import {
   History,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 import { useWithdrawalDetail } from "@/hooks/admin/useWithdrawalDetail";
 import TransactionInfoCard from "@/components/dashboard/admin/withdrawal/detail/TransactionInfoCard";
@@ -218,3 +218,4 @@ export default function WithdrawalDetailPage({
     </div>
   );
 }
+

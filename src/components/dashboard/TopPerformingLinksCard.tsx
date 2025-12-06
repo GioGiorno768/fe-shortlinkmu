@@ -20,7 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
 import type { TopPerformingLink } from "@/types/type";
 

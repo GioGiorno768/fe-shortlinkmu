@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Crown, TrendingUp, Zap } from "lucide-react";
 import type { UserLevelProgress } from "@/types/type";
 import clsx from "clsx";

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Figtree, Geist, Manrope } from "next/font/google";
+import { Figtree, Manrope } from "next/font/google";
 import "../globals.css"; // Perhatikan path naik satu level (../)
 import LenisScrollProvider from "../LenisProvider"; // Sesuaikan path jika perlu
 import { NextIntlClientProvider } from "next-intl";
@@ -22,11 +22,11 @@ const manrope = Manrope({
   weight: ["300", "400", "500", "600", "700", "800"],
 });
 
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
+// const geist = Geist({
+//   variable: "--font-geist",
+//   subsets: ["latin"],
+//   weight: ["300", "400", "500", "600", "700", "800", "900"],
+// });
 
 export const metadata: Metadata = {
   title: "Shortlinkmu",
@@ -55,7 +55,7 @@ export default async function RootLayout({
     <html lang={locale} className="scroll-smooth">
       {/* ... (Isi body sama aja) ... */}
       <body
-        className={`${figtree.className} ${manrope.className} ${geist.className} antialiased`}
+        className={`${figtree.className} ${manrope.className} antialiased`}
       >
         <NextIntlClientProvider messages={messages}>
           <LenisScrollProvider>

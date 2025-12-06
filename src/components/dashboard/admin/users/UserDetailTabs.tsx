@@ -15,7 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { useTranslations, useFormatter } from "next-intl";
 import type { UserDetailData } from "@/types/type";
 import UserMessageHistory from "./UserMessageHistory";

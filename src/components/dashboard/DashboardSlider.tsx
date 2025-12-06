@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { ArrowRight, Loader2 } from "lucide-react"; // Icon lain dihapus karena dikirim via props
 import { Link } from "@/i18n/routing";
 import clsx from "clsx";

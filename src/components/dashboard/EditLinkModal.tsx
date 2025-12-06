@@ -12,7 +12,7 @@ import {
   Megaphone,
   ChevronDown,
 } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import type { EditableLinkData, AdLevel } from "@/types/type";
 
 interface EditLinkModalProps {

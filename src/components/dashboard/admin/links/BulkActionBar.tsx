@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { CheckSquare, Square, Ban, CheckCircle2, X } from "lucide-react";
 
 interface BulkActionBarProps {

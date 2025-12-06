@@ -17,7 +17,7 @@ import {
   Filter,
   ChevronDown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
 import { useNotifications } from "@/hooks/useNotifications";
 import type { Role, NotificationItem } from "@/types/type"; // Import tipe global

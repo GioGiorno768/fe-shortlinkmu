@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { useEffect } from "react";
-import { motion } from "framer-motion"; // Hapus import Variants kalau gak dipake eksplisit
+import { motion } from "motion/react"; // Hapus import Variants kalau gak dipake eksplisit
 import { FileQuestion, ArrowLeft, Home } from "lucide-react";
 
 export default function NotFound() {
@@ -157,3 +157,4 @@ export default function NotFound() {
     </main>
   );
 }
+

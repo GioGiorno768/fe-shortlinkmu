@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Link2, MousePointerClick, Users } from "lucide-react";
 
 export default function StatsSection() {

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Filter, ChevronDown, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AdminLinkFilters } from "@/types/type";

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Lock, Shield, Smartphone, Loader2, KeyRound } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
 import type { SecuritySettings } from "@/types/type";

@@ -1,7 +1,7 @@
 // src/components/dashboard/analytics/TrafficHistory.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import {
   TrendingUp,
   Crown,

@@ -6,7 +6,7 @@ import {
   AnimatePresence,
   useScroll,
   useTransform,
-} from "framer-motion";
+} from "motion/react";
 
 export default function FloatingNavbar() {
   const openMenu = useRef<HTMLInputElement>(null);

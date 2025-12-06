@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Bell, Mail, ShieldAlert, Megaphone } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
 import type { NotificationSettings } from "@/types/type";

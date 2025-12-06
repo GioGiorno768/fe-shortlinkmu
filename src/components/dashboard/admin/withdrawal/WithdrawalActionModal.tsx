@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { X, AlertTriangle, Link2, Send, Loader2 } from "lucide-react";
 import clsx from "clsx";
 

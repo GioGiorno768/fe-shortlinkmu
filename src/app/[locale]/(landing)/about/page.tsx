@@ -3,7 +3,7 @@
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import TitleSection from "@/components/landing/TitleSection";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Eye, Link as LinkIcon, Target, Users } from "lucide-react";
 
 export default function AboutPage() {
@@ -195,3 +195,4 @@ export default function AboutPage() {
     </main>
   );
 }
+

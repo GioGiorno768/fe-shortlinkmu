@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import clsx from "clsx";
 import type { FilterByType, SortByType } from "@/types/type";
 

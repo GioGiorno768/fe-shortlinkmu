@@ -1,7 +1,7 @@
 // src/components/dashboard/MilestoneCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { TrendingUp, ChevronRight, Loader2, Lock, Star } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import type { MilestoneData } from "@/types/type";

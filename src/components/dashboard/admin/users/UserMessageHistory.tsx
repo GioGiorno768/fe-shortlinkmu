@@ -17,7 +17,7 @@ import {
   Calendar,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import type { UserMessage } from "@/types/type";
 import { useFormatter } from "next-intl";
 
