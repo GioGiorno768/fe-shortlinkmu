@@ -70,17 +70,29 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
     {
       icon: LineChart,
       label: "Total Profit (Platform)",
-      href: "/admin/profit",
+      href: "/super-admin/profit",
     },
-    { icon: Megaphone, label: "Ads Configuration", href: "/admin/ads-levels" }, // <--- PINDAH SINI
-    { icon: UserCog, label: "Manage Admins", href: "/admin/manage-admins" },
+    {
+      icon: Megaphone,
+      label: "Ads Configuration",
+      href: "/super-admin/ads-levels",
+    }, // <--- PINDAH SINI
+    {
+      icon: UserCog,
+      label: "Manage Admins",
+      href: "/super-admin/manage-admins",
+    },
     {
       icon: ServerCog,
       label: "System Settings",
-      href: "/admin/system-settings",
+      href: "/super-admin/system-settings",
     },
-    { icon: ClipboardList, label: "Audit Logs", href: "/admin/audit" },
-    { icon: Database, label: "Database & Backup", href: "/admin/database" },
+    { icon: ClipboardList, label: "Audit Logs", href: "/super-admin/audit" },
+    {
+      icon: Database,
+      label: "Database & Backup",
+      href: "/super-admin/database",
+    },
   ];
 
   // LOGIC PENGGABUNGAN:

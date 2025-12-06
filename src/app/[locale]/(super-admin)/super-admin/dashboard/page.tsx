@@ -1,52 +1,89 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-// Nanti lu bisa bikin komponen khusus kayak 'ServerStatusCard' atau 'GlobalRevenue'
-// import SuperAdminStats from "@/components/dashboard/super-admin/SuperAdminStats";
+import SharedStatsGrid, {
+  StatCardData,
+} from "@/components/dashboard/SharedStatsGrid"; // <--- REUSE DISINI
+import { useSuperAdmin } from "@/hooks/useSuperAdmin";
+import { DollarSign, Users, Ban, UserCheck } from "lucide-react";
+import RevenueEstimationChart from "@/components/dashboard/super-admin/RevenueEstimationChart";
+import AuditLogCard from "@/components/dashboard/super-admin/AuditLogCard";
+import { useState, useEffect } from "react";
+import { getRecentAuditLogs } from "@/services/superAdminService";
+import type { AuditLogEntry } from "@/types/type";
 
 export default function SuperAdminDashboardPage() {
+  const { stats, isLoading } = useSuperAdmin();
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [isLogsLoading, setIsLogsLoading] = useState(true);
+
+  useEffect(() => {
+    getRecentAuditLogs().then((data) => {
+      setAuditLogs(data);
+      setIsLogsLoading(false);
+    });
+  }, []);
+
+  const formatCurrency = (val: number) =>
+    "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
+
+  // MAPPING DATA SUPER ADMIN (Beda Config)
+  const superAdminCards: StatCardData[] = [
+    {
+      id: "paid",
+      title: "Paid Today",
+      value: stats ? formatCurrency(stats.financial.paidToday) : "...",
+      subLabel: "Total Disbursement",
+      trend: stats?.financial.trend,
+      icon: DollarSign,
+      color: "green",
+    },
+    {
+      id: "users",
+      title: "Users Paid",
+      value: stats ? stats.financial.usersPaidToday.toString() : "...",
+      subLabel: "Processed Today",
+      trend: stats?.financial.trend,
+      icon: Users,
+      color: "blue",
+    },
+    {
+      id: "blocked",
+      title: "Blocked Links",
+      value: stats ? stats.security.blockedLinksToday.toString() : "...",
+      subLabel: "System Block",
+      trend: stats?.security.trend,
+      icon: Ban,
+      color: "red",
+    },
+    {
+      id: "staff",
+      title: "Staff Online",
+      value: stats
+        ? `${stats.system.staffOnline} / ${stats.system.totalStaff}`
+        : "...",
+      subLabel: "Active Admins",
+      icon: UserCheck,
+      color: "orange", // Warna beda buat sistem
+    },
+  ];
+
   return (
     <div className="space-y-8 pb-24 text-[10px]">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-[2.4em] font-bold text-red-600 flex items-center gap-2">
-            Super Admin Control 🛡️
-          </h1>
-          <p className="text-gray-400 text-[1.4em]">
-            Global system monitoring and configuration.
-          </p>
-        </div>
-      </div>
+      {/* 1. Top Stats (REUSE) */}
+      <SharedStatsGrid
+        cards={superAdminCards}
+        isLoading={isLoading}
+        columns={4}
+      />
 
-      {/* Area Konten Super Admin */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Contoh Card Placeholder */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-[1.4em] font-bold text-shortblack">
-            Server Status
-          </h3>
-          <p className="text-[2em] font-bold text-green-500 mt-2">Healthy</p>
-          <p className="text-gray-400 text-[1.1em]">CPU: 12% | RAM: 45%</p>
-        </div>
+      {/* 2. Revenue Chart */}
+      <RevenueEstimationChart />
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-[1.4em] font-bold text-shortblack">
-            Total Admins
-          </h3>
-          <p className="text-[2em] font-bold text-blue-500 mt-2">5 Staff</p>
-          <p className="text-gray-400 text-[1.1em]">2 Active Now</p>
-        </div>
+      {/* 3. Audit Logs */}
+      <AuditLogCard logs={auditLogs} isLoading={isLogsLoading} />
 
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-[1.4em] font-bold text-shortblack">
-            Global Revenue
-          </h3>
-          <p className="text-[2em] font-bold text-orange-500 mt-2">$15,420</p>
-          <p className="text-gray-400 text-[1.1em]">All time platform profit</p>
-        </div>
-      </div>
-
-      {/* Nanti di sini bisa tambah Table Audit Log dll */}
+      {/* 4. Chart & Logs */}
+      {/* ... (kode chart) ... */}
     </div>
   );
 }

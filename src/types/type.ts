@@ -569,9 +569,42 @@ export interface AdminAnnouncementStats {
 
 // --- SUPER ADMIN TYPES ---
 
+// 👇 UPDATE: Super Admin Stats
 export interface SuperAdminStats {
-  totalAdmins: number;
-  serverStatus: string;
-  totalRevenue: number;
-  systemLogs: number;
+  financial: {
+    paidToday: number; // Total uang keluar hari ini
+    usersPaidToday: number; // Jumlah user yang dibayar
+    trend: number; // Persentase vs kemarin
+  };
+  security: {
+    blockedLinksToday: number; // Link yang kena ban hari ini
+    trend: number;
+  };
+  system: {
+    staffOnline: number; // Jumlah admin aktif
+    totalStaff: number; // Total admin terdaftar
+  };
+}
+
+// 👇 AUDIT LOG TYPE
+export type AuditActionType =
+  | "BLOCK_LINK"
+  | "APPROVE_WITHDRAWAL"
+  | "REJECT_WITHDRAWAL"
+  | "MANAGE_ANNOUNCEMENT" // Baru: Update Announcement
+  | "SEND_NOTIFICATION"; // Baru: Chat/Notif ke User
+
+export interface AuditLogEntry {
+  id: string;
+  admin: {
+    id: string;
+    name: string;
+    avatar: string;
+    role: "admin" | "super-admin";
+  };
+  action: AuditActionType;
+  target: string; // "short.link/abc", "User: Udin", "Withdrawal #123"
+  details: string; // "Reason: Phishing detected"
+  timestamp: string; // ISO Date
+  status: "success" | "failed";
 }

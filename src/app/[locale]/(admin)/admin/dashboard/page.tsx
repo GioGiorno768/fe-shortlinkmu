@@ -1,19 +1,68 @@
-// src/app/[locale]/(admin)/admin/dashboard/page.tsx
 "use client";
 
-import TopStatsCards from "@/components/dashboard/admin/dashboardAdmin/TopStatsCards";
+import SharedStatsGrid, {
+  StatCardData,
+} from "@/components/dashboard/SharedStatsGrid"; // <--- IMPORT INI
 import RecentActivities from "@/components/dashboard/admin/dashboardAdmin/RecentActivities";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
+import { CheckCircle2, Users, Link2, Ban } from "lucide-react"; // Import Icon
 
 export default function AdminDashboard() {
   const { stats, activities, isLoading } = useAdminDashboard();
 
-  return (
-    <div className="space-y-8">
-      {/* 1. Top Stats */}
-      <TopStatsCards data={stats} isLoading={isLoading} />
+  const formatCurrency = (val: number) =>
+    "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
+  const formatNumber = (val: number) => val.toLocaleString("en-US");
 
-      {/* 2. Recent Activities */}
+  // MAPPING DATA ADMIN
+  const adminStatsCards: StatCardData[] = [
+    {
+      id: "paid",
+      title: "Paid Today",
+      value: stats ? formatCurrency(stats.financial.paidToday) : "...",
+      subLabel: "Total Payouts",
+      trend: stats?.financial.trend,
+      icon: CheckCircle2,
+      color: "green",
+    },
+    {
+      id: "users_paid",
+      title: "Users Paid",
+      value: stats ? formatNumber(stats.financial.usersPaidToday) : "...",
+      subLabel: "Processed Today",
+      trend: stats?.financial.trend,
+      icon: Users,
+      color: "blue",
+    },
+    {
+      id: "created",
+      title: "Links Created",
+      value: stats ? formatNumber(stats.content.linksCreatedToday) : "...",
+      subLabel: "New Links Today",
+      trend: stats?.content.trend,
+      icon: Link2,
+      color: "purple",
+    },
+    {
+      id: "blocked",
+      title: "Blocked Links",
+      value: stats ? formatNumber(stats.security.linksBlockedToday) : "...",
+      subLabel: "Blocked Today",
+      trend: stats?.security.trend,
+      icon: Ban,
+      color: "red",
+    },
+  ];
+
+  return (
+    <div className="space-y-8 pb-10 text-[10px]">
+      {/* Pake Shared Component */}
+      <SharedStatsGrid
+        cards={adminStatsCards}
+        isLoading={isLoading}
+        columns={4}
+      />
+
       <RecentActivities
         withdrawals={activities?.withdrawals || []}
         users={activities?.users || []}
