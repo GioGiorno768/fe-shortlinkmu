@@ -1,21 +1,54 @@
+// src/app/[locale]/(super-admin)/super-admin/links/page.tsx
 "use client";
 
-export default function SuperAdminLinksPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manage Links</h1>
-          <p className="text-gray-500">Super Admin Control for All Links</p>
-        </div>
-      </div>
+import LinkStatsRow from "@/components/dashboard/admin/links/LinkStatsRow";
+import LinkList from "@/components/dashboard/admin/links/LinkList";
+import { useAdminLinks } from "@/hooks/admin/useAdminLinks";
 
-      {/* Placeholder Content */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-        <p className="text-gray-500 text-center py-10">
-          Super Admin Link Management Module (Coming Soon)
-        </p>
-      </div>
+export default function SuperAdminLinksPage() {
+  const {
+    stats,
+    links,
+    isLoading,
+    search,
+    setSearch,
+    filters,
+    setFilters,
+    selectedItems,
+    isAllSelected,
+    toggleSelect,
+    selectAll,
+    deselectAll,
+    handleBulkAction,
+    page,
+    totalPages,
+    setPage,
+    totalCount,
+  } = useAdminLinks();
+
+  return (
+    <div className="space-y-8 pb-24 text-[10px]">
+      {" "}
+      {/* pb-24 biar gak ketutup bulk bar */}
+      <LinkStatsRow stats={stats} isLoading={isLoading} />
+      <LinkList
+        links={links}
+        isLoading={isLoading}
+        search={search}
+        setSearch={setSearch}
+        filters={filters}
+        setFilters={setFilters}
+        selectedItems={selectedItems}
+        isAllSelected={isAllSelected}
+        toggleSelect={toggleSelect}
+        selectAll={selectAll}
+        deselectAll={deselectAll}
+        handleBulkAction={handleBulkAction}
+        page={page}
+        totalPages={totalPages}
+        setPage={setPage}
+        totalCount={totalCount}
+      />
     </div>
   );
 }

@@ -139,7 +139,7 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
       </div>
 
       {/* List content */}
-      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-minimal">
+      <div onWheel={(e) => e.stopPropagation()} className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-minimal">
         {logs.length === 0 ? (
           <div className="text-center py-10 text-slate-400">No logs found</div>
         ) : (

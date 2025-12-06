@@ -19,12 +19,18 @@ interface UserListCardProps {
   user: AdminUser;
   isSelected?: boolean;
   onClick?: () => void;
+  onViewDetail?: () => void; // <--- Keep for backward compatibility (modal)
+  detailHref?: string; // <--- Add this for Link-based navigation
+  onSuspend?: (userId: string, currentStatus: UserStatus) => void; // <--- Add for suspend/unsuspend
 }
 
 export default function UserListCard({
   user,
   isSelected,
   onClick,
+  onViewDetail, // <--- Add this
+  detailHref, // <--- Add this
+  onSuspend, // <--- Add this
 }: UserListCardProps) {
   const getInitials = (name: string) => {
     return name
@@ -142,7 +148,56 @@ export default function UserListCard({
 
         {/* Actions (Desktop Only or Hidden) */}
         <div className="hidden md:flex items-center gap-3 shrink-0 w-full md:w-auto justify-end">
-          {/* ... actions ... */}
+          {/* Suspend/Unsuspend Button */}
+          {onSuspend && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSuspend(user.id, user.status);
+              }}
+              className={clsx(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2",
+                user.status === "suspended"
+                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                  : "bg-red-100 text-red-700 hover:bg-red-200"
+              )}
+            >
+              {user.status === "suspended" ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4" />
+                  Unsuspend
+                </>
+              ) : (
+                <>
+                  <Ban className="w-4 h-4" />
+                  Suspend
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Detail Button */}
+          {detailHref ? (
+            <Link
+              href={detailHref}
+              onClick={(e) => e.stopPropagation()}
+              className="px-4 py-2 bg-bluelight text-white rounded-lg text-sm font-medium hover:bg-bluelight/90 transition-colors flex items-center gap-2"
+            >
+              <ArrowRight className="w-4 h-4" />
+              Detail
+            </Link>
+          ) : onViewDetail ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewDetail();
+              }}
+              className="px-4 py-2 bg-bluelight text-white rounded-lg text-sm font-medium hover:bg-bluelight/90 transition-colors flex items-center gap-2"
+            >
+              <ArrowRight className="w-4 h-4" />
+              Detail
+            </button>
+          ) : null}
         </div>
       </div>
 

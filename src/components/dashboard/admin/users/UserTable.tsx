@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Search,
-  ChevronDown,
-  Filter,
-  CheckCircle2,
-} from "lucide-react";
+import { Search, ChevronDown, Filter, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useRef } from "react";
 import clsx from "clsx";
@@ -30,6 +25,9 @@ interface UserTableProps {
   isAllSelected: boolean; // <--- New Prop
   onToggleSelection: (id: string) => void;
   onSelectAll: () => void;
+  onViewDetail?: (userId: string) => void; // <--- Add this
+  detailBasePath?: string; // <--- Add this for Link-based navigation (e.g., "/super-admin/manage-user")
+  onSuspend?: (userId: string, currentStatus: UserStatus) => void; // <--- Add for suspend/unsuspend
 }
 
 export default function UserTable({
@@ -47,6 +45,9 @@ export default function UserTable({
   isAllSelected, // <--- Destructure
   onToggleSelection,
   onSelectAll,
+  onViewDetail, // <--- Add this
+  detailBasePath, // <--- Add this
+  onSuspend, // <--- Add this
 }: UserTableProps) {
   // Filter Dropdown State
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -57,7 +58,6 @@ export default function UserTable({
     { value: "all", label: "Semua Status" },
     { value: "active", label: "Aktif Aja" },
     { value: "suspended", label: "Yg Kena Suspend" },
-    { value: "process", label: "Lagi Diproses" },
   ];
 
   const currentFilterLabel =
@@ -156,8 +156,15 @@ export default function UserTable({
             <UserListCard
               key={user.id}
               user={user}
-              isSelected={isAllSelected || selectedIds.has(user.id)} // <--- Update Logic
+              isSelected={isAllSelected || selectedIds.has(user.id)}
               onClick={() => onToggleSelection(user.id)}
+              onViewDetail={
+                onViewDetail ? () => onViewDetail(user.id) : undefined
+              }
+              detailHref={
+                detailBasePath ? `${detailBasePath}/${user.id}` : undefined
+              }
+              onSuspend={onSuspend} // <--- Pass suspend handler
             />
           ))
         )}
