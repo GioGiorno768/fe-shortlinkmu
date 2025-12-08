@@ -92,9 +92,20 @@ export interface AdFeature {
 
 export interface AdLevelConfig {
   id: string;
-  totalReferred: number;
-  activeReferred: number;
-  commissionRate: number; // dalam persen (misal 20)
+  name: string; // cth: "Low", "Medium", "High", "Aggressive"
+  slug: string; // cth: "low", "medium", "high", "aggressive"
+  description: string; // Deskripsi level ads
+  cpmRate: string; // cth: "Variable" atau "$0.50 - $2.00"
+  revenueShare: number; // Persentase revenue (30, 50, 75, 100)
+  demoUrl: string; // Link demo
+  colorTheme: string; // "green", "blue", "orange", "red"
+  features: AdFeature[]; // List fitur ads
+  isPopular?: boolean; // Optional - buat badge "MOST POPULAR"
+
+  // Legacy fields (optional, mungkin dipake di bagian referral config)
+  totalReferred?: number;
+  activeReferred?: number;
+  commissionRate?: number; // dalam persen (misal 20)
 }
 
 export interface ReferredUser {
