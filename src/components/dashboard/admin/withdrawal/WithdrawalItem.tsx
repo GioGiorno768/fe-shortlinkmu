@@ -31,6 +31,7 @@ interface WithdrawalItemProps {
   // Modal triggers
   openRejectModal: (id: string) => void;
   openProofModal: (id: string) => void; // Added
+  detailBasePath?: string; // <--- Add this for dynamic URL
 }
 
 export default function WithdrawalItem({
@@ -38,6 +39,7 @@ export default function WithdrawalItem({
   onApprove,
   openRejectModal,
   openProofModal,
+  detailBasePath = "/admin/withdrawals", // <--- Add with default
 }: WithdrawalItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -151,7 +153,7 @@ export default function WithdrawalItem({
                     >
                       {/* Detail Link */}
                       <a
-                        href={`/admin/withdrawals/${trx.id}`}
+                        href={`${detailBasePath}/${trx.id}`}
                         className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
                       >
                         <ExternalLink className="w-4 h-4 text-grays" /> Detail

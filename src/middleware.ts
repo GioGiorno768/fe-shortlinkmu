@@ -16,7 +16,22 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. PROTEKSI HALAMAN ADMIN
+  // 2. Redirect bare /admin or /super-admin to dashboards
+  // Extract locale and check path after locale
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length >= 1) {
+    const locale = segments[0]; // en or id
+    const path = segments.slice(1).join("/");
+
+    // Check if accessing bare admin or super-admin
+    if (path === "admin" || path === "super-admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${locale}/${path}/dashboard`;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // 3. PROTEKSI HALAMAN ADMIN
   // Cek apakah URL mengandung "/admin"
   // (Logic aslinya nanti lu ganti pake cek Session/Token user)
   const isAdminPath = pathname.includes("/admin");
@@ -29,7 +44,7 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 3. Lanjut ke i18n Handler
+  // 4. Lanjut ke i18n Handler
   return intlMiddleware(request);
 }
 

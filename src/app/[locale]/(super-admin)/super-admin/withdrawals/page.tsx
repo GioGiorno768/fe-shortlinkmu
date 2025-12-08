@@ -1,21 +1,56 @@
+// src/app/[locale]/(super-admin)/super-admin/withdrawals/page.tsx
 "use client";
 
-export default function SuperAdminWithdrawalsPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Withdrawals</h1>
-          <p className="text-gray-500">Super Admin Withdrawal Management</p>
-        </div>
-      </div>
+import WithdrawalList from "@/components/dashboard/admin/withdrawal/WithdrawalList";
+import WithdrawalStatsCard from "@/components/dashboard/admin/withdrawal/WithdrawalStatsCard";
+import { useAdminWithdrawals } from "@/hooks/admin/useAdminWithdrawals";
 
-      {/* Placeholder Content */}
-      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-        <p className="text-gray-500 text-center py-10">
-          Super Admin Withdrawal Module (Coming Soon)
-        </p>
-      </div>
+export default function SuperAdminWithdrawalsPage() {
+  // 1. Panggil Hook Sakti
+  const {
+    stats,
+    transactions,
+    isLoading,
+    // Filter & Search
+    search,
+    setSearch,
+    filters,
+    setFilters,
+    // Pagination
+    page,
+    setPage,
+    totalPages,
+    // Actions
+    handleApprove,
+    handleReject,
+    handleAddProof,
+    handlePayWithProof,
+  } = useAdminWithdrawals();
+
+  return (
+    <div className="space-y-8 pb-10 font-figtree text-[10px]">
+      {/* 2. Stats Row (Financial Overview) */}
+      <WithdrawalStatsCard stats={stats} isLoading={isLoading} />
+
+      {/* 3. Main List (Search + Filter + Table + Pagination) */}
+      <WithdrawalList
+        transactions={transactions}
+        isLoading={isLoading}
+        // State Props
+        search={search}
+        setSearch={setSearch}
+        filters={filters}
+        setFilters={setFilters}
+        page={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        // Action Props
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onAddProof={handleAddProof}
+        onPayWithProof={handlePayWithProof}
+        detailBasePath="/super-admin/withdrawals" // <--- Fix detail URL
+      />
     </div>
   );
 }

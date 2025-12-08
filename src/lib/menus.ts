@@ -69,8 +69,8 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
     { label: "CORE SYSTEM", isHeader: true },
     {
       icon: LineChart,
-      label: "Total Profit (Platform)",
-      href: "/super-admin/profit",
+      label: "Analytics",
+      href: "/super-admin/analytics",
     },
     {
       icon: Megaphone,
@@ -81,11 +81,6 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       icon: UserCog,
       label: "Manage Admins",
       href: "/super-admin/manage-admins",
-    },
-    {
-      icon: ServerCog,
-      label: "System Settings",
-      href: "/super-admin/system-settings",
     },
     { icon: ClipboardList, label: "Audit Logs", href: "/super-admin/audit" },
     {

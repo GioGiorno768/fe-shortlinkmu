@@ -81,7 +81,10 @@ export default function Breadcrumb() {
             const label = pageInfo?.label || segment;
 
             // Hide system segments
-            if (["id", "en", "member", "admin"].includes(segment)) return null;
+            if (
+              ["id", "en", "member", "admin", "super-admin"].includes(segment)
+            )
+              return null;
 
             return (
               <li key={segment} className="flex items-center gap-2">

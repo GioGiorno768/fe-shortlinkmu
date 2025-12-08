@@ -24,6 +24,7 @@ interface Props {
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
   onPayWithProof: (id: string, url: string) => Promise<void>;
+  detailBasePath?: string; // <--- Add for dynamic detail URL
 }
 
 export default function WithdrawalList({
@@ -40,6 +41,7 @@ export default function WithdrawalList({
   onReject,
   onAddProof,
   onPayWithProof,
+  detailBasePath, // <--- Add this
 }: Props) {
   const { showAlert } = useAlert();
 
@@ -115,6 +117,7 @@ export default function WithdrawalList({
               openProofModal={(id) =>
                 setModalState({ isOpen: true, type: "proof", id })
               }
+              detailBasePath={detailBasePath} // <--- Pass this
             />
           ))
         )}

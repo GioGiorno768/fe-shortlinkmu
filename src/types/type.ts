@@ -92,19 +92,6 @@ export interface AdFeature {
 
 export interface AdLevelConfig {
   id: string;
-  name: string; // Low, Medium, High, Aggressive
-  slug: string; // low, medium, high, aggressive
-  description: string;
-  cpmRate: string; // cth: "$3.50"
-  revenueShare: number; // cth: 50 (persen)
-  isPopular?: boolean; // Buat highlight card
-  demoUrl: string; // Link redirect ke demo
-  features: AdFeature[];
-  colorTheme: string; // Buat styling border/badge (green, blue, orange, red)
-}
-
-export interface ReferralStats {
-  totalEarnings: number;
   totalReferred: number;
   activeReferred: number;
   commissionRate: number; // dalam persen (misal 20)
