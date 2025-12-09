@@ -19,6 +19,7 @@ import {
   BanknoteArrowDown,
   History,
   Crown,
+  DollarSign,
 } from "lucide-react";
 import type { Role, NavItem } from "@/types/type";
 
@@ -72,6 +73,11 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       label: "Analytics",
       href: "/super-admin/analytics",
     },
+    // {
+    //   icon: DollarSign,
+    //   label: "Revenue",
+    //   href: "/super-admin/revenue",
+    // },
     {
       icon: Megaphone,
       label: "Ads Configuration",
@@ -81,6 +87,11 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       icon: UserCog,
       label: "Manage Admins",
       href: "/super-admin/manage-admins",
+    },
+    {
+      icon: Crown,
+      label: "Manage Levels",
+      href: "/super-admin/manage-levels",
     },
     {
       icon: ClipboardList,

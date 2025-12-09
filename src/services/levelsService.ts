@@ -93,3 +93,35 @@ export async function getLevelsConfig(): Promise<LevelConfig[]> {
     },
   ];
 }
+
+// ============== CRUD OPERATIONS ==============
+
+// Update level configuration
+export async function updateLevelConfig(
+  levelId: string,
+  updates: Partial<LevelConfig>
+): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // TODO: Replace with actual API call
+  console.log('Updating level:', levelId, updates);
+}
+
+// Create new level
+export async function createLevel(
+  newLevel: Omit<LevelConfig, 'no'>
+): Promise<LevelConfig> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // TODO: Replace with actual API call
+  console.log('Creating level:', newLevel);
+  return {
+    ...newLevel,
+    no: 7, // Will be assigned by backend
+  };
+}
+
+// Delete level
+export async function deleteLevel(levelId: string): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  // TODO: Replace with actual API call
+  console.log('Deleting level:', levelId);
+}
