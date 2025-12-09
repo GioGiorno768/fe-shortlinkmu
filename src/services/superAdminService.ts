@@ -2,7 +2,7 @@ import type {
   SuperAdminStats,
   AnalyticsData,
   TimeRange,
-  AuditLogEntry,
+  AuditLog,
 } from "@/types/type";
 
 export async function getSuperAdminStats(): Promise<SuperAdminStats> {
@@ -81,78 +81,78 @@ export async function getSuperAdminRevenueChart(
   };
 }
 
-export async function getRecentAuditLogs(): Promise<AuditLogEntry[]> {
+export async function getRecentAuditLogs(): Promise<AuditLog[]> {
   await new Promise((r) => setTimeout(r, 700));
 
   return [
     {
       id: "log-1",
-      admin: {
-        id: "adm-1",
-        name: "Sarah Admin",
-        avatar: "https://avatar.iran.liara.run/public/65",
-        role: "admin",
-      },
-      action: "BLOCK_LINK",
-      target: "short.link/phishing123",
-      details: "Detected as phishing site via report #RP-99",
       timestamp: new Date().toISOString(),
+      adminId: "adm-1",
+      adminName: "Sarah Admin",
+      adminRole: "admin",
+      adminAvatar: "https://avatar.iran.liara.run/public/65",
+      action: "block",
+      targetType: "link",
+      targetId: "link-123",
+      targetName: "short.link/phishing123",
+      description: "Detected as phishing site via report #RP-99",
       status: "success",
     },
     {
       id: "log-2",
-      admin: {
-        id: "adm-2",
-        name: "Budi Santoso",
-        avatar: "https://avatar.iran.liara.run/public/32",
-        role: "admin",
-      },
-      action: "APPROVE_WITHDRAWAL",
-      target: "WD-8821 ($50.00)",
-      details: "Payment sent via PayPal",
-      timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 jam lalu
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      adminId: "adm-2",
+      adminName: "Budi Santoso",
+      adminRole: "admin",
+      adminAvatar: "https://avatar.iran.liara.run/public/32",
+      action: "approve",
+      targetType: "withdrawal",
+      targetId: "wd-8821",
+      targetName: "WD-8821 ($50.00)",
+      description: "Payment sent via PayPal",
       status: "success",
     },
     {
       id: "log-3",
-      admin: {
-        id: "adm-3",
-        name: "Sarah Admin",
-        avatar: "https://avatar.iran.liara.run/public/65",
-        role: "admin",
-      },
-      action: "MANAGE_ANNOUNCEMENT",
-      target: "Maintenance Notice",
-      details: "Posted new announcement about server maintenance",
-      timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 jam lalu
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      adminId: "adm-3",
+      adminName: "Sarah Admin",
+      adminRole: "admin",
+      adminAvatar: "https://avatar.iran.liara.run/public/65",
+      action: "update",
+      targetType: "announcement",
+      targetId: "ann-123",
+      targetName: "Maintenance Notice",
+      description: "Posted new announcement about server maintenance",
       status: "success",
     },
     {
       id: "log-4",
-      admin: {
-        id: "adm-1",
-        name: "Sarah Admin",
-        avatar: "https://avatar.iran.liara.run/public/65",
-        role: "admin",
-      },
-      action: "REJECT_WITHDRAWAL",
-      target: "WD-8890 ($120.00)",
-      details: "Invalid payment details (Bank ID not found)",
-      timestamp: new Date(Date.now() - 18000000).toISOString(), // 5 jam lalu
+      timestamp: new Date(Date.now() - 18000000).toISOString(),
+      adminId: "adm-1",
+      adminName: "Sarah Admin",
+      adminRole: "admin",
+      adminAvatar: "https://avatar.iran.liara.run/public/65",
+      action: "reject",
+      targetType: "withdrawal",
+      targetId: "wd-8890",
+      targetName: "WD-8890 ($120.00)",
+      description: "Invalid payment details (Bank ID not found)",
       status: "failed",
     },
     {
       id: "log-5",
-      admin: {
-        id: "adm-2",
-        name: "Budi Santoso",
-        avatar: "https://avatar.iran.liara.run/public/32",
-        role: "admin",
-      },
-      action: "SEND_NOTIFICATION",
-      target: "User: spammer01",
-      details: "Sent warning about traffic quality",
-      timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 hari lalu
+      timestamp: new Date(Date.now() - 86400000).toISOString(),
+      adminId: "adm-2",
+      adminName: "Budi Santoso",
+      adminRole: "admin",
+      adminAvatar: "https://avatar.iran.liara.run/public/32",
+      action: "create",
+      targetType: "user",
+      targetId: "user-spam01",
+      targetName: "User: spammer01",
+      description: "Sent warning about traffic quality",
       status: "success",
     },
   ];

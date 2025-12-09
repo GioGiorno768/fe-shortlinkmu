@@ -15,49 +15,14 @@ import {
   Megaphone,
   BellRing,
 } from "lucide-react";
-
-// ...
-
-const getActionIcon = (action: AuditActionType) => {
-  switch (action) {
-    case "BLOCK_LINK":
-      return <Ban className="w-4 h-4 text-red-500" />;
-    case "APPROVE_WITHDRAWAL":
-      return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-    case "REJECT_WITHDRAWAL":
-      return <XCircle className="w-4 h-4 text-red-500" />;
-    case "MANAGE_ANNOUNCEMENT":
-      return <Megaphone className="w-4 h-4 text-blue-500" />;
-    case "SEND_NOTIFICATION":
-      return <BellRing className="w-4 h-4 text-orange-500" />;
-    default:
-      return <AlertTriangle className="w-4 h-4 text-gray-500" />;
-  }
-};
-
-const getActionColor = (action: AuditActionType) => {
-  switch (action) {
-    case "BLOCK_LINK":
-    case "REJECT_WITHDRAWAL":
-      return "bg-red-50 border-red-100 text-red-700";
-    case "APPROVE_WITHDRAWAL":
-      return "bg-green-50 border-green-100 text-green-700";
-    case "MANAGE_ANNOUNCEMENT":
-      return "bg-blue-50 border-blue-100 text-blue-700";
-    case "SEND_NOTIFICATION":
-      return "bg-orange-50 border-orange-100 text-orange-700";
-    default:
-      return "bg-gray-50 border-gray-100 text-gray-700";
-  }
-};
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
-import type { AuditLogEntry, AuditActionType } from "@/types/type";
+import type { AuditLog, AuditActionType } from "@/types/type";
 
 interface AuditLogCardProps {
-  logs: AuditLogEntry[];
+  logs: AuditLog[];
   isLoading: boolean;
 }
 
@@ -78,16 +43,12 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
 
   const getActionIcon = (action: AuditActionType) => {
     switch (action) {
-      case "BLOCK_LINK":
+      case "block":
         return <Ban className="w-4 h-4 text-red-500" />;
-      case "APPROVE_WITHDRAWAL":
+      case "approve":
         return <CheckCircle2 className="w-4 h-4 text-green-500" />;
-      case "REJECT_WITHDRAWAL":
+      case "reject":
         return <XCircle className="w-4 h-4 text-red-500" />;
-      // case "SUSPEND_USER":
-      //   return <ShieldAlert className="w-4 h-4 text-orange-500" />;
-      // case "UPDATE_ADS":
-      //   return <Settings className="w-4 h-4 text-blue-500" />;
       default:
         return <AlertTriangle className="w-4 h-4 text-gray-500" />;
     }
@@ -95,15 +56,11 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
 
   const getActionColor = (action: AuditActionType) => {
     switch (action) {
-      case "BLOCK_LINK":
-      case "REJECT_WITHDRAWAL":
+      case "block":
+      case "reject":
         return "bg-red-50 border-red-100 text-red-700";
-      case "APPROVE_WITHDRAWAL":
+      case "approve":
         return "bg-green-50 border-green-100 text-green-700";
-      // case "SUSPEND_USER":
-      //   return "bg-orange-50 border-orange-100 text-orange-700";
-      // case "UPDATE_ADS":
-      //   return "bg-blue-50 border-blue-100 text-blue-700";
       default:
         return "bg-gray-50 border-gray-100 text-gray-700";
     }
@@ -139,7 +96,10 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
       </div>
 
       {/* List content */}
-      <div onWheel={(e) => e.stopPropagation()} className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-minimal">
+      <div
+        onWheel={(e) => e.stopPropagation()}
+        className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-minimal"
+      >
         {logs.length === 0 ? (
           <div className="text-center py-10 text-slate-400">No logs found</div>
         ) : (
@@ -155,8 +115,8 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
                 {/* Avatar */}
                 <div className="relative">
                   <Image
-                    src={log.admin.avatar}
-                    alt={log.admin.name}
+                    src={log.adminAvatar || "/default-avatar.png"}
+                    alt={log.adminName}
                     width={48}
                     height={48}
                     className="rounded-full object-cover border-2 border-white shadow-sm w-12 h-12"
@@ -165,7 +125,7 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
                     <div
                       className={clsx(
                         "w-3 h-3 rounded-full",
-                        log.admin.role === "super-admin"
+                        log.adminRole === "super-admin"
                           ? "bg-purple-500"
                           : "bg-blue-500"
                       )}
@@ -175,9 +135,9 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
 
                 <div>
                   <p className="text-[1.4em] font-bold text-slate-800 flex items-center gap-2">
-                    {log.admin.name}
+                    {log.adminName}
                     <span className="text-[0.8em] font-normal text-slate-400 bg-slate-100 px-2 rounded-full capitalize">
-                      {log.admin.role.replace("-", " ")}
+                      {log.adminRole.replace("-", " ")}
                     </span>
                   </p>
                   <div className="flex items-center gap-2 mt-1">
@@ -194,7 +154,7 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
                     </div>
                     <span className="text-[1.2em] text-slate-400">•</span>
                     <span className="text-[1.2em] font-medium text-slate-600">
-                      {log.target}
+                      {log.targetName}
                     </span>
                   </div>
                 </div>
@@ -207,9 +167,9 @@ export default function AuditLogCard({ logs, isLoading }: AuditLogCardProps) {
                 </p>
                 <p
                   className="text-[1.1em] text-slate-400 max-w-[200px] truncate"
-                  title={log.details}
+                  title={log.description}
                 >
-                  {log.details}
+                  {log.description}
                 </p>
               </div>
             </motion.div>
