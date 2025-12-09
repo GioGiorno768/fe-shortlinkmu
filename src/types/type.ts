@@ -185,6 +185,30 @@ export type NotificationCategory =
 
 export type Role = "member" | "admin" | "super-admin";
 
+// Admin Data (buat manage-admins page di super-admin)
+export interface Admin {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  avatarUrl: string;
+  role: "admin" | "super-admin"; // Admin atau Super Admin
+  status: "active" | "suspended";
+  joinedAt: string;
+  lastLogin: string;
+  stats: {
+    usersManaged: number; // Berapa user yang di-handle
+    withdrawalsProcessed: number; // Withdrawal yang diproses
+    linksBlocked: number; // Link yang di-block
+  };
+}
+
+export interface AdminStats {
+  totalAdmins: { count: number; trend: number };
+  activeToday: { count: number; trend: number };
+  suspendedAdmins: { count: number; trend: number };
+}
+
 export interface NotificationItem {
   id: string;
   title: string;
