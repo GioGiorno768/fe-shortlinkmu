@@ -70,6 +70,12 @@ export interface ReferrerStat {
   percentage: number; // 0-100
 }
 
+export interface ReferralStats {
+  totalEarnings: number; // Total earnings from referrals
+  totalReferred: number; // Total number of referred users
+  activeReferred: number; // Number of active referred users
+}
+
 export interface CreateLinkFormData {
   url: string;
   alias?: string;
