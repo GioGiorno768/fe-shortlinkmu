@@ -85,6 +85,59 @@ export interface CreateLinkFormData {
   adsLevel: AdLevel;
 }
 
+// Audit Log Types
+export type AuditActionType =
+  | "create"
+  | "update"
+  | "delete"
+  | "suspend"
+  | "unsuspend"
+  | "approve"
+  | "reject"
+  | "block"
+  | "unblock";
+
+export type AuditTargetType =
+  | "user"
+  | "link"
+  | "withdrawal"
+  | "admin"
+  | "announcement"
+  | "ad_level"
+  | "system";
+
+export type AuditLogStatus = "success" | "failed";
+
+export interface AuditLog {
+  id: string;
+  timestamp: string; // ISO date string
+  adminId: string;
+  adminName: string;
+  adminRole: "admin" | "super-admin";
+  adminAvatar?: string;
+  action: AuditActionType;
+  targetType: AuditTargetType;
+  targetId: string;
+  targetName: string;
+  description: string;
+  status: AuditLogStatus;
+  ipAddress?: string;
+  location?: string;
+  metadata?: {
+    oldValue?: string;
+    newValue?: string;
+    reason?: string;
+    [key: string]: any;
+  };
+}
+
+export interface AuditLogStats {
+  totalActivitiesToday: number;
+  activeAdmins: number;
+  criticalActions: number;
+  failedActions: number;
+}
+
 export interface GeneratedLinkData {
   shortUrl: string; // cth: short.link/taik112
   originalUrl: string; // cth: https://kevinragil.vercel.app
@@ -620,27 +673,4 @@ export interface SuperAdminStats {
     staffOnline: number; // Jumlah admin aktif
     totalStaff: number; // Total admin terdaftar
   };
-}
-
-// 👇 AUDIT LOG TYPE
-export type AuditActionType =
-  | "BLOCK_LINK"
-  | "APPROVE_WITHDRAWAL"
-  | "REJECT_WITHDRAWAL"
-  | "MANAGE_ANNOUNCEMENT" // Baru: Update Announcement
-  | "SEND_NOTIFICATION"; // Baru: Chat/Notif ke User
-
-export interface AuditLogEntry {
-  id: string;
-  admin: {
-    id: string;
-    name: string;
-    avatar: string;
-    role: "admin" | "super-admin";
-  };
-  action: AuditActionType;
-  target: string; // "short.link/abc", "User: Udin", "Withdrawal #123"
-  details: string; // "Reason: Phishing detected"
-  timestamp: string; // ISO Date
-  status: "success" | "failed";
 }

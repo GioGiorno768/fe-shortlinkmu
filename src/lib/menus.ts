@@ -82,7 +82,11 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       label: "Manage Admins",
       href: "/super-admin/manage-admins",
     },
-    { icon: ClipboardList, label: "Audit Logs", href: "/super-admin/audit" },
+    {
+      icon: ClipboardList,
+      label: "Audit Logs",
+      href: "/super-admin/audit-logs",
+    },
     {
       icon: Database,
       label: "Database & Backup",
