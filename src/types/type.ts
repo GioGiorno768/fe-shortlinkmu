@@ -289,6 +289,14 @@ export interface MilestoneData {
   progress: number;
 }
 
+// Referral Stats (for stats grid display)
+export interface ReferralStats {
+  totalEarnings: number;
+  totalReferred: number;
+  activeReferred: number;
+  commissionRate: number; // Persentase commission (misal 20 = 20%)
+}
+
 export interface ReferralCardData {
   referralLink: string;
   totalUsers: number;
