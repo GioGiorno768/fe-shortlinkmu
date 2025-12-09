@@ -9,11 +9,11 @@ import RevenueEstimationChart from "@/components/dashboard/super-admin/RevenueEs
 import AuditLogCard from "@/components/dashboard/super-admin/AuditLogCard";
 import { useState, useEffect } from "react";
 import { getRecentAuditLogs } from "@/services/superAdminService";
-import type { AuditLogEntry } from "@/types/type";
+import type { AuditLog } from "@/types/type";
 
 export default function SuperAdminDashboardPage() {
   const { stats, isLoading } = useSuperAdmin();
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [isLogsLoading, setIsLogsLoading] = useState(true);
 
   useEffect(() => {
