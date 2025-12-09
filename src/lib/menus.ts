@@ -87,11 +87,6 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       label: "Audit Logs",
       href: "/super-admin/audit-logs",
     },
-    {
-      icon: Database,
-      label: "Database & Backup",
-      href: "/super-admin/database",
-    },
   ];
 
   // LOGIC PENGGABUNGAN:

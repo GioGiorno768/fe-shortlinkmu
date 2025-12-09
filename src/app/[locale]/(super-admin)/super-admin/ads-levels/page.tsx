@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Sparkles } from "lucide-react";
 import { useAdLevels } from "@/hooks/useAdLevels";
+import { useGlobalFeatures } from "@/hooks/useGlobalFeatures";
 import { useAlert } from "@/hooks/useAlert";
 import AdLevelCard from "@/components/dashboard/super-admin/AdLevelCard";
 import AdLevelModal from "@/components/dashboard/super-admin/AdLevelModal";
+import GlobalFeatureModal from "@/components/dashboard/super-admin/GlobalFeatureModal";
 import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
 import GlobalAlert from "@/components/dashboard/GlobalAlert";
 import type { AdLevelConfig } from "@/services/adLevelService";
@@ -23,7 +25,17 @@ export default function AdsConfigurationPage() {
 
   const { showAlert } = useAlert();
 
+  // Global features hook
+  const {
+    features: globalFeatures,
+    isLoading: isFeaturesLoading,
+    handleCreate: handleCreateFeature,
+    handleUpdate: handleUpdateFeature,
+    handleDelete: handleDeleteFeature,
+  } = useGlobalFeatures();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFeatureModalOpen, setIsFeatureModalOpen] = useState(false);
   const [editingLevel, setEditingLevel] = useState<AdLevelConfig | null>(null);
 
   // Confirmation modal state
@@ -43,6 +55,19 @@ export default function AdsConfigurationPage() {
   // Pending default confirmation
   const [isDefaultConfirmOpen, setIsDefaultConfirmOpen] = useState(false);
   const [pendingDefaultLevel, setPendingDefaultLevel] =
+    useState<AdLevelConfig | null>(null);
+
+  // Popular level state (stored in localStorage)
+  const [popularLevelId, setPopularLevelId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("popularAdLevelId");
+    }
+    return null;
+  });
+
+  // Pending popular confirmation
+  const [isPopularConfirmOpen, setIsPopularConfirmOpen] = useState(false);
+  const [pendingPopularLevel, setPendingPopularLevel] =
     useState<AdLevelConfig | null>(null);
 
   const openCreateModal = () => {
@@ -102,6 +127,30 @@ export default function AdsConfigurationPage() {
     }
   };
 
+  const handleSetPopular = (level: AdLevelConfig) => {
+    setPendingPopularLevel(level);
+    setIsPopularConfirmOpen(true);
+  };
+
+  const confirmSetPopular = () => {
+    if (pendingPopularLevel) {
+      setPopularLevelId(pendingPopularLevel.id);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("popularAdLevelId", pendingPopularLevel.id);
+      }
+
+      // Show success alert
+      showAlert(
+        `"${pendingPopularLevel.name}" has been set as the popular ad level!`,
+        "success",
+        "Popular Ad Level Set!"
+      );
+
+      setIsPopularConfirmOpen(false);
+      setPendingPopularLevel(null);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-10 font-figtree text-[10px]">
       {/* Header */}
@@ -115,13 +164,23 @@ export default function AdsConfigurationPage() {
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="flex items-center gap-2 bg-shortblack text-white px-6 py-3 rounded-xl font-semibold text-[1.4em] hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl"
-        >
-          <Plus className="w-5 h-5" />
-          Add New Level
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsFeatureModalOpen(true)}
+            className="flex items-center gap-2 bg-bluelight text-white px-6 py-3 rounded-xl font-semibold text-[1.4em] hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Sparkles className="w-5 h-5" />
+            Add Feature
+          </button>
+
+          <button
+            onClick={openCreateModal}
+            className="flex items-center gap-2 bg-shortblack text-white px-6 py-3 rounded-xl font-semibold text-[1.4em] hover:bg-opacity-90 transition-all shadow-lg hover:shadow-xl"
+          >
+            <Plus className="w-5 h-5" />
+            Add New Level
+          </button>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -174,7 +233,10 @@ export default function AdsConfigurationPage() {
                     onDelete={handleDeleteClick}
                     onSetDefault={handleSetDefault}
                     isDefault={level.id === defaultLevelId}
+                    onSetPopular={handleSetPopular}
+                    isPopular={level.id === popularLevelId}
                     index={index}
+                    globalFeatures={globalFeatures}
                   />
                 ))}
               </div>
@@ -228,6 +290,23 @@ export default function AdsConfigurationPage() {
         editingLevel={editingLevel}
         nextLevelNumber={getNextLevelNumber()}
         isSubmitting={isSubmitting}
+        globalFeatures={globalFeatures}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => {
+          setIsConfirmOpen(false);
+          setDeletingLevel(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Ad Level?"
+        description={`Are you sure you want to delete "${deletingLevel?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        type="danger"
+        isLoading={isSubmitting}
       />
 
       {/* Set Default Confirmation Modal */}
@@ -245,6 +324,34 @@ export default function AdsConfigurationPage() {
         type="info"
         isLoading={false}
       />
+
+      {/* Set Popular Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isPopularConfirmOpen}
+        onClose={() => {
+          setIsPopularConfirmOpen(false);
+          setPendingPopularLevel(null);
+        }}
+        onConfirm={confirmSetPopular}
+        title="Set as Popular Ad Level?"
+        description={`Set "${pendingPopularLevel?.name}" as the popular ad level? This will display a "POPULAR" badge on this level.`}
+        confirmLabel="Set as Popular"
+        cancelLabel="Cancel"
+        type="info"
+        isLoading={false}
+      />
+
+      {/* Global Feature Management Modal */}
+      <GlobalFeatureModal
+        isOpen={isFeatureModalOpen}
+        onClose={() => setIsFeatureModalOpen(false)}
+        features={globalFeatures}
+        onAdd={handleCreateFeature}
+        onUpdate={handleUpdateFeature}
+        onDelete={handleDeleteFeature}
+        isLoading={isFeaturesLoading}
+      />
+
       {/* Global Alert for notifications */}
       <GlobalAlert />
     </div>

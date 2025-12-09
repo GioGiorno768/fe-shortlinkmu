@@ -11,7 +11,8 @@ export interface AdLevelConfig {
   colorTheme: "green" | "blue" | "orange" | "red";
   isPopular: boolean;
   demoUrl: string;
-  features: AdFeature[];
+  features: AdFeature[]; // Legacy features (for backward compatibility)
+  enabledFeatures?: string[]; // New: IDs of global features enabled for this level
   createdAt: Date;
   updatedAt: Date;
 }
@@ -182,4 +183,86 @@ export const calculateCPM = (cpc: number): number => {
 export const formatCPM = (cpc: number): string => {
   const cpm = calculateCPM(cpc);
   return `$${cpm.toFixed(2)}`;
+};
+
+// ============== GLOBAL FEATURES MANAGEMENT ==============
+
+export interface GlobalFeature {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const mockGlobalFeatures: GlobalFeature[] = [
+  {
+    id: "gf1",
+    name: "Faster Payout",
+    description: "Get your earnings faster",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "gf2",
+    name: "No Captcha",
+    description: "Users skip captcha verification",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "gf3",
+    name: "Custom Domain",
+    description: "Use your own branded domain",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "gf4",
+    name: "Priority Support",
+    description: "24/7 dedicated support team",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+let globalFeatures = [...mockGlobalFeatures];
+
+export const getGlobalFeatures = async (): Promise<GlobalFeature[]> => {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  return [...globalFeatures];
+};
+
+export const createGlobalFeature = async (
+  data: Omit<GlobalFeature, "id" | "createdAt" | "updatedAt">
+): Promise<GlobalFeature> => {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const newFeature: GlobalFeature = {
+    ...data,
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  globalFeatures.push(newFeature);
+  return newFeature;
+};
+
+export const updateGlobalFeature = async (
+  id: string,
+  data: Partial<Omit<GlobalFeature, "id" | "createdAt" | "updatedAt">>
+): Promise<GlobalFeature> => {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const index = globalFeatures.findIndex((f) => f.id === id);
+  if (index === -1) throw new Error("Feature not found");
+  globalFeatures[index] = {
+    ...globalFeatures[index],
+    ...data,
+    updatedAt: new Date().toISOString(),
+  };
+  return globalFeatures[index];
+};
+
+export const deleteGlobalFeature = async (id: string): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  globalFeatures = globalFeatures.filter((f) => f.id !== id);
 };

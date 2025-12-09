@@ -1,19 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  X,
-  Plus,
-  Trash2,
-  Crown,
-  Sparkles,
-  Check,
-  ChevronRight,
-} from "lucide-react";
+import { X, Crown, Check } from "lucide-react";
 import clsx from "clsx";
-import type { AdLevelConfig, AdFeature } from "@/services/adLevelService";
+import type {
+  AdLevelConfig,
+  AdFeature,
+  GlobalFeature,
+} from "@/services/adLevelService";
 import { formatCPM } from "@/services/adLevelService";
 import { motion, AnimatePresence } from "motion/react";
+import FeatureSelector from "./FeatureSelector";
 
 interface AdLevelModalProps {
   isOpen: boolean;
@@ -24,6 +21,7 @@ interface AdLevelModalProps {
   editingLevel?: AdLevelConfig | null;
   nextLevelNumber: number;
   isSubmitting: boolean;
+  globalFeatures: GlobalFeature[];
 }
 
 const COLOR_THEMES = [
@@ -64,6 +62,7 @@ export default function AdLevelModal({
   editingLevel,
   nextLevelNumber,
   isSubmitting,
+  globalFeatures,
 }: AdLevelModalProps) {
   const [formData, setFormData] = useState({
     levelNumber: nextLevelNumber,
@@ -72,10 +71,10 @@ export default function AdLevelModal({
     revenueShare: 50,
     cpcRate: 0.005,
     colorTheme: "blue" as "green" | "blue" | "orange" | "red",
-    isPopular: false,
     demoUrl: "",
   });
 
+  // Legacy features (for backward compatibility)
   const [features, setFeatures] = useState<AdFeature[]>([
     {
       id: "1",
@@ -84,6 +83,9 @@ export default function AdLevelModal({
       value: "1x per visit",
     },
   ]);
+
+  // New global features selection
+  const [enabledFeatures, setEnabledFeatures] = useState<string[]>([]);
 
   // Initialize form with editing data
   useEffect(() => {
@@ -95,10 +97,10 @@ export default function AdLevelModal({
         revenueShare: editingLevel.revenueShare,
         cpcRate: editingLevel.cpcRate,
         colorTheme: editingLevel.colorTheme,
-        isPopular: editingLevel.isPopular,
         demoUrl: editingLevel.demoUrl,
       });
       setFeatures(editingLevel.features);
+      setEnabledFeatures(editingLevel.enabledFeatures || []);
     } else {
       setFormData({
         levelNumber: nextLevelNumber,
@@ -107,7 +109,6 @@ export default function AdLevelModal({
         revenueShare: 50,
         cpcRate: 0.005,
         colorTheme: "blue",
-        isPopular: false,
         demoUrl: "",
       });
       setFeatures([
@@ -118,6 +119,7 @@ export default function AdLevelModal({
           value: "1x per visit",
         },
       ]);
+      setEnabledFeatures([]);
     }
   }, [editingLevel, nextLevelNumber, isOpen]);
 
@@ -126,37 +128,30 @@ export default function AdLevelModal({
 
     const data: Omit<AdLevelConfig, "id" | "createdAt" | "updatedAt"> = {
       ...formData,
-      features,
+      isPopular: false, // Popular status is now controlled via button in card, not modal
+      features, // Keep legacy features for backward compatibility
+      enabledFeatures, // New global features
     };
 
     await onSubmit(data);
     onClose();
   };
 
-  const addFeature = () => {
-    setFeatures([
-      ...features,
-      {
-        id: Date.now().toString(),
-        label: "",
-        included: true,
-        value: "",
-      },
-    ]);
-  };
-
-  const removeFeature = (id: string) => {
-    setFeatures(features.filter((f) => f.id !== id));
-  };
-
-  const updateFeature = (id: string, updates: Partial<AdFeature>) => {
-    setFeatures(features.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+  const toggleFeature = (id: string) => {
+    setEnabledFeatures((prev) =>
+      prev.includes(id) ? prev.filter((fid) => fid !== id) : [...prev, id]
+    );
   };
 
   // Get current theme style
   const selectedTheme =
     COLOR_THEMES.find((t) => t.value === formData.colorTheme) ||
     COLOR_THEMES[1];
+
+  // Get enabled feature names for preview
+  const enabledFeatureNames = globalFeatures
+    .filter((f) => enabledFeatures.includes(f.id))
+    .map((f) => f.name);
 
   return (
     <AnimatePresence>
@@ -355,48 +350,6 @@ export default function AdLevelModal({
                     </div>
                   </div>
 
-                  {/* Popular Toggle */}
-                  <div
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        isPopular: !formData.isPopular,
-                      })
-                    }
-                    className={clsx(
-                      "flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                      formData.isPopular
-                        ? "bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200"
-                        : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                    )}
-                  >
-                    {/* Check Icon */}
-                    <div
-                      className={clsx(
-                        "flex items-center justify-center w-6 h-6 rounded-full border-2 transition-all shrink-0",
-                        formData.isPopular
-                          ? "bg-purple-500 border-purple-500"
-                          : "bg-white border-gray-300"
-                      )}
-                    >
-                      {formData.isPopular && (
-                        <Check className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[1.3em] font-bold text-shortblack flex-1">
-                      <Crown
-                        className={clsx(
-                          "w-5 h-5",
-                          formData.isPopular
-                            ? "text-purple-600"
-                            : "text-gray-400"
-                        )}
-                      />
-                      Mark as Popular
-                    </div>
-                  </div>
-
                   {/* Article/Demo URL */}
                   <div>
                     <label className="block text-[1.3em] font-bold text-shortblack mb-2">
@@ -416,102 +369,21 @@ export default function AdLevelModal({
                     </p>
                   </div>
 
-                  {/* Features */}
+                  {/* Global Features Selector */}
                   <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <label className="text-[1.3em] font-bold text-shortblack">
-                        Features ({features.length})
-                      </label>
-                      <button
-                        type="button"
-                        onClick={addFeature}
-                        className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-xl text-[1.2em] font-medium hover:bg-green-100 transition-colors border border-green-200"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add
-                      </button>
-                    </div>
-
+                    <label className="block text-[1.3em] font-bold text-shortblack mb-3">
+                      Features ({enabledFeatures.length} selected)
+                    </label>
                     <div
                       onWheel={(e) => e.stopPropagation()}
-                      className="space-y-2 max-h-64 overflow-y-auto pr-2"
+                      className="max-h-80 overflow-y-auto pr-2"
                     >
-                      {features.map((feature, index) => (
-                        <div
-                          key={feature.id}
-                          onClick={() =>
-                            updateFeature(feature.id, {
-                              included: !feature.included,
-                            })
-                          }
-                          className={clsx(
-                            "relative flex gap-3 items-start p-4 rounded-xl border-2 transition-all cursor-pointer group",
-                            feature.included
-                              ? "bg-green-50 border-green-200 hover:border-green-300"
-                              : "bg-gray-50 border-gray-200 hover:border-gray-300"
-                          )}
-                        >
-                          {/* Check Icon */}
-                          <div
-                            className={clsx(
-                              "flex items-center justify-center w-6 h-6 rounded-full border-2 transition-all shrink-0 mt-1",
-                              feature.included
-                                ? "bg-green-500 border-green-500"
-                                : "bg-white border-gray-300 group-hover:border-gray-400"
-                            )}
-                          >
-                            {feature.included && (
-                              <Check className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-
-                          {/* Input Fields */}
-                          <div
-                            className="flex-1 space-y-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <input
-                              type="text"
-                              value={feature.label}
-                              onChange={(e) =>
-                                updateFeature(feature.id, {
-                                  label: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-[1.2em] focus:outline-none focus:border-bluelight focus:ring-2 focus:ring-bluelight/20"
-                              placeholder="Feature name"
-                              required
-                            />
-                            <input
-                              type="text"
-                              value={
-                                typeof feature.value === "string"
-                                  ? feature.value
-                                  : ""
-                              }
-                              onChange={(e) =>
-                                updateFeature(feature.id, {
-                                  value: e.target.value,
-                                })
-                              }
-                              className="w-full px-3 py-2 rounded-lg bg-white border border-gray-200 text-[1.1em] focus:outline-none focus:border-bluelight focus:ring-2 focus:ring-bluelight/20 text-grays"
-                              placeholder="Optional value (e.g., '3x per day')"
-                            />
-                          </div>
-
-                          {/* Delete Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFeature(feature.id);
-                            }}
-                            className="p-2 hover:bg-red-100 rounded-lg transition-colors text-red-600 shrink-0"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      ))}
+                      <FeatureSelector
+                        features={globalFeatures}
+                        selectedIds={enabledFeatures}
+                        onToggle={toggleFeature}
+                        disabled={isSubmitting}
+                      />
                     </div>
                   </div>
 
@@ -539,21 +411,8 @@ export default function AdLevelModal({
                 </h3>
 
                 {/* Card Preview (matching ads-info display) */}
-                <div
-                  className={clsx(
-                    "relative w-full max-w-sm rounded-3xl p-8 transition-all duration-500 border-2 shadow-xl bg-white",
-                    formData.isPopular
-                      ? "border-bluelight shadow-blue-100 scale-105"
-                      : "border-gray-100"
-                  )}
-                >
-                  {/* Popular Badge */}
-                  {formData.isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-bluelight text-white px-4 py-1 rounded-full text-[1.1em] font-semibold shadow-md flex items-center gap-1">
-                      <Crown className="w-3.5 h-3.5" />
-                      <span>POPULAR</span>
-                    </div>
-                  )}
+                <div className="relative w-full max-w-sm rounded-3xl p-8 transition-all duration-500 border-2 shadow-xl bg-white border-gray-100">
+                  {/* Popular Badge - Not shown in preview since it's controlled via button */}
 
                   {/* Header */}
                   <div className="text-center mb-6">
@@ -602,31 +461,26 @@ export default function AdLevelModal({
                       Features
                     </p>
                     <div className="space-y-2">
-                      {features.slice(0, 3).map((feature) => (
-                        <div
-                          key={feature.id}
-                          className="flex items-center gap-2 text-[1.2em]"
-                        >
-                          <div
-                            className={clsx(
-                              "w-1.5 h-1.5 rounded-full",
-                              feature.included ? "bg-green-500" : "bg-gray-300"
-                            )}
-                          />
-                          <span
-                            className={
-                              feature.included
-                                ? "text-shortblack"
-                                : "text-gray-400"
-                            }
-                          >
-                            {feature.label || "Feature name"}
-                          </span>
-                        </div>
-                      ))}
-                      {features.length > 3 && (
-                        <p className="text-[1.1em] text-grays italic">
-                          +{features.length - 3} more...
+                      {enabledFeatureNames.length > 0 ? (
+                        <>
+                          {enabledFeatureNames.slice(0, 3).map((name, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-2 text-[1.2em]"
+                            >
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              <span className="text-shortblack">{name}</span>
+                            </div>
+                          ))}
+                          {enabledFeatureNames.length > 3 && (
+                            <p className="text-[1.1em] text-grays italic">
+                              +{enabledFeatureNames.length - 3} more...
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-[1.2em] text-gray-400 italic">
+                          No features selected
                         </p>
                       )}
                     </div>

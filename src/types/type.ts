@@ -158,7 +158,8 @@ export interface AdLevelConfig {
   revenueShare: number; // Persentase revenue (30, 50, 75, 100)
   demoUrl: string; // Link demo
   colorTheme: string; // "green", "blue", "orange", "red"
-  features: AdFeature[]; // List fitur ads
+  features: AdFeature[]; // List fitur ads (legacy, will be deprecated)
+  enabledFeatures?: string[]; // IDs of enabled global features
   isPopular?: boolean; // Optional - buat badge "MOST POPULAR"
 
   // Legacy fields (optional, mungkin dipake di bagian referral config)

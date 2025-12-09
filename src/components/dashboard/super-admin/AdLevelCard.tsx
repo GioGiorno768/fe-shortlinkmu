@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import { Edit2, Trash2, Crown, ExternalLink, Check } from "lucide-react";
 import clsx from "clsx";
-import type { AdLevelConfig } from "@/services/adLevelService";
+import type { AdLevelConfig, GlobalFeature } from "@/services/adLevelService";
 import { calculateCPM, formatCPM } from "@/services/adLevelService";
 
 interface AdLevelCardProps {
@@ -12,7 +12,10 @@ interface AdLevelCardProps {
   onDelete: (level: AdLevelConfig) => void;
   onSetDefault?: (level: AdLevelConfig) => void;
   isDefault?: boolean;
+  onSetPopular?: (level: AdLevelConfig) => void;
+  isPopular?: boolean;
   index: number;
+  globalFeatures: GlobalFeature[]; // Pass global features to display enabled ones
 }
 
 const getThemeStyles = (theme: string) => {
@@ -54,10 +57,18 @@ export default function AdLevelCard({
   onDelete,
   onSetDefault,
   isDefault = false,
+  onSetPopular,
+  isPopular = false,
   index,
+  globalFeatures,
 }: AdLevelCardProps) {
   const theme = getThemeStyles(level.colorTheme);
   const cpm = formatCPM(level.cpcRate);
+
+  // Check if a feature is enabled
+  const isFeatureEnabled = (featureId: string) => {
+    return level.enabledFeatures?.includes(featureId) || false;
+  };
 
   return (
     <motion.div
@@ -66,13 +77,13 @@ export default function AdLevelCard({
       transition={{ delay: index * 0.1, duration: 0.5 }}
       className={clsx(
         "relative bg-white rounded-3xl p-6 flex flex-col border-2 transition-all duration-300",
-        level.isPopular
+        isPopular
           ? "border-bluelight shadow-xl shadow-blue-100 scale-105 z-10"
           : "border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1"
       )}
     >
       {/* Popular Badge */}
-      {level.isPopular && (
+      {isPopular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-bluelight text-white px-4 py-1 rounded-full text-[1.1em] font-semibold shadow-md flex items-center gap-1">
           <Crown className="w-3.5 h-3.5" />
           <span>POPULAR</span>
@@ -118,32 +129,34 @@ export default function AdLevelCard({
       {/* Features Preview */}
       <div className="mb-4 flex-1">
         <p className="text-[1.1em] font-semibold text-shortblack mb-2">
-          Features ({level.features.length})
+          Features ({level.enabledFeatures?.length || 0})
         </p>
         <div className="space-y-1">
-          {level.features.slice(0, 3).map((feature) => (
-            <div
-              key={feature.id}
-              className="flex items-center gap-2 text-[1.1em]"
-            >
-              <div
-                className={clsx(
-                  "w-1.5 h-1.5 rounded-full",
-                  feature.included ? "bg-green-500" : "bg-gray-300"
-                )}
-              />
-              <span
-                className={
-                  feature.included ? "text-shortblack" : "text-gray-400"
-                }
-              >
-                {feature.label}
-              </span>
-            </div>
-          ))}
-          {level.features.length > 3 && (
-            <p className="text-[1em] text-grays italic">
-              +{level.features.length - 3} more...
+          {globalFeatures.length > 0 ? (
+            globalFeatures.map((feature) => {
+              const enabled = isFeatureEnabled(feature.id);
+              return (
+                <div
+                  key={feature.id}
+                  className="flex items-center gap-2 text-[1.1em]"
+                >
+                  <div
+                    className={clsx(
+                      "w-1.5 h-1.5 rounded-full",
+                      enabled ? "bg-green-500" : "bg-gray-300"
+                    )}
+                  />
+                  <span
+                    className={enabled ? "text-shortblack" : "text-gray-400"}
+                  >
+                    {feature.name}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-[1.1em] text-gray-400 italic">
+              No features available
             </p>
           )}
         </div>
@@ -192,6 +205,21 @@ export default function AdLevelCard({
       >
         <Check className="w-4 h-4" />
         {isDefault ? "Current Default" : "Set as Default"}
+      </button>
+
+      {/* Set as Popular Button */}
+      <button
+        onClick={() => onSetPopular?.(level)}
+        disabled={isPopular}
+        className={clsx(
+          "mt-2 w-full py-2 rounded-xl font-semibold text-[1.2em] transition-all border flex items-center justify-center gap-2",
+          isPopular
+            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+            : "bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 hover:from-purple-100 hover:to-pink-100 border-purple-200"
+        )}
+      >
+        <Crown className="w-4 h-4" />
+        {isPopular ? "Current Popular" : "Set as Popular"}
       </button>
     </motion.div>
   );
