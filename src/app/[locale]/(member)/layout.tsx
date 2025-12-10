@@ -1,12 +1,15 @@
 // src/app/[locale]/(member)/layout.tsx
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-// Hapus import getMemberMenu dan useTranslations
+import DashboardAuthCheck from "@/components/dashboard/DashboardAuthCheck";
 
 export default function MemberLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Kita cuma kasih tau role-nya aja, biarin DashboardLayout yang mikir menunya
-  return <DashboardLayout role="member">{children}</DashboardLayout>;
+  return (
+    <DashboardAuthCheck>
+      <DashboardLayout role="member">{children}</DashboardLayout>
+    </DashboardAuthCheck>
+  );
 }

@@ -48,16 +48,18 @@ export default async function RootLayout({
   return (
     <html lang={locale} className="scroll-smooth">
       {/* ... (Isi body sama aja) ... */}
-      <body className={`${figtree.className} ${manrope.className} antialiased`}>
-        <NextIntlClientProvider messages={messages}>
-          <LenisScrollProvider>
-            <Suspense fallback={null}>
+      <body
+        className={`${figtree.variable} ${manrope.variable} font-figtree antialiased`}
+      >
+        <LenisScrollProvider>
+          <NextIntlClientProvider messages={messages}>
+            <Suspense fallback={<div />}>
               <TopLoadingBar />
             </Suspense>
             <GlobalAlert />
             {children}
-          </LenisScrollProvider>
-        </NextIntlClientProvider>
+          </NextIntlClientProvider>
+        </LenisScrollProvider>
       </body>
     </html>
   );

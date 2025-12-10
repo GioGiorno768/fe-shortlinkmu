@@ -1,7 +1,7 @@
 // src/components/dashboard/sidebar/Sidebar.tsx
 "use client";
 
-import { Link, usePathname } from "@/i18n/routing";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useState, useRef, useEffect } from "react";
 import { Settings, LogOut } from "lucide-react";
@@ -9,6 +9,8 @@ import SidebarItem from "./SidebarItem";
 import { NavItem, Role } from "@/types/type";
 import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
+import authService from "@/services/authService";
+import Toast from "@/components/common/Toast";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -28,6 +30,7 @@ export default function Sidebar({
   role = "member",
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations("Dashboard");
   // Determine user type based on role
   const userType =
@@ -36,6 +39,33 @@ export default function Sidebar({
 
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const userPopupRef = useRef<HTMLDivElement>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  // Logout handler
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+
+      // Show success toast
+      setToastMessage("Logout berhasil!");
+      setShowToast(true);
+
+      // Redirect after short delay
+      setTimeout(() => {
+        router.push("/login");
+      }, 800);
+    } catch (error) {
+      console.error("Logout error:", error);
+      // Even if API fails, show toast and redirect
+      authService.removeToken();
+      setToastMessage("Logout berhasil!");
+      setShowToast(true);
+      setTimeout(() => {
+        router.push("/login");
+      }, 800);
+    }
+  };
 
   // Styling Sidebar: Member = Ungu, Admin = Merah Gelap
   const sidebarBg = role === "member" ? "bg-[#10052C]" : "bg-[#1a0b2e]";
@@ -101,6 +131,7 @@ export default function Sidebar({
                 onClick={() => {
                   setIsUserPopupOpen(false);
                   onClose();
+                  handleLogout(); // Call logout API
                 }}
                 className={itemClass}
               >
@@ -316,6 +347,14 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
+
+      {/* Toast Notification */}
+      <Toast
+        message={toastMessage}
+        type="success"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
+      />
     </>
   );
 }

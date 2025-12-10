@@ -1,0 +1,294 @@
+// Register Form Component
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Link } from "@/i18n/routing";
+import authService from "@/services/authService";
+import ErrorAlert from "./ErrorAlert";
+import Modal from "@/components/common/Modal";
+import GoogleAuthButton from "./GoogleAuthButton";
+
+export default function RegisterForm() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: "",
+    message: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    setError("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Password dan konfirmasi password tidak cocok");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password minimal 8 karakter");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.confirmPassword,
+      });
+
+      // Redirect based on user role
+      const redirectPath = authService.getRedirectPath();
+      router.push(redirectPath);
+    } catch (err: any) {
+      console.error("Registration error:", err);
+
+      if (err.response?.status === 422) {
+        const errors = err.response?.data?.errors;
+
+        if (errors?.email) {
+          const emailError = Array.isArray(errors.email)
+            ? errors.email[0]
+            : errors.email;
+          setError(emailError);
+
+          setModalConfig({
+            title: "Email Sudah Terdaftar",
+            message:
+              "Email ini sudah digunakan oleh akun lain. Silakan gunakan email berbeda atau login dengan akun yang sudah ada.",
+          });
+          setShowModal(true);
+        } else {
+          const firstError = Object.values(errors)[0];
+          const errorMessage = Array.isArray(firstError)
+            ? firstError[0]
+            : firstError;
+          setError(errorMessage as string);
+        }
+      } else {
+        const errorMessage =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Terjadi kesalahan saat registrasi. Silakan coba lagi.";
+        setError(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (accessToken: string) => {
+    try {
+      setLoading(true);
+      setError("");
+      await authService.googleLogin(accessToken);
+
+      // Redirect based on user role
+      const redirectPath = authService.getRedirectPath();
+      router.push(redirectPath);
+    } catch (err: any) {
+      console.error("Google login error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Terjadi kesalahan saat login dengan Google.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="space-y-6">
+        {/* Title */}
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-gray-900">Buat Akun Baru</h1>
+          <p className="text-lg text-gray-600">
+            Gratis selamanya. Ayo bergabung!
+          </p>
+        </div>
+
+        {/* Error Alert */}
+        <ErrorAlert error={error} onClose={() => setError("")} />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5 ">
+          <div className="grid custom:grid-cols-2 grid-cols-1 gap-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Nama Lengkap
+              </label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white transition-all"
+                  placeholder="Nama lengkap Anda"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Email
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white transition-all"
+                  placeholder="email@anda.com"
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Password
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white transition-all"
+                  placeholder="Min. 8 karakter"
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Konfirmasi Password
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-purple-600 transition-colors" />
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-600 focus:bg-white transition-all"
+                  placeholder="Ulangi password"
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-4 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg shadow-purple-500/30"
+          >
+            {loading ? "Mendaftar..." : "Daftar"}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-4 bg-white text-gray-500">Atau</span>
+          </div>
+        </div>
+
+        {/* Google OAuth */}
+        <div>
+          <GoogleAuthButton
+            onSuccess={handleGoogleSuccess}
+            onError={(error) => setError(error)}
+            text="Daftar dengan Google"
+          />
+        </div>
+
+        {/* Login link */}
+        <p className="text-center text-gray-600">
+          Sudah punya akun?{" "}
+          <Link
+            href="/login"
+            className="font-bold text-purple-600 hover:text-purple-700 hover:underline"
+          >
+            Login di sini
+          </Link>
+        </p>
+      </div>
+
+      {/* Modal Popup */}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type="error"
+      />
+    </>
+  );
+}

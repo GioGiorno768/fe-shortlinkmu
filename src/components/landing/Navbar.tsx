@@ -1,18 +1,25 @@
 "use client";
 
-import { usePathname, useRouter, Link } from "@/i18n/routing"; // PENTING: Pakai Link dari sini, bukan next/link
+import { usePathname, useRouter, Link } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, useEffect } from "react";
+import authService from "@/services/authService";
 
 export default function Navbar() {
-  const t = useTranslations("Navbar"); // Hook untuk mengambil teks dari en.json/id.json
-  const locale = useLocale(); // 'en' atau 'id'
+  const t = useTranslations("Navbar");
+  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const openMenu = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Check auth status on mount
+  useEffect(() => {
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
 
   const handleOpenMenu = () => {
     setIsOpen(openMenu.current?.checked ?? false);
@@ -92,24 +99,40 @@ export default function Navbar() {
               </button>
             </div>
 
-            <Link
-              href="/login"
-              className={`text-[1.6em] font-semibold tracking-tight ${
-                pathname != "/" ? "text-bluelight" : "text-white"
-              }`}
-            >
-              {t("login")}
-            </Link>
-            <Link
-              href="/register"
-              className={`text-[1.6em] font-semibold tracking-tight ${
-                pathname != "/"
-                  ? "bg-bluelight text-white"
-                  : "bg-white text-bluelight"
-              } px-[1.5em] py-[.5em] rounded-full`}
-            >
-              {t("register")}
-            </Link>
+            {/* Auth Buttons - Desktop */}
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className={`text-[1.6em] font-semibold tracking-tight ${
+                  pathname != "/"
+                    ? "bg-bluelight text-white"
+                    : "bg-white text-bluelight"
+                } px-[1.5em] py-[.5em] rounded-full`}
+              >
+                {t("dashboard")}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={`text-[1.6em] font-semibold tracking-tight ${
+                    pathname != "/" ? "text-bluelight" : "text-white"
+                  }`}
+                >
+                  {t("login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className={`text-[1.6em] font-semibold tracking-tight ${
+                    pathname != "/"
+                      ? "bg-bluelight text-white"
+                      : "bg-white text-bluelight"
+                  } px-[1.5em] py-[.5em] rounded-full`}
+                >
+                  {t("register")}
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -178,14 +201,30 @@ export default function Navbar() {
               {t("contact")}
             </Link>
             <div className="w-full border-t border-gray-200 my-[1em]"></div>
-            <div className="flex items-center gap-[3em] justify-stretch w-full">
-              <button className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-gray-50 text-shortblack py-[.8em] rounded-full">
-                {t("login")}
-              </button>
-              <button className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-blues text-bluelight py-[.8em] rounded-full">
-                {t("register")}
-              </button>
-            </div>
+            {/* Auth Buttons - Mobile */}
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-bluelight text-white py-[.8em] rounded-full text-center"
+              >
+                {t("dashboard")}
+              </Link>
+            ) : (
+              <div className="flex items-center gap-[3em] justify-stretch w-full">
+                <Link
+                  href="/login"
+                  className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-gray-50 text-shortblack py-[.8em] rounded-full text-center"
+                >
+                  {t("login")}
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-[1.6em] font-semibold tracking-tight w-full px-[2em] bg-blues text-bluelight py-[.8em] rounded-full text-center"
+                >
+                  {t("register")}
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>
