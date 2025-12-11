@@ -167,6 +167,7 @@ export default function LinkFilters({
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 5 }}
+                onWheel={(e) => e.stopPropagation()}
                 className="absolute top-full right-0 mt-2 p-2 w-56 bg-white rounded-lg shadow-lg border border-gray-100 max-h-60 overflow-y-auto custom-scrollbar-minimal"
               >
                 {filterOptions.map((opt) => (

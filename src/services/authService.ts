@@ -1,27 +1,8 @@
 // Auth Service - Handle semua API calls untuk authentication
-import axios from "axios";
+import apiClient from "./apiClient";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "user_data";
-
-// Axios instance dengan config default
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
-});
-
-// Interceptor untuk attach token ke setiap request
-apiClient.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 // ==================== Helper Functions ====================
 

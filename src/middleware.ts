@@ -16,9 +16,37 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 1.5. SHORTLINK REWRITE PROXY
+  // Detect /{code} (single segment, not a locale) and REWRITE to Backend
+  // Backend will return 302 Redirect, which Next.js will pass to browser.
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 1) {
+    const potentialCode = segments[0];
+
+    // Check if it's NOT a locale (id, en) and NOT a standard route
+    const isLocale = potentialCode === "id" || potentialCode === "en";
+    const isSpecial = [
+      "admin",
+      "super-admin",
+      "dashboard",
+      "login",
+      "register",
+      "continue",
+      "go",
+      "expired", // ⭐ Add expired page
+    ].includes(potentialCode);
+
+    if (!isLocale && !isSpecial) {
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+      // Gunakan Rewrite agar URL backend tidak terekspos langsung, tapi browser menerima respons 302 dari backend
+      return NextResponse.rewrite(`${API_URL}/links/${potentialCode}`);
+    }
+  }
+
   // 2. Redirect bare /admin or /super-admin to dashboards
   // Extract locale and check path after locale
-  const segments = pathname.split("/").filter(Boolean);
+  // const segments = pathname.split("/").filter(Boolean);
   if (segments.length >= 1) {
     const locale = segments[0]; // en or id
     const path = segments.slice(1).join("/");

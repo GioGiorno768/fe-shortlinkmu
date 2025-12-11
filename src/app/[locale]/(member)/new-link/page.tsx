@@ -7,7 +7,6 @@ import LinkList from "@/components/dashboard/links/LinkList";
 import EditLinkModal from "@/components/dashboard/EditLinkModal";
 import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
 import { useLinks } from "@/hooks/useLinks";
-import { Loader2 } from "lucide-react";
 import type { Shortlink } from "@/types/type";
 
 export default function NewLinkPage() {
@@ -68,26 +67,21 @@ export default function NewLinkPage() {
         onSubmit={createLink}
       />
 
-      {isLoading ? (
-        <div className="flex justify-center items-center py-20">
-          <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
-        </div>
-      ) : (
-        <LinkList
-          links={links}
-          totalPages={totalPages}
-          search={search}
-          setSearch={setSearch}
-          filterBy={filterBy}
-          setFilterBy={setFilterBy}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          page={page}
-          setPage={setPage}
-          onEdit={openEditModal}
-          onToggleStatus={openConfirmModal}
-        />
-      )}
+      <LinkList
+        links={links}
+        totalPages={totalPages}
+        search={search}
+        setSearch={setSearch}
+        filterBy={filterBy}
+        setFilterBy={setFilterBy}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        page={page}
+        setPage={setPage}
+        isLoading={isLoading}
+        onEdit={openEditModal}
+        onToggleStatus={openConfirmModal}
+      />
 
       {/* Modal Edit */}
       <EditLinkModal

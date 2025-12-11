@@ -10,6 +10,7 @@ import {
   OctagonAlert, // Icon buat loading
 } from "lucide-react";
 import { useAlert } from "@/hooks/useAlert";
+import * as linkService from "@/services/linkService";
 
 export default function ShortLink() {
   const { showAlert } = useAlert();
@@ -32,38 +33,27 @@ export default function ShortLink() {
     setShortLink("");
     setIsCopied(false);
 
-    // --- KERANGKA REST API (Fetch POST) ---
-    // Nanti lu tinggal ganti URL-nya dan sesuaikan body-nya
     try {
-      /*
-      // --- INI CONTOH KALO PAKE API Beneran ---
-      const response = await fetch("/api/v1/generate", { // Ganti URL API lu di sini
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ originalUrl: urlInput }),
-      });
+      // Call Real API
+      const data = await linkService.createGuestLink(urlInput);
 
-      if (!response.ok) {
-        throw new Error("Gagal membuat shortlink");
+      // Detect protocol automatically (http on dev, https on prod)
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+
+      // Construct display URL: e.g. http://localhost:3000/ABC123
+      const fullShortUrl = `${host}/${data.code}`;
+
+      setShortLink(fullShortUrl);
+      setUrlInput(""); // Clear input on success
+
+      // Optional: Show guest info
+      if (data.isGuest) {
+        // You could show a small toast/alert here if needed
+        // console.log("Guest link created");
       }
-
-      const data = await response.json();
-      setShortLink(data.shortUrl); // Asumsi API ngembaliin { shortUrl: "short.link/xyz" }
-      */
-
-      // --- SIMULASI API (Hapus aja kalo API udah jadi) ---
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulasi loading 1 detik
-      // Cek kalo URL valid (simulasi simpel)
-      if (!urlInput.startsWith("http")) {
-        throw new Error("URL tidak valid. Harus diawali http:// atau https://");
-      }
-      const randomString = Math.random().toString(36).substring(7);
-      setShortLink(`short.link/${randomString}`);
-      setUrlInput(""); // Kosongin input setelah sukses
-      // ---------------------------------------------------
     } catch (err: any) {
+      // Error message is already formatted in service (e.g. "Guest limit reached...")
       setError(err.message || "Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
@@ -74,7 +64,8 @@ export default function ShortLink() {
   const handleCopy = () => {
     if (!shortLink) return;
 
-    navigator.clipboard.writeText(`https://${shortLink}`);
+    const protocol = window.location.protocol;
+    navigator.clipboard.writeText(`${protocol}//${shortLink}`);
     setIsCopied(true);
 
     // Tambahin alert sukses copy (opsional, karena udah ada icon check)
@@ -89,12 +80,13 @@ export default function ShortLink() {
   const handleShare = async () => {
     if (!shortLink) return;
 
+    const protocol = window.location.protocol;
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Shortlinkmu Link",
           text: `Lihat link saya: ${shortLink}`,
-          url: `https://${shortLink}`,
+          url: `${protocol}//${shortLink}`,
         });
       } catch (err) {
         console.error("Gagal share:", err);

@@ -32,7 +32,7 @@ export default function LinkItem({
   link,
   isExpanded,
   onToggleExpand,
-  onEdit, 
+  onEdit,
   onToggleStatus,
 }: LinkItemProps) {
   // State UI Lokal (Menu & Password)
@@ -264,7 +264,7 @@ export default function LinkItem({
                 </div>
               </div>
               {/* Stats Grid */}
-              
+
               {/* <div className="flex items-center gap-3">
                 <Eye className="w-5 h-5 text-bluelight" />
                 <div>
@@ -284,9 +284,9 @@ export default function LinkItem({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <BarChart className="w-5 h-5 text-bluelight" />
+                <Eye className="w-5 h-5 text-bluelight" />
                 <div>
-                  <p className="text-[1.2em] text-grays">Clicks</p>
+                  <p className="text-[1.2em] text-grays">Views</p>
                   <p className="text-[1.4em] text-shortblack">
                     {formatNumber(link.totalClicks)}
                   </p>

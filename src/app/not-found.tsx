@@ -15,4 +15,11 @@ export default async function RootNotFound() {
 
   // Redirect ke 404 page dengan locale
   redirect(`/${locale}/not-found`);
+
+  // Return dummy structure to satisfy root layout requirement
+  return (
+    <html>
+      <body></body>
+    </html>
+  );
 }

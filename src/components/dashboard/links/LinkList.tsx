@@ -19,9 +19,12 @@ interface LinkListProps {
   page: number;
   setPage: (v: number) => void;
   // Actions
+  isLoading: boolean;
   onEdit: (id: string) => void;
   onToggleStatus: (id: string, status: "active" | "disabled") => void;
 }
+
+import { Loader2 } from "lucide-react";
 
 export default function LinkList({
   links,
@@ -34,6 +37,7 @@ export default function LinkList({
   setSortBy,
   page,
   setPage,
+  isLoading,
   onEdit,
   onToggleStatus,
 }: LinkListProps) {
@@ -50,8 +54,12 @@ export default function LinkList({
         setSortBy={setSortBy}
       />
 
-      <div className="space-y-3">
-        {links.length === 0 ? (
+      <div className="space-y-3 min-h-[200px]">
+        {isLoading ? (
+            <div className="flex justify-center items-center py-20">
+                <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+            </div>
+        ) : links.length === 0 ? (
           <p className="text-center text-grays py-8">
             No links found matching criteria.
           </p>
@@ -71,7 +79,7 @@ export default function LinkList({
         )}
       </div>
 
-      {totalPages > 1 && (
+      {!isLoading && totalPages > 1 && (
         <div className="flex justify-center items-center flex-wrap gap-2 mt-8">
           <button
             disabled={page === 1}
