@@ -18,12 +18,8 @@ export default function NewLinkPage() {
     isMutating,
     page,
     setPage,
-    search,
-    setSearch,
-    filterBy,
-    setFilterBy,
-    sortBy,
-    setSortBy,
+    filters,
+    setFilters,
     createLink,
     updateLink,
     toggleLinkStatus,
@@ -70,12 +66,8 @@ export default function NewLinkPage() {
       <LinkList
         links={links}
         totalPages={totalPages}
-        search={search}
-        setSearch={setSearch}
-        filterBy={filterBy}
-        setFilterBy={setFilterBy}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
+        filters={filters}
+        setFilters={setFilters}
         page={page}
         setPage={setPage}
         isLoading={isLoading}

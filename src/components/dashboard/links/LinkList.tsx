@@ -2,20 +2,18 @@
 "use client";
 
 import { useState } from "react";
-import type { Shortlink, FilterByType, SortByType } from "@/types/type";
-import LinkFilters from "./LinkFilters";
+import { Loader2 } from "lucide-react";
 import LinkItem from "./LinkItem";
+import LinkFilters from "./LinkFilters";
+import Pagination from "../Pagination";
+import type { Shortlink, MemberLinkFilters } from "@/types/type";
 
 interface LinkListProps {
   links: Shortlink[];
   totalPages: number;
   // Filter Props (Controlled from Parent)
-  search: string;
-  setSearch: (v: string) => void;
-  filterBy: FilterByType;
-  setFilterBy: (v: FilterByType) => void;
-  sortBy: SortByType;
-  setSortBy: (v: SortByType) => void;
+  filters: MemberLinkFilters;
+  setFilters: (v: MemberLinkFilters) => void;
   page: number;
   setPage: (v: number) => void;
   // Actions
@@ -24,17 +22,11 @@ interface LinkListProps {
   onToggleStatus: (id: string, status: "active" | "disabled") => void;
 }
 
-import { Loader2 } from "lucide-react";
-
 export default function LinkList({
   links,
   totalPages,
-  search,
-  setSearch,
-  filterBy,
-  setFilterBy,
-  sortBy,
-  setSortBy,
+  filters,
+  setFilters,
   page,
   setPage,
   isLoading,
@@ -45,20 +37,13 @@ export default function LinkList({
 
   return (
     <div className="rounded-xl mt-6 text-[10px]">
-      <LinkFilters
-        searchTerm={search}
-        setSearchTerm={setSearch}
-        filterBy={filterBy}
-        setFilterBy={setFilterBy}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
+      <LinkFilters filters={filters} setFilters={setFilters} />
 
       <div className="space-y-3 min-h-[200px]">
         {isLoading ? (
-            <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
-            </div>
+          <div className="flex justify-center items-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
+          </div>
         ) : links.length === 0 ? (
           <p className="text-center text-grays py-8">
             No links found matching criteria.
@@ -80,25 +65,11 @@ export default function LinkList({
       </div>
 
       {!isLoading && totalPages > 1 && (
-        <div className="flex justify-center items-center flex-wrap gap-2 mt-8">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-            className="text-[1.6em] px-4 py-2 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-blues transition-colors"
-          >
-            Previous
-          </button>
-          <span className="text-[1.6em] px-2 text-grays font-medium">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-            className="text-[1.6em] px-4 py-2 bg-white border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-blues transition-colors"
-          >
-            Next
-          </button>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       )}
     </div>
   );

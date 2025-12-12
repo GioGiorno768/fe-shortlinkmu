@@ -15,6 +15,7 @@ export default function ContinuePage() {
 
   const code = searchParams.get("code");
   const token = searchParams.get("token");
+  const visitorId = searchParams.get("visitor_id"); // 🛡️ Anti-Fraud Device Fingerprint
 
   // Don't auto-load, wait for user to click
   const [isLoading, setIsLoading] = useState(false);
@@ -70,11 +71,12 @@ export default function ContinuePage() {
     setError("");
 
     try {
-      // Pass password if state is set
+      // Pass password if state is set, and visitor_id for anti-fraud
       const originalUrl = await linkService.validateContinueToken(
         code,
         token,
-        password || undefined
+        password || undefined,
+        visitorId || undefined // 🛡️ Anti-Fraud
       );
 
       // Success! Redirect to destination

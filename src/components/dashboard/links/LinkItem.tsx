@@ -68,9 +68,10 @@ export default function LinkItem({
   return (
     <div
       className={clsx(
-        "rounded-xl bg-white shadow-sm shadow-slate-500/50 transition-shadow block w-full text-start",
-        link.status === "disabled" && "bg-gray-50 opacity-70",
-        isExpanded && "shadow-lg"
+        "rounded-xl bg-white shadow-sm shadow-slate-500/50 transition-shadow block w-full text-start relative",
+        link.status === "disabled" && "bg-gray-50 ",
+        isExpanded && "shadow-lg",
+        isMenuOpen && "z-30"
       )}
     >
       {/* HEADER (Baris Utama) */}
@@ -86,13 +87,13 @@ export default function LinkItem({
           <div
             className={clsx(
               "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center",
-              link.status === "active" ? "bg-blue-dashboard" : "bg-gray-200"
+              link.status === "active" ? "bg-blue-dashboard" : "bg-lightred-dashboard"
             )}
           >
             <LinkIcon
               className={clsx(
                 "w-5 h-5",
-                link.status === "active" ? "text-bluelight" : "text-grays"
+                link.status === "active" ? "text-bluelight" : "text-redshortlink"
               )}
             />
           </div>

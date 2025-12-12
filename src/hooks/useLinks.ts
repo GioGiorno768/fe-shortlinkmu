@@ -9,6 +9,7 @@ import type {
   FilterByType,
   SortByType,
   GeneratedLinkData,
+  MemberLinkFilters,
 } from "@/types/type";
 import * as linkService from "@/services/linkService";
 import { useAlert } from "@/hooks/useAlert";
@@ -25,22 +26,29 @@ export function useLinks() {
 
   // Filter
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [filterBy, setFilterBy] = useState<FilterByType>("date");
-  const [sortBy, setSortBy] = useState<SortByType>("highest");
+  const [filters, setFilters] = useState<MemberLinkFilters>({
+    sort: "newest",
+    status: "all",
+    adsLevel: "all",
+    search: "",
+  });
+
+  // Backward compatibility / Helper for UI if needed, but best to use filters directly
+  // const [search, setSearch] = useState(""); // Merged into filters
 
   // Loading
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
+
+  // Debounced Search updater (optional, or handle in component)
+  // For now we assume setFilters updates state immediately, and we depend on debouncing fetch or use effect
 
   const fetchLinks = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await linkService.getLinks({
         page,
-        search,
-        filterBy,
-        sortBy,
+        filters,
       });
       setLinks(res.data);
       setTotalPages(res.totalPages);
@@ -49,7 +57,7 @@ export function useLinks() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, search, filterBy, sortBy, showAlert]);
+  }, [page, filters, showAlert]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,7 +69,7 @@ export function useLinks() {
   // Reset page kalau filter berubah
   useEffect(() => {
     setPage(1);
-  }, [search, filterBy, sortBy]);
+  }, [filters]);
 
   const createLink = async (formData: CreateLinkFormData): Promise<boolean> => {
     setIsMutating(true);
@@ -101,14 +109,8 @@ export function useLinks() {
   ) => {
     try {
       await linkService.toggleLinkStatus(id, status);
-      // Optimistic update lokal biar cepet
-      setLinks((prev) =>
-        prev.map((l) =>
-          l.id === id
-            ? { ...l, status: status === "active" ? "disabled" : "active" }
-            : l
-        )
-      );
+      // Refetch data to ensure UI reflects backend truth with loading state
+      fetchLinks();
       showAlert(`Status link berhasil diubah.`, "info");
     } catch (error) {
       showAlert("Gagal mengubah status.", "error");
@@ -123,12 +125,8 @@ export function useLinks() {
     isMutating,
     page,
     setPage,
-    search,
-    setSearch,
-    filterBy,
-    setFilterBy,
-    sortBy,
-    setSortBy,
+    filters,
+    setFilters,
     createLink,
     updateLink: handleUpdate,
     toggleLinkStatus: handleToggleStatus,

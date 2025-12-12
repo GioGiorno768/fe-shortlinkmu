@@ -134,7 +134,7 @@ export default function Header({
       className={`
         fixed top-0 right-0 left-0
         ${isCollapsed ? "custom:left-20" : "custom:left-64"}
-        transition-all duration-300 ease-in-out z-30
+        transition-all duration-300 ease-in-out z-50
         px-4 custom:px-8 sm:pt-6 pt-3
         font-figtree bg-slate-50
       `}

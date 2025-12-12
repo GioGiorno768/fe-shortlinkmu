@@ -608,6 +608,13 @@ export interface AdminLink {
   adsLevel: string; // "level1", "noAds", dll
 }
 
+export interface MemberLinkFilters {
+  search?: string;
+  status?: string; // active, disabled, expired
+  adsLevel?: string;
+  sort?: string;
+}
+
 // 👇 TIPE DATA ABUSE REPORT
 export type ReportStatus = "pending" | "resolved" | "ignored";
 export type ReportReason = "phishing" | "spam" | "adult" | "scam" | "other";

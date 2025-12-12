@@ -6,6 +6,7 @@ import type {
   FilterByType,
   SortByType,
   AdLevel,
+  MemberLinkFilters,
 } from "@/types/type";
 import apiClient from "./apiClient";
 
@@ -17,58 +18,64 @@ export interface GeneratedLinkData {
   earnPerClick: number;
 }
 
+// Update params interface
 interface GetLinksParams {
   page?: number;
-  search?: string;
-  filterBy?: FilterByType;
-  sortBy?: SortByType;
+  filters: MemberLinkFilters;
 }
 
 export const getLinks = async (
   params: GetLinksParams
 ): Promise<{ data: Shortlink[]; totalPages: number }> => {
   try {
-    // Map frontend filter/sort to backend params
-    let backendFilter = undefined;
-    let backendStatus = undefined;
+    const { filters } = params;
 
-    switch (params.filterBy) {
-      case "topLinks":
+    // Map frontend filters to backend params
+    let backendFilter = undefined;
+
+    // Sort mapping
+    switch (filters.sort) {
+      case "most_views":
         backendFilter = "top_links";
         break;
-      case "validViews":
-        backendFilter = "top_valid";
+      case "least_views":
+        backendFilter = "least_links"; // Placeholder
         break;
-      case "totalEarning":
+      case "most_earnings":
         backendFilter = "top_earned";
         break;
-      case "avgCPM":
-        backendFilter = "avg_cpm";
+      case "least_earnings":
+        backendFilter = "least_earned"; // Placeholder
         break;
-      case "linkPassword":
-        backendFilter = "link_password";
+      case "newest":
+        backendFilter = "newest"; // Explicitly send newest
         break;
-      case "dateExpired":
-        // If user wants to see expired links
-        backendFilter = "expired";
+      case "oldest":
+        backendFilter = "oldest";
         break;
-      case "linkDisabled":
-        backendStatus = "disabled";
-        break;
-      case "linkEnabled":
-        backendStatus = "active";
-        break;
-      // 'date' uses default backend sorting (latest)
-      default:
-        break;
+    }
+
+    // Status mapping
+    // Backend expects 'status' param: 'active' | 'disabled'
+    // 'expired' is likely a 'filter' in backend based on previous code: case "dateExpired": backendFilter = "expired";
+    let backendStatus = filters.status !== "all" ? filters.status : undefined;
+
+    // Handle 'expired' which was previously a filter, but in UI is a status
+    if (filters.status === "expired") {
+      backendFilter = "expired";
+      backendStatus = undefined; // Clear status if expired is treated as filter
+    } else if (filters.status === "password") {
+      backendFilter = "link_password";
+      backendStatus = undefined;
     }
 
     const response = await apiClient.get("/links", {
       params: {
         page: params.page || 1,
-        search: params.search,
-        filter: backendFilter,
-        status: backendStatus,
+        search: filters.search,
+        filter: backendFilter, // Sort/Special lists
+        status: backendStatus, // Active/Disabled
+        ad_level: filters.adsLevel !== "all" ? filters.adsLevel : undefined, // New param
       },
     });
 
@@ -90,7 +97,7 @@ export const getLinks = async (
       totalClicks: link.total_views || 0,
       averageCPM: parseFloat(link.calculated_cpm || 0),
       adsLevel: (link.ad_level ? `level${link.ad_level}` : "level1") as AdLevel,
-      password: link.password, // Add this line
+      password: link.password,
       passwordProtected: !!link.password,
       status: link.status,
       dateExpired: link.expired_at,
@@ -244,12 +251,16 @@ export const createGuestLink = async (
 export const validateContinueToken = async (
   code: string,
   token: string,
-  password?: string
+  password?: string,
+  visitorId?: string // 🛡️ Anti-Fraud Device Fingerprint
 ): Promise<string> => {
   try {
     const payload: any = { token };
     if (password) {
       payload.password = password;
+    }
+    if (visitorId) {
+      payload.visitor_id = visitorId; // 🛡️ Send fingerprint to backend
     }
 
     const response = await apiClient.post(`/links/${code}/continue`, payload);

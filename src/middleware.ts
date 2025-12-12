@@ -101,8 +101,21 @@ export default function middleware(request: NextRequest) {
   }
 
   // Protect dashboard routes - require authentication
-  if (isDashboardPath && !isAdminPath && !isSuperAdminPath) {
-    // This is user dashboard (/dashboard)
+  const memberRoutes = [
+    "/new-link",
+    "/ads-info",
+    "/analytics",
+    "/history",
+    "/levels",
+    "/profile",
+    "/referral",
+    "/settings",
+    "/withdrawal",
+  ];
+  const isMemberPath = memberRoutes.some((route) => pathname.includes(route));
+
+  if ((isDashboardPath || isMemberPath) && !isAdminPath && !isSuperAdminPath) {
+    // This is user dashboard (/dashboard) or member page
     if (!token) {
       const url = request.nextUrl.clone();
       const locale = segments[0] || "en";
