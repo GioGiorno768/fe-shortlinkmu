@@ -76,6 +76,7 @@ export const getRedirectPath = (): string => {
 interface LoginCredentials {
   email: string;
   password: string;
+  visitor_id?: string; // 🛡️ Anti-Fraud
 }
 
 interface RegisterCredentials {
@@ -84,6 +85,7 @@ interface RegisterCredentials {
   password: string;
   password_confirmation: string;
   referral_code?: string;
+  visitor_id?: string; // 🛡️ Anti-Fraud
 }
 
 interface AuthResponse {
@@ -132,12 +134,15 @@ export const register = async (
 /**
  * Google OAuth Login
  * @param credential - Credential JWT dari Google OAuth popup
+ * @param visitorId - Device fingerprint for anti-fraud (optional)
  */
 export const googleLogin = async (
-  credential: string
+  credential: string,
+  visitorId?: string
 ): Promise<AuthResponse> => {
   const response = await apiClient.post("/auth/google/callback", {
     access_token: credential, // Backend expect 'access_token' key
+    visitor_id: visitorId, // 🛡️ Anti-Fraud Fingerprint
   });
   const { token, user } = response.data.data || response.data;
 

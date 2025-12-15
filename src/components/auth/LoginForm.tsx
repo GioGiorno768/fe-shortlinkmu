@@ -9,6 +9,7 @@ import authService from "@/services/authService";
 import ErrorAlert from "./ErrorAlert";
 import GoogleAuthButton from "./GoogleAuthButton";
 import Toast from "@/components/common/Toast";
+import { useFingerprint } from "@/hooks/useFingerprint";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -21,6 +22,9 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  // 🛡️ Device Fingerprinting
+  const { visitorId } = useFingerprint();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -39,6 +43,7 @@ export default function LoginForm() {
       await authService.login({
         email: formData.email,
         password: formData.password,
+        visitor_id: visitorId || undefined, // 🛡️ Anti-Fraud Fingerprint
       });
 
       // Show success toast
@@ -92,7 +97,7 @@ export default function LoginForm() {
     try {
       setLoading(true);
       setError("");
-      await authService.googleLogin(accessToken);
+      await authService.googleLogin(accessToken, visitorId || undefined); // 🛡️ Pass fingerprint
 
       // Show success toast
       setToastMessage("Login dengan Google berhasil!");

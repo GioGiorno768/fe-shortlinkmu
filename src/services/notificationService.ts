@@ -1,124 +1,106 @@
-import type { NotificationItem, Role } from "@/types/type";
+// src/services/notificationService.ts
+import type {
+  NotificationItem,
+  Role,
+  NotificationCategory,
+} from "@/types/type";
+import apiClient from "./apiClient";
 
-// --- MOCK DATA USER (Member) ---
-const MEMBER_NOTIFS: NotificationItem[] = [
-  {
-    id: "1",
-    type: "warning",
-    category: "system",
-    title: "Maintenance Scheduled",
-    message: "Sistem akan maintenance pada jam 02:00 - 04:00 WIB.",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-  },
-  {
-    id: "2",
-    type: "success",
-    category: "payment",
-    title: "Payout Approved",
-    message: "Penarikan dana $15.50 berhasil dikirim ke PayPal.",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-  {
-    id: "3",
-    type: "info",
-    category: "event",
-    title: "Event Double CPM!",
-    message: "Nikmati kenaikan CPM 20% khusus weekend ini!",
-    isRead: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-  },
-  {
-    id: "4",
-    type: "alert",
-    category: "account",
-    title: "Login Mencurigakan",
-    message: "Login dari IP tidak dikenal (Russia). Segera cek akun.",
-    isRead: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-  {
-    id: "5",
-    type: "info",
-    category: "link",
-    title: "Link Populer",
-    message: "Link 'short.link/xyz' tembus 1000 view hari ini!",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-  },
-];
+/**
+ * Map backend notification to frontend NotificationItem type
+ */
+function mapNotification(notification: any): NotificationItem {
+  const data = notification.data || {};
 
-// --- MOCK DATA ADMIN (Staff/Super Admin) ---
-const ADMIN_NOTIFS: NotificationItem[] = [
-  {
-    id: "a1",
-    type: "warning",
-    category: "payment",
-    title: "🔥 Withdrawal Request",
-    message:
-      "User 'Rizky01' minta withdraw $50. Cek mutasi dan approve segera.",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 menit lalu
-    actionUrl: "/admin/withdrawals",
-  },
-  {
-    id: "a2",
-    type: "alert",
-    category: "link",
-    title: "🚨 Abuse Report: Phishing",
-    message:
-      "3 User melaporkan link 'short.link/free-diamond' sebagai Phishing.",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    actionUrl: "/admin/reports",
-  },
-  {
-    id: "a3",
-    type: "info",
-    category: "account",
-    title: "New User Registration",
-    message: "+15 User baru mendaftar dalam 1 jam terakhir.",
-    isRead: true,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-  },
-  {
-    id: "a4",
-    type: "info",
-    category: "system",
-    title: "📢 Broadcast: Super Admin",
-    message:
-      "Tolong fokus bersihin tiket pending WD sebelum jam 5 sore. Thanks!",
-    isRead: false,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-  },
-];
+  // Map backend type to frontend type
+  const typeMap: Record<string, NotificationItem["type"]> = {
+    info: "info",
+    success: "success",
+    warning: "warning",
+    danger: "alert",
+    alert: "alert",
+  };
 
-// --- LOGIC FETCHING ---
+  // Map category or default to "system"
+  const category: NotificationCategory = data.category || "system";
+
+  return {
+    id: notification.id,
+    title: data.title || "Notification",
+    message: data.message || "",
+    type: typeMap[data.type] || "info",
+    category: category,
+    isRead: notification.read_at !== null,
+    timestamp: notification.created_at,
+    actionUrl: data.url || undefined,
+  };
+}
+
+/**
+ * Get all notifications for the logged-in user
+ */
 export async function getNotifications(
   role: Role = "member"
 ): Promise<NotificationItem[]> {
-  // NANTI GANTI: fetch(`/api/notifications?role=${role}`)
-  await new Promise((r) => setTimeout(r, 600));
+  try {
+    const response = await apiClient.get("/notifications");
+    const notifications = response.data.data?.data || response.data.data || [];
 
-  if (role === "admin" || role === "super-admin") {
-    return [...ADMIN_NOTIFS];
+    return notifications.map(mapNotification);
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    return [];
   }
-  return [...MEMBER_NOTIFS];
 }
 
-// Action lain tetep sama (bisa di-update nanti buat hit API beneran)
+/**
+ * Get unread notification count
+ */
+export async function getUnreadCount(): Promise<number> {
+  try {
+    const response = await apiClient.get("/notifications/unread");
+    return response.data.data?.unread_count ?? 0;
+  } catch (error) {
+    console.error("Failed to fetch unread count:", error);
+    return 0;
+  }
+}
+
+/**
+ * Mark a single notification as read
+ */
 export async function markAsRead(id: string): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 300));
-  return true;
+  try {
+    await apiClient.post(`/notifications/${id}/read`);
+    return true;
+  } catch (error) {
+    console.error("Failed to mark notification as read:", error);
+    return false;
+  }
 }
 
+/**
+ * Mark all notifications as read
+ */
 export async function markAllAsRead(): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 500));
-  return true;
+  try {
+    await apiClient.post("/notifications/read-all");
+    return true;
+  } catch (error) {
+    console.error("Failed to mark all as read:", error);
+    return false;
+  }
 }
 
+/**
+ * Delete a notification
+ */
 export async function deleteNotification(id: string): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 400));
-  return true;
+  try {
+    await apiClient.delete(`/notifications/${id}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to delete notification:", error);
+    return false;
+  }
 }

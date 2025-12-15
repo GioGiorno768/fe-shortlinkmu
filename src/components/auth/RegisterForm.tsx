@@ -9,6 +9,7 @@ import authService from "@/services/authService";
 import ErrorAlert from "./ErrorAlert";
 import Modal from "@/components/common/Modal";
 import GoogleAuthButton from "./GoogleAuthButton";
+import { useFingerprint } from "@/hooks/useFingerprint";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -27,6 +28,9 @@ export default function RegisterForm() {
     title: "",
     message: "",
   });
+
+  // 🛡️ Device Fingerprinting
+  const { visitorId } = useFingerprint();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -57,6 +61,7 @@ export default function RegisterForm() {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
+        visitor_id: visitorId || undefined, // 🛡️ Anti-Fraud
       });
 
       // Redirect based on user role
@@ -103,7 +108,7 @@ export default function RegisterForm() {
     try {
       setLoading(true);
       setError("");
-      await authService.googleLogin(accessToken);
+      await authService.googleLogin(accessToken, visitorId || undefined); // 🛡️ Pass fingerprint
 
       // Redirect based on user role
       const redirectPath = authService.getRedirectPath();

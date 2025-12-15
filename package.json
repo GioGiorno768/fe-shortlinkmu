@@ -10,6 +10,7 @@
     "format": "biome format --write"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^5.0.1",
     "apexcharts": "^5.3.6",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
