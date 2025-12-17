@@ -9,6 +9,7 @@ import { routing } from "@/i18n/routing";
 import { Suspense } from "react";
 import TopLoadingBar from "@/components/TopLoadingBar";
 import GlobalAlert from "@/components/dashboard/GlobalAlert";
+import QueryProvider from "@/providers/QueryProvider";
 
 const figtree = Figtree({
   variable: "--font-figtree",
@@ -51,13 +52,15 @@ export default async function RootLayout({
       <body
         className={`${figtree.variable} ${manrope.variable} font-figtree antialiased`}
       >
+        <Suspense fallback={<div />}>
+          <TopLoadingBar />
+        </Suspense>
         <LenisScrollProvider>
           <NextIntlClientProvider messages={messages}>
-            <Suspense fallback={<div />}>
-              <TopLoadingBar />
-            </Suspense>
-            <GlobalAlert />
-            {children}
+            <QueryProvider>
+              <GlobalAlert />
+              {children}
+            </QueryProvider>
           </NextIntlClientProvider>
         </LenisScrollProvider>
       </body>

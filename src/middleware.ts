@@ -33,7 +33,17 @@ export default function middleware(request: NextRequest) {
       "register",
       "continue",
       "go",
-      "expired", // ⭐ Add expired page
+      "expired",
+      "referral",
+      // Member routes
+      "analytics",
+      "levels",
+      "withdrawal",
+      "history",
+      "settings",
+      "new-link",
+      "ads-info",
+      "my-links",
     ].includes(potentialCode);
 
     if (!isLocale && !isSpecial) {
@@ -86,15 +96,28 @@ export default function middleware(request: NextRequest) {
   // Redirect authenticated users away from auth pages
   if (isAuthPage && token) {
     const url = request.nextUrl.clone();
+
+    // Properly extract locale - check if first segment is a valid locale
+    const validLocales = ["en", "id"];
+    const firstSegment = segments[0] || "en";
+    const locale = validLocales.includes(firstSegment) ? firstSegment : "en";
+
+    // If accessing register with referral code, redirect to referral page
+    const hasRefParam = request.nextUrl.searchParams.has("ref");
+    const isRegisterPage = pathname.includes("/register");
+
+    if (isRegisterPage && hasRefParam) {
+      // User is logged in and clicked a referral link → show their own referral page
+      url.pathname = `/${locale}/referral`;
+      return NextResponse.redirect(url);
+    }
+
     // Redirect based on role
     if (userRole === "super_admin") {
-      const locale = segments[0] || "en";
       url.pathname = `/${locale}/super-admin/dashboard`;
     } else if (userRole === "admin") {
-      const locale = segments[0] || "en";
       url.pathname = `/${locale}/admin/dashboard`;
     } else {
-      const locale = segments[0] || "en";
       url.pathname = `/${locale}/dashboard`;
     }
     return NextResponse.redirect(url);

@@ -123,6 +123,7 @@ export default function ProfileSection({
               </div>
             </div>
 
+            {/* Phone Number - Hidden for now since registration only uses username and email
             <div className="space-y-2">
               <label className="text-[1.4em] font-medium text-shortblack">
                 Phone Number
@@ -138,6 +139,7 @@ export default function ProfileSection({
                 />
               </div>
             </div>
+            */}
           </div>
 
           {/* Submit Button */}

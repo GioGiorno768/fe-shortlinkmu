@@ -11,9 +11,11 @@ import {
   Crown,
   Check,
   Lock,
+  LucideIcon,
 } from "lucide-react";
 import clsx from "clsx";
 import type { UserLevel, LevelConfig } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // 👇 Update Props: Terima 'levels' dari parent
 interface LevelsGridProps {
@@ -21,27 +23,25 @@ interface LevelsGridProps {
   levels: LevelConfig[]; // <--- Tambah ini
 }
 
-// Helper Icon (Tetap di sini karena ini urusan UI)
-const getIcon = (id: UserLevel) => {
-  switch (id) {
-    case "beginner":
-      return Shield;
-    case "rookie":
-      return Star;
-    case "elite":
-      return Trophy;
-    case "pro":
-      return Gem;
-    case "master":
-      return Rocket;
-    case "mythic":
-      return Crown;
-    default:
-      return Shield;
-  }
+// Icon mapper - convert icon name string to component
+const iconMap: Record<string, LucideIcon> = {
+  shield: Shield,
+  star: Star,
+  trophy: Trophy,
+  gem: Gem,
+  rocket: Rocket,
+  crown: Crown,
+};
+
+// Helper to get icon component from name
+const getIcon = (iconName: string): LucideIcon => {
+  return iconMap[iconName] || Shield;
 };
 
 export default function LevelsGrid({ currentLevel, levels }: LevelsGridProps) {
+  // 💱 Currency context
+  const { format: formatCurrency } = useCurrency();
+
   // Logic cari index level user saat ini
   const currentIndex = levels.findIndex((l) => l.id === currentLevel);
 
@@ -52,7 +52,7 @@ export default function LevelsGrid({ currentLevel, levels }: LevelsGridProps) {
         // (Asumsi array 'levels' sudah urut dari beginner -> mythic)
         const isUnlocked = index <= currentIndex;
         const isCurrent = index === currentIndex;
-        const Icon = getIcon(level.id);
+        const Icon = getIcon(level.icon);
 
         return (
           <motion.div
@@ -96,7 +96,7 @@ export default function LevelsGrid({ currentLevel, levels }: LevelsGridProps) {
                 {level.name}
               </h3>
               <p className="text-[1.4em] text-grays">
-                Min. Earnings ${level.minEarnings.toLocaleString()}
+                Min. Earnings {formatCurrency(level.minEarnings)}
               </p>
             </div>
 

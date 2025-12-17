@@ -1,9 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Calendar,
+  DollarSign,
+} from "lucide-react";
 import clsx from "clsx";
 import type { ReferredUser } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ReferralTableProps {
   users: ReferredUser[];
@@ -14,15 +22,14 @@ export default function ReferralTable({ users }: ReferralTableProps) {
 
   // --- STATE PAGINATION ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Kita set 5 atau 10, terserah selera lu
+  const itemsPerPage = 5;
 
-  const formatCurrency = (val: number) => `$${val.toFixed(2)}`;
+  // 💱 Currency context
+  const { format: formatCurrency } = useCurrency();
 
-  // 1. Filter Data (Search)
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.emailHidden.toLowerCase().includes(searchTerm.toLowerCase())
+  // 1. Filter Data (Search by name only)
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // 2. Reset Page kalau search berubah
@@ -43,6 +50,7 @@ export default function ReferralTable({ users }: ReferralTableProps) {
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden font-figtree">
+      {/* Header */}
       <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
         <h3 className="text-[1.8em] font-semibold text-shortblack">
           Daftar Teman
@@ -61,70 +69,86 @@ export default function ReferralTable({ users }: ReferralTableProps) {
         </div>
       </div>
 
-      {/* Table Wrapper */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
-          <thead className="bg-blues text-grays uppercase text-[1.2em] font-semibold">
-            <tr>
-              <th className="px-6 py-4">User</th>
-              <th className="px-6 py-4">Tanggal Gabung</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Penghasilan (Utk Anda)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {currentData.length > 0 ? (
-              currentData.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-slate-50 transition-colors"
-                >
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-shortblack text-[1.4em]">
-                      {user.name}
-                    </div>
-                    <div className="text-grays text-[1.2em]">
-                      {user.emailHidden}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-[1.4em] text-grays">
-                    {new Date(user.dateJoined).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={clsx(
-                        "px-3 py-1 rounded-full text-[1.2em] font-medium text-center block w-[8em]",
-                        user.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-500"
-                      )}
-                    >
-                      {user.status === "active" ? "Aktif" : "Tidak Aktif"}
+      {/* List Container */}
+      <div className="divide-y divide-gray-100">
+        {currentData.length > 0 ? (
+          currentData.map((user) => (
+            <div
+              key={user.id}
+              className="p-4 sm:p-5 hover:bg-slate-50 transition-all group"
+            >
+              {/* Main Content Row */}
+              <div className="flex items-start sm:items-center justify-between gap-4">
+                {/* Left Side - User Info */}
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {/* Avatar */}
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                    <span className="text-white font-bold text-sm sm:text-base">
+                      {user.name.charAt(0).toUpperCase()}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 text-right font-bold text-bluelight text-[1.4em]">
+                  </div>
+
+                  {/* Name & Status */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-shortblack text-[1.4em] truncate">
+                        {user.name}
+                      </span>
+                      <span
+                        className={clsx(
+                          "px-2 py-0.5 rounded-full text-[1em] font-medium whitespace-nowrap",
+                          user.status === "active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-500"
+                        )}
+                      >
+                        {user.status === "active" ? "Aktif" : "Tidak Aktif"}
+                      </span>
+                    </div>
+
+                    {/* Date - Desktop inline, Mobile below */}
+                    <div className="flex items-center gap-1 text-grays text-[1.2em] mt-0.5">
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        Bergabung{" "}
+                        {new Date(user.dateJoined).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side - Earnings */}
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[1em] text-grays mb-0.5 hidden sm:block">
+                    Penghasilan
+                  </div>
+                  <div className="font-bold text-bluelight text-[1.5em] sm:text-[1.6em]">
                     {formatCurrency(user.totalEarningsForMe)}
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-6 py-8 text-center text-grays text-[1.4em]"
-                >
-                  {searchTerm
-                    ? "User tidak ditemukan."
-                    : "Belum ada teman yang diajak."}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <User className="w-8 h-8 text-gray-400" />
+            </div>
+            <p className="text-grays text-[1.4em]">
+              {searchTerm
+                ? "User tidak ditemukan."
+                : "Belum ada teman yang diajak."}
+            </p>
+            <p className="text-gray-400 text-[1.2em] mt-1">
+              {!searchTerm &&
+                "Bagikan link referral Anda untuk mengajak teman!"}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* --- FOOTER PAGINATION --- */}

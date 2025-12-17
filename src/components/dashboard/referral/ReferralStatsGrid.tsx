@@ -3,13 +3,15 @@
 import { motion } from "motion/react";
 import { DollarSign, Users, Activity } from "lucide-react";
 import type { ReferralStats } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface ReferralStatsGridProps {
   stats: ReferralStats | null;
 }
 
 export default function ReferralStatsGrid({ stats }: ReferralStatsGridProps) {
-  const formatCurrency = (val: number) => `$${val.toFixed(2)}`;
+  // 💱 Currency context
+  const { format: formatCurrency } = useCurrency();
 
   const containerVariants = {
     hidden: { opacity: 0 },

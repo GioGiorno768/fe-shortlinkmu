@@ -62,19 +62,20 @@ const PAYMENT_CONFIG = {
       },
     ],
   },
-  crypto: {
-    label: "Crypto",
-    icon: Bitcoin,
-    methods: [
-      {
-        id: "USDT",
-        label: "USDT (TRC20)",
-        type: "text",
-        placeholder: "Txr...",
-      },
-      { id: "BTC", label: "Bitcoin", type: "text", placeholder: "1A1z..." },
-    ],
-  },
+  // Crypto - Disabled for now, will enable when project grows
+  // crypto: {
+  //   label: "Crypto",
+  //   icon: Bitcoin,
+  //   methods: [
+  //     {
+  //       id: "USDT",
+  //       label: "USDT (TRC20)",
+  //       type: "text",
+  //       placeholder: "Txr...",
+  //     },
+  //     { id: "BTC", label: "Bitcoin", type: "text", placeholder: "1A1z..." },
+  //   ],
+  // },
 };
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
@@ -224,7 +225,7 @@ export default function PaymentSection({
 
         <form onSubmit={handleAddSubmit} className="space-y-8">
           {/* Category Tabs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
               const config = PAYMENT_CONFIG[key];
               const isActive = activeCategory === key;

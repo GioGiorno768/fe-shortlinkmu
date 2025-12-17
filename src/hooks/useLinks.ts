@@ -1,30 +1,35 @@
 // src/hooks/useLinks.ts
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   Shortlink,
   CreateLinkFormData,
   EditableLinkData,
-  FilterByType,
-  SortByType,
   GeneratedLinkData,
   MemberLinkFilters,
 } from "@/types/type";
 import * as linkService from "@/services/linkService";
 import { useAlert } from "@/hooks/useAlert";
 
+// Query keys for React Query
+export const linkKeys = {
+  all: ["links"] as const,
+  list: (filters: MemberLinkFilters, page: number) =>
+    [...linkKeys.all, "list", { ...filters, page }] as const,
+};
+
 export function useLinks() {
   const { showAlert } = useAlert();
+  const queryClient = useQueryClient();
 
-  // Data
-  const [links, setLinks] = useState<Shortlink[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
+  // Generated link (after create)
   const [generatedLink, setGeneratedLink] = useState<GeneratedLinkData | null>(
     null
   );
 
-  // Filter
+  // Filter & Pagination state
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<MemberLinkFilters>({
     sort: "newest",
@@ -33,102 +38,116 @@ export function useLinks() {
     search: "",
   });
 
-  // Backward compatibility / Helper for UI if needed, but best to use filters directly
-  // const [search, setSearch] = useState(""); // Merged into filters
-
-  // Loading
-  const [isLoading, setIsLoading] = useState(true);
-  const [isMutating, setIsMutating] = useState(false);
-
-  // Debounced Search updater (optional, or handle in component)
-  // For now we assume setFilters updates state immediately, and we depend on debouncing fetch or use effect
-
-  const fetchLinks = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await linkService.getLinks({
-        page,
-        filters,
-      });
-      setLinks(res.data);
-      setTotalPages(res.totalPages);
-    } catch (error) {
-      showAlert("Gagal memuat data link.", "error");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, filters, showAlert]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchLinks();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [fetchLinks]);
-
-  // Reset page kalau filter berubah
-  useEffect(() => {
+  // Custom setFilters that resets page to 1
+  const updateFilters = (newFilters: MemberLinkFilters) => {
+    setFilters(newFilters);
     setPage(1);
-  }, [filters]);
+  };
 
-  const createLink = async (formData: CreateLinkFormData): Promise<boolean> => {
-    setIsMutating(true);
-    try {
-      const newLink = await linkService.createLink(formData);
+  // Query: Fetch Links
+  const {
+    data: linksData,
+    isLoading,
+    isFetching,
+  } = useQuery({
+    queryKey: linkKeys.list(filters, page),
+    queryFn: () => linkService.getLinks({ page, filters }),
+    staleTime: 30 * 1000, // 30 seconds stale time (links change more frequently)
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching
+  });
+
+  // Mutation: Create Link
+  const createMutation = useMutation({
+    mutationFn: linkService.createLink,
+    onSuccess: (newLink) => {
       setGeneratedLink({
         shortUrl: newLink.shortUrl,
         originalUrl: newLink.originalUrl,
       });
-      fetchLinks(); // Refresh list
+      // Invalidate and refetch links list
+      queryClient.invalidateQueries({ queryKey: linkKeys.all });
       showAlert("Shortlink berhasil dibuat!", "success");
-      return true;
-    } catch (error) {
+    },
+    onError: () => {
       showAlert("Gagal membuat link.", "error");
-      return false;
-    } finally {
-      setIsMutating(false);
-    }
-  };
+    },
+  });
 
-  const handleUpdate = async (id: string, newData: EditableLinkData) => {
-    setIsMutating(true);
-    try {
-      await linkService.updateLink(id, newData);
-      fetchLinks(); // Refresh data biar tabel update
+  // Mutation: Update Link
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: EditableLinkData }) =>
+      linkService.updateLink(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linkKeys.all });
       showAlert("Link berhasil diperbarui.", "success");
-    } catch (error) {
+    },
+    onError: () => {
       showAlert("Gagal memperbarui link.", "error");
-    } finally {
-      setIsMutating(false);
+    },
+  });
+
+  // Mutation: Toggle Status
+  const toggleMutation = useMutation({
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: "active" | "disabled";
+    }) => linkService.toggleLinkStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: linkKeys.all });
+      showAlert("Status link berhasil diubah.", "info");
+    },
+    onError: () => {
+      showAlert("Gagal mengubah status.", "error");
+    },
+  });
+
+  // Wrapper functions for mutations
+  const createLink = async (formData: CreateLinkFormData): Promise<boolean> => {
+    try {
+      await createMutation.mutateAsync(formData);
+      return true;
+    } catch {
+      return false;
     }
   };
 
-  const handleToggleStatus = async (
+  const updateLink = async (id: string, data: EditableLinkData) => {
+    await updateMutation.mutateAsync({ id, data });
+  };
+
+  const toggleLinkStatus = async (
     id: string,
     status: "active" | "disabled"
   ) => {
-    try {
-      await linkService.toggleLinkStatus(id, status);
-      // Refetch data to ensure UI reflects backend truth with loading state
-      fetchLinks();
-      showAlert(`Status link berhasil diubah.`, "info");
-    } catch (error) {
-      showAlert("Gagal mengubah status.", "error");
-    }
+    await toggleMutation.mutateAsync({ id, status });
   };
 
   return {
-    links,
-    totalPages,
+    // Data
+    links: linksData?.data ?? [],
+    totalPages: linksData?.totalPages ?? 1,
     generatedLink,
-    isLoading,
-    isMutating,
+
+    // Loading states
+    isLoading, // Initial loading
+    isFetching, // Background refetching
+    isMutating:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      toggleMutation.isPending,
+
+    // Pagination & Filters
     page,
     setPage,
     filters,
-    setFilters,
+    setFilters: updateFilters,
+
+    // Actions
     createLink,
-    updateLink: handleUpdate,
-    toggleLinkStatus: handleToggleStatus,
+    updateLink,
+    toggleLinkStatus,
   };
 }

@@ -38,13 +38,19 @@ function mapNotification(notification: any): NotificationItem {
 
 /**
  * Get all notifications for the logged-in user
+ * @param category - Filter by category (system, payment, link, account, event) or "all" for no filter
  */
 export async function getNotifications(
-  role: Role = "member"
+  category?: string
 ): Promise<NotificationItem[]> {
   try {
-    const response = await apiClient.get("/notifications");
-    const notifications = response.data.data?.data || response.data.data || [];
+    const params = category && category !== "all" ? { category } : {};
+    const response = await apiClient.get("/notifications", { params });
+
+    // Handle both array response (new) and paginated response (old)
+    const notifications = Array.isArray(response.data.data)
+      ? response.data.data
+      : response.data.data?.data || [];
 
     return notifications.map(mapNotification);
   } catch (error) {

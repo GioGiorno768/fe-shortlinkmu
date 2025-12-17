@@ -7,6 +7,7 @@ import { useState, useTransition, useRef, useEffect } from "react";
 import NotificationDropdown from "./NotificationDropdown";
 import { useHeader } from "@/hooks/useHeader";
 import { useAdminStats } from "@/hooks/useAdminStats";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // 👇 1. IMPORT TIPE 'Role' DARI SINI
 import type { Role } from "@/types/type";
@@ -38,15 +39,17 @@ export default function Header({
   const { stats: userStats, isLoading: userLoading } = useHeader();
   const { stats: adminStats, isLoading: adminLoading } = useAdminStats();
 
+  // 💱 Use global currency context for formatting
+  const { format: formatWithCurrency } = useCurrency();
+
   // Logic loading & data stats juga perlu update dikit
   // Kalau admin ATAU super-admin, pake loading admin
   const isAdminOrSuper = role === "admin" || role === "super-admin";
   const isLoading = isAdminOrSuper ? adminLoading : userLoading;
 
+  // Use global currency format for monetary values
   const formatCurrency = (val?: number) =>
-    val
-      ? `$${val.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-      : "...";
+    val !== undefined ? formatWithCurrency(val) : "...";
 
   const formatNumber = (val?: number) =>
     val !== undefined ? val.toLocaleString("en-US") : "...";

@@ -5,28 +5,45 @@ import type {
   SavedPaymentMethod,
   UserPreferences,
 } from "@/types/type";
+import apiClient from "./apiClient";
 
 // ==========================================
 // 1. PROFILE SERVICE
 // ==========================================
 export async function getUserProfile(): Promise<UserProfile> {
-  // NANTI GANTI: fetch('/api/user/profile')
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    name: "Kevin Ragil",
-    email: "kevinragil768@gmail.com",
-    phone: "08123456789",
-    avatarUrl: "https://avatar.iran.liara.run/public/35",
-    username: "Narancia",
-  };
+  try {
+    const response = await apiClient.get("/user/me");
+    const userData = response.data.data;
+    return {
+      name: userData.name,
+      email: userData.email,
+      phone: "", // Not returned from API yet
+      avatarUrl: "https://avatar.iran.liara.run/public/35",
+      username: userData.name, // Use name as username
+    };
+  } catch (error) {
+    console.error("Failed to fetch user profile:", error);
+    // Fallback to empty profile on error
+    return {
+      name: "Guest",
+      email: "",
+      phone: "",
+      avatarUrl: "https://avatar.iran.liara.run/public/35",
+      username: "Guest",
+    };
+  }
 }
 
 export async function updateUserProfile(
   data: UserProfile
 ): Promise<UserProfile> {
-  // NANTI GANTI: fetch('/api/user/profile', { method: 'PUT', body: JSON.stringify(data) })
-  await new Promise((r) => setTimeout(r, 1000));
-  return data;
+  const response = await apiClient.put("/user/profile", {
+    name: data.name,
+  });
+  return {
+    ...data,
+    name: response.data.data.name,
+  };
 }
 
 // ==========================================
@@ -44,13 +61,15 @@ export async function getSecuritySettings(): Promise<SecuritySettings> {
 
 export async function changePassword(
   current: string,
-  newPass: string
+  newPass: string,
+  confirmPass: string
 ): Promise<boolean> {
-  // NANTI GANTI: fetch('/api/user/change-password', { method: 'POST', body: ... })
-  await new Promise((r) => setTimeout(r, 1500));
-  // Simulasi validasi
-  if (newPass.length < 8) throw new Error("Password too short");
-  return true;
+  const response = await apiClient.put("/user/password", {
+    current_password: current,
+    new_password: newPass,
+    new_password_confirmation: confirmPass,
+  });
+  return response.data.success;
 }
 
 export async function toggle2FA(enabled: boolean): Promise<boolean> {
@@ -63,42 +82,48 @@ export async function toggle2FA(enabled: boolean): Promise<boolean> {
 // 3. PAYMENT SERVICE
 // ==========================================
 export async function getPaymentMethods(): Promise<SavedPaymentMethod[]> {
-  // NANTI GANTI: fetch('/api/user/payment-methods')
-  await new Promise((r) => setTimeout(r, 800));
-  return [
-    {
-      id: "pm-1",
-      provider: "PayPal",
-      accountName: "Kevin Ragil",
-      accountNumber: "kevin@example.com",
-      isDefault: true,
-      category: "wallet",
-    },
-  ];
+  const response = await apiClient.get("/payment-methods");
+  const methods = response.data.data || [];
+
+  // Map backend fields to frontend format
+  return methods.map((m: any) => ({
+    id: String(m.id),
+    provider: m.bank_name,
+    accountName: m.account_name,
+    accountNumber: m.account_number,
+    isDefault: m.is_default || false,
+    category: m.method_type === "ewallet" ? "wallet" : "bank",
+  }));
 }
 
 export async function addPaymentMethod(
   data: Omit<SavedPaymentMethod, "id" | "isDefault">
 ): Promise<SavedPaymentMethod> {
-  // NANTI GANTI: fetch('/api/user/payment-methods', { method: 'POST', body: ... })
-  await new Promise((r) => setTimeout(r, 1000));
+  const response = await apiClient.post("/payment-methods", {
+    method_type: data.category === "wallet" ? "ewallet" : "bank_transfer",
+    account_name: data.accountName,
+    account_number: data.accountNumber,
+    bank_name: data.provider,
+  });
 
+  const m = response.data.data;
   return {
-    id: `pm-${Date.now()}`,
-    ...data,
-    isDefault: false, // Default false, nanti di hook bisa diatur
+    id: String(m.id),
+    provider: m.bank_name,
+    accountName: m.account_name,
+    accountNumber: m.account_number,
+    isDefault: m.is_default || false,
+    category: data.category,
   };
 }
 
 export async function deletePaymentMethod(id: string): Promise<boolean> {
-  // NANTI GANTI: fetch(`/api/user/payment-methods/${id}`, { method: 'DELETE' })
-  await new Promise((r) => setTimeout(r, 800));
+  await apiClient.delete(`/payment-methods/${id}`);
   return true;
 }
 
 export async function setDefaultPaymentMethod(id: string): Promise<boolean> {
-  // NANTI GANTI: fetch(`/api/user/payment-methods/${id}/default`, { method: 'PATCH' })
-  await new Promise((r) => setTimeout(r, 600));
+  await apiClient.patch(`/payment-methods/${id}/default`);
   return true;
 }
 
@@ -131,14 +156,26 @@ export async function updateUserPreferences(
 // 5. ADMIN SERVICES (New)
 // ==========================================
 export async function getAdminProfile(): Promise<UserProfile> {
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    name: "Super Admin",
-    email: "admin@shortlinku.com",
-    phone: "08129999999",
-    avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
-    username: "Administrator",
-  };
+  try {
+    const response = await apiClient.get("/user/me");
+    const userData = response.data.data;
+    return {
+      name: userData.name,
+      email: userData.email,
+      phone: "",
+      avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
+      username: userData.name,
+    };
+  } catch (error) {
+    console.error("Failed to fetch admin profile:", error);
+    return {
+      name: "Admin",
+      email: "",
+      phone: "",
+      avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
+      username: "Admin",
+    };
+  }
 }
 
 export async function updateAdminProfile(

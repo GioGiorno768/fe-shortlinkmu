@@ -4,14 +4,15 @@ import { motion } from "motion/react";
 import { Crown, TrendingUp, Zap } from "lucide-react";
 import type { UserLevelProgress } from "@/types/type";
 import clsx from "clsx";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface CurrentLevelHeaderProps {
   data: UserLevelProgress;
 }
 
 export default function CurrentLevelHeader({ data }: CurrentLevelHeaderProps) {
-  const formatCurrency = (num: number) =>
-    "$" + num.toLocaleString("en-US", { minimumFractionDigits: 2 });
+  // 💱 Currency context
+  const { format: formatCurrency } = useCurrency();
   const earningsNeeded = data.nextLevelEarnings - data.currentEarnings;
 
   return (

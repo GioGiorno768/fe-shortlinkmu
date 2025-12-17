@@ -1,11 +1,11 @@
 // Register Form Component
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, User, Eye, EyeOff, Gift, UserPlus } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import authService from "@/services/authService";
+import authService, { hasEverRegistered } from "@/services/authService";
 import ErrorAlert from "./ErrorAlert";
 import Modal from "@/components/common/Modal";
 import GoogleAuthButton from "./GoogleAuthButton";
@@ -13,6 +13,11 @@ import { useFingerprint } from "@/hooks/useFingerprint";
 
 export default function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get referral code from URL (?ref=CODE)
+  const referralCode = searchParams.get("ref") || "";
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +36,40 @@ export default function RegisterForm() {
 
   // 🛡️ Device Fingerprinting
   const { visitorId } = useFingerprint();
+
+  // 🎁 Referrer name state
+  const [referrerName, setReferrerName] = useState<string>("");
+
+  // 🔖 Check if user has ever registered on this browser
+  useEffect(() => {
+    // Only redirect if user has registered before AND coming from referral link
+    // This prompts existing users to login instead of creating duplicate account
+    // Normal register page (no ref) is always accessible for new accounts
+    if (hasEverRegistered() && referralCode) {
+      router.push("/login");
+    }
+  }, [router, referralCode]);
+
+  // 🎁 Fetch referrer name if referral code exists
+  useEffect(() => {
+    const fetchReferrerName = async () => {
+      if (!referralCode) return;
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/referral/info?code=${referralCode}`
+        );
+        const data = await response.json();
+        if (data.success && data.data?.name) {
+          setReferrerName(data.data.name);
+        }
+      } catch (error) {
+        console.error("Failed to fetch referrer info:", error);
+      }
+    };
+
+    fetchReferrerName();
+  }, [referralCode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -61,6 +100,7 @@ export default function RegisterForm() {
         email: formData.email,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
+        referral_code: referralCode || undefined, // 🎁 Pass referral code from URL
         visitor_id: visitorId || undefined, // 🛡️ Anti-Fraud
       });
 
@@ -108,7 +148,12 @@ export default function RegisterForm() {
     try {
       setLoading(true);
       setError("");
-      await authService.googleLogin(accessToken, visitorId || undefined); // 🛡️ Pass fingerprint
+      // 🎁 Pass referralCode for new users registering via Google
+      await authService.googleLogin(
+        accessToken,
+        visitorId || undefined,
+        referralCode || undefined
+      );
 
       // Redirect based on user role
       const redirectPath = authService.getRedirectPath();
@@ -135,6 +180,26 @@ export default function RegisterForm() {
             Gratis selamanya. Ayo bergabung!
           </p>
         </div>
+
+        {/* Referral Banner */}
+        {referralCode && (
+          <div className="bg-linear-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-4 flex items-center gap-3">
+            <div className="bg-purple-100 p-2 rounded-lg">
+              <Gift className="w-6 h-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-purple-900">
+                🎉{" "}
+                {referrerName
+                  ? `Diundang oleh ${referrerName}!`
+                  : "Kamu diundang!"}
+              </p>
+              <p className="text-sm text-purple-700">
+                Daftar sekarang dan nikmati bonus spesial.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert */}
         <ErrorAlert error={error} onClose={() => setError("")} />

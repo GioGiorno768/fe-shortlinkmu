@@ -7,6 +7,7 @@ import LinkItem from "./LinkItem";
 import LinkFilters from "./LinkFilters";
 import Pagination from "../Pagination";
 import type { Shortlink, MemberLinkFilters } from "@/types/type";
+import Spinner from "../Spinner";
 
 interface LinkListProps {
   links: Shortlink[];
@@ -41,9 +42,7 @@ export default function LinkList({
 
       <div className="space-y-3 min-h-[200px]">
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
-          </div>
+          <Spinner />
         ) : links.length === 0 ? (
           <p className="text-center text-grays py-8">
             No links found matching criteria.

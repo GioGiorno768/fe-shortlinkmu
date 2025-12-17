@@ -30,21 +30,24 @@ interface LinkAnalyticsCardProps {
   isLoading: boolean;
   error: string | null;
   // State Filter dikontrol Parent
-  range: TimeRange;
+  range?: TimeRange;
   stat: StatType;
   // Callback buat minta Parent ganti data
-  onChangeRange: (range: TimeRange) => void;
+  onChangeRange?: (range: TimeRange) => void;
   onChangeStat: (stat: StatType) => void;
+  // Optional: Hide range filter if controlled externally
+  hideRangeFilter?: boolean;
 }
 
 export default function LinkAnalyticsCard({
   data,
   isLoading,
   error,
-  range,
+  range = "perMonth",
   stat,
   onChangeRange,
   onChangeStat,
+  hideRangeFilter = false,
 }: LinkAnalyticsCardProps) {
   const t = useTranslations("Dashboard");
   const path = usePathname();
@@ -218,40 +221,42 @@ export default function LinkAnalyticsCard({
                 )}
               </div>
 
-              {/* Dropdown 2: Range Waktu */}
-              <div className="relative" ref={rangeRef}>
-                <button
-                  onClick={() => setIsRangeOpen(!isRangeOpen)}
-                  className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 "
-                >
-                  {timeRanges.find((o) => o.key === range)?.label}
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      isRangeOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {isRangeOpen && (
-                  <div className="absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {timeRanges.map((r) => (
-                      <button
-                        key={r.key}
-                        onClick={() => {
-                          onChangeRange(r.key); // Panggil Parent
-                          setIsRangeOpen(false);
-                        }}
-                        className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
-                          range === r.key
-                            ? "text-bluelight font-semibold bg-blue-dashboard"
-                            : "text-shortblack hover:bg-blues"
-                        }`}
-                      >
-                        {r.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Dropdown 2: Range Waktu - Only show if not hidden */}
+              {!hideRangeFilter && onChangeRange && (
+                <div className="relative" ref={rangeRef}>
+                  <button
+                    onClick={() => setIsRangeOpen(!isRangeOpen)}
+                    className="flex items-center gap-2 text-[1.4em] font-medium text-shortblack bg-blues px-[1.5em] py-[.5em] rounded-lg hover:bg-blue-dashboard hover:text-bluelight transition-colors duration-300 "
+                  >
+                    {timeRanges.find((o) => o.key === range)?.label}
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-300 ${
+                        isRangeOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  {isRangeOpen && (
+                    <div className="absolute top-full right-0 mt-2 p-[.5em] w-max bg-white rounded-lg shadow-lg z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {timeRanges.map((r) => (
+                        <button
+                          key={r.key}
+                          onClick={() => {
+                            onChangeRange(r.key); // Panggil Parent
+                            setIsRangeOpen(false);
+                          }}
+                          className={`block w-full text-left text-[1.4em] px-[1em] py-[.5em] rounded-md ${
+                            range === r.key
+                              ? "text-bluelight font-semibold bg-blue-dashboard"
+                              : "text-shortblack hover:bg-blues"
+                          }`}
+                        >
+                          {r.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

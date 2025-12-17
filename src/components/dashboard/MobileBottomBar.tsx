@@ -19,6 +19,7 @@ import { useLocale } from "next-intl";
 import clsx from "clsx";
 import { useHeader } from "@/hooks/useHeader";
 import { Role, HeaderStats, AdminHeaderStats } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface MobileBottomBarProps {
   isSidebarOpen: boolean;
@@ -43,16 +44,13 @@ export default function MobileBottomBar({
   // 2. PANGGIL DATA REAL-TIME
   const { stats, isLoading } = useHeader(role);
 
-  // Helper Format Currency
+  // 💱 Use global currency context
+  const { format: formatWithCurrency } = useCurrency();
+
+  // Helper Format Currency - uses global currency context
   const formatCurrency = (val?: number) => {
     if (val === undefined) return "...";
-    return (
-      "$" +
-      val.toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })
-    );
+    return formatWithCurrency(val);
   };
 
   useEffect(() => {

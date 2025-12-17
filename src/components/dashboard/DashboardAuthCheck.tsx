@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import authService from "@/services/authService";
+import { useCrossTabLogout } from "@/hooks/useCrossTabLogout";
 
 export default function DashboardAuthCheck({
   children,
@@ -11,6 +12,9 @@ export default function DashboardAuthCheck({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+
+  // 📢 Listen for logout events from other tabs
+  useCrossTabLogout();
 
   useEffect(() => {
     // Check auth immediately on mount

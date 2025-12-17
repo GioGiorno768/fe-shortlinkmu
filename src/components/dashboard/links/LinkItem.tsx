@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import type { Shortlink } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface LinkItemProps {
   link: Shortlink;
@@ -40,6 +41,9 @@ export default function LinkItem({
   const [showPassword, setShowPassword] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+  // 💱 Currency context
+  const { format: formatCurrency } = useCurrency();
+
   // Helper Format (Sama persis)
   const formatLinkDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("id-ID", {
@@ -51,8 +55,6 @@ export default function LinkItem({
       hour12: true,
     });
   const formatNumber = (num: number) => num.toLocaleString("en-US");
-  const formatCurrency = (num: number) =>
-    "$" + num.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
   // Tutup menu aksi kalau klik luar
   useEffect(() => {
@@ -87,13 +89,17 @@ export default function LinkItem({
           <div
             className={clsx(
               "w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center",
-              link.status === "active" ? "bg-blue-dashboard" : "bg-lightred-dashboard"
+              link.status === "active"
+                ? "bg-blue-dashboard"
+                : "bg-lightred-dashboard"
             )}
           >
             <LinkIcon
               className={clsx(
                 "w-5 h-5",
-                link.status === "active" ? "text-bluelight" : "text-redshortlink"
+                link.status === "active"
+                  ? "text-bluelight"
+                  : "text-redshortlink"
               )}
             />
           </div>

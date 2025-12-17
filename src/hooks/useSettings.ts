@@ -26,6 +26,10 @@ export function useProfileLogic(type: "user" | "admin" = "user") {
         await settingsService.updateUserProfile(data);
       }
       showAlert("Profil berhasil diperbarui!", "success");
+      // Refresh page after 1 second to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
       return true;
     } catch (error) {
       console.error(error);
@@ -52,15 +56,21 @@ export function useSecurityLogic() {
   const { showAlert } = useAlert();
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const updatePass = async (current: string, newPass: string) => {
+  const updatePass = async (
+    current: string,
+    newPass: string,
+    confirmPass: string
+  ) => {
     setIsUpdating(true);
     try {
-      await settingsService.changePassword(current, newPass);
+      await settingsService.changePassword(current, newPass, confirmPass);
       showAlert("Password berhasil diubah!", "success");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showAlert("Gagal mengubah password.", "error");
+      const errorMsg =
+        error.response?.data?.message || "Gagal mengubah password.";
+      showAlert(errorMsg, "error");
       return false;
     } finally {
       setIsUpdating(false);

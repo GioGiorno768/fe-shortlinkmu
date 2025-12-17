@@ -21,7 +21,9 @@ import { useLocale } from "next-intl";
 import clsx from "clsx";
 import Image from "next/image";
 import type { UserPreferences, PrivacySettings } from "@/types/type";
-import { usePreferencesLogic } from "@/hooks/useSettings"; // Import Hook
+import { usePreferencesLogic } from "@/hooks/useSettings";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import type { CurrencyCode } from "@/utils/currency";
 
 // --- DATA STATIS ---
 const CURRENCY_OPTIONS = [
@@ -29,6 +31,8 @@ const CURRENCY_OPTIONS = [
   { code: "IDR", label: "Indonesian Rupiah", countryCode: "id" },
   { code: "MYR", label: "Malaysian Ringgit", countryCode: "my" },
   { code: "SGD", label: "Singapore Dollar", countryCode: "sg" },
+  { code: "EUR", label: "Euro", countryCode: "eu" },
+  { code: "GBP", label: "British Pound", countryCode: "gb" },
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -51,6 +55,10 @@ export default function PreferencesSection({
   const searchParams = useSearchParams();
   const currentLocale = useLocale();
 
+  // Global currency context
+  const { currency: globalCurrency, setCurrency: setGlobalCurrency } =
+    useCurrency();
+
   // Panggil Logic dari Hook
   const { savePreferences, isSaving } = usePreferencesLogic(type);
 
@@ -58,10 +66,10 @@ export default function PreferencesSection({
   const [isCurrencyOpen, setIsCurrencyOpen] = useState(false);
   const currencyRef = useRef<HTMLDivElement>(null);
 
-  // State Form (Default Value dari props)
+  // State Form (Default Value dari props or global context)
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: (currentLocale as "en" | "id") || "en",
-    currency: initialData?.currency || "USD",
+    currency: globalCurrency || initialData?.currency || "USD",
     timezone: initialData?.timezone || "Asia/Jakarta",
     privacy: initialData?.privacy || {
       loginAlert: true,
@@ -216,11 +224,18 @@ export default function PreferencesSection({
                       <button
                         key={curr.code}
                         onClick={() => {
+                          const newCurrency = curr.code as CurrencyCode;
                           setPreferences({
                             ...preferences,
-                            currency: curr.code as any,
+                            currency: newCurrency,
                           });
+                          // Update global currency context immediately
+                          setGlobalCurrency(newCurrency);
                           setIsCurrencyOpen(false);
+                          showAlert(
+                            `Mata uang diganti ke ${curr.label}`,
+                            "success"
+                          );
                         }}
                         className={clsx(
                           "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
@@ -259,8 +274,8 @@ export default function PreferencesSection({
             </p>
           </div>
 
-          {/* Timezone Picker */}
-          <div className="space-y-3 md:col-span-2">
+          {/* Timezone Picker - DISABLED: Using Asia/Jakarta fixed timezone for now */}
+          {/* <div className="space-y-3 md:col-span-2">
             <label className="text-[1.4em] font-medium text-grays">
               Timezone
             </label>
@@ -281,12 +296,12 @@ export default function PreferencesSection({
               </select>
               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays pointer-events-none" />
             </div>
-          </div>
+          </div> */}
         </div>
       </motion.div>
 
-      {/* === PRIVACY & SESSION === */}
-      <motion.div
+      {/* === PRIVACY & SESSION - DISABLED: Not needed for initial launch === */}
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -361,10 +376,10 @@ export default function PreferencesSection({
             );
           })}
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Footer Submit */}
-      <div className="flex justify-end pt-4">
+      {/* <div className="flex justify-end pt-4">
         <button
           onClick={handleSave}
           disabled={isSaving}
@@ -377,7 +392,7 @@ export default function PreferencesSection({
           )}
           Save Preferences
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

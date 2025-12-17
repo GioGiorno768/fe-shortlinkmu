@@ -22,6 +22,7 @@ import clsx from "clsx";
 import { useNotifications } from "@/hooks/useNotifications";
 import type { Role, NotificationItem } from "@/types/type"; // Import tipe global
 import { useAlert } from "@/hooks/useAlert";
+import Spinner from "./Spinner";
 
 interface NotificationDropdownProps {
   isOpen: boolean;
@@ -36,15 +37,20 @@ export default function NotificationDropdown({
 }: NotificationDropdownProps) {
   const { showAlert } = useAlert();
 
-  // Panggil Hook dengan Role
+  // Panggil Hook - now using category filter
   const {
     notifications,
     unreadCount,
     isLoading,
+    category: activeCategory,
     markRead,
     markAllRead,
     removeNotification,
-  } = useNotifications(role);
+    filterByCategory,
+  } = useNotifications();
+
+  // Local UI state for filter dropdown
+  const [activeFilter, setActiveFilter] = useState("all");
 
   // --- FILTER DINAMIS ---
   // Kita bedain opsi filter buat User vs Admin
@@ -73,22 +79,28 @@ export default function NotificationDropdown({
 
   const FILTER_OPTIONS = getFilterOptions();
 
-  // ... (State local UI: activeFilter, isFilterOpen, selectedNotif -> SAMA KAYAK SEBELUMNYA) ...
-  const [activeFilter, setActiveFilter] = useState("all");
+  // ... (State local UI: isFilterOpen, selectedNotif -> SAMA KAYAK SEBELUMNYA) ...
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const [selectedNotif, setSelectedNotif] = useState<NotificationItem | null>(
     null
   );
 
-  // ... (Logic useEffect click outside & reset -> SAMA) ...
+  // Handle filter change - call backend API
+  const handleFilterChange = (filterId: string) => {
+    setActiveFilter(filterId);
+    filterByCategory(filterId);
+    setIsFilterOpen(false);
+  };
+
+  // Reset state when dropdown opens
   useEffect(() => {
     if (isOpen) {
       setSelectedNotif(null);
       setActiveFilter("all");
       setIsFilterOpen(false);
     }
-  }, [isOpen]);
+  }, [isOpen]); // Only depend on isOpen
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -103,10 +115,8 @@ export default function NotificationDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (activeFilter === "all") return true;
-    return n.category === activeFilter;
-  });
+  // No frontend filtering needed - backend already filtered
+  const filteredNotifications = notifications;
 
   const handleItemClick = (notif: NotificationItem) => {
     if (!notif.isRead) markRead(notif.id);
@@ -304,10 +314,7 @@ export default function NotificationDropdown({
                           {FILTER_OPTIONS.map((option) => (
                             <button
                               key={option.id}
-                              onClick={() => {
-                                setActiveFilter(option.id);
-                                setIsFilterOpen(false);
-                              }}
+                              onClick={() => handleFilterChange(option.id)}
                               className={clsx(
                                 "flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-[1.3em] transition-colors text-left",
                                 activeFilter === option.id
@@ -340,9 +347,7 @@ export default function NotificationDropdown({
                   className="overflow-y-auto custom-scrollbar-minimal flex-1 bg-white"
                 >
                   {isLoading ? (
-                    <div className="p-8 text-center text-grays text-[1.4em]">
-                      Loading...
-                    </div>
+                    <Spinner />
                   ) : filteredNotifications.length === 0 ? (
                     <div className="p-8 text-center flex flex-col items-center gap-3 mt-10">
                       <p className="text-grays text-[1.4em]">

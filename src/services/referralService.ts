@@ -1,54 +1,64 @@
 // src/services/referralService.ts
+import apiClient from "@/services/apiClient";
 import type { ReferralStats, ReferredUser } from "@/types/type";
 
-// --- MOCK API CALLS ---
-
-export async function getReferralStats(): Promise<ReferralStats> {
-  // NANTI GANTI: fetch('/api/referral/stats')
-  await new Promise((resolve) => setTimeout(resolve, 600));
-  return {
-    totalEarnings: 154.2,
-    totalReferred: 45,
-    activeReferred: 12,
-    commissionRate: 20,
+// API Response types
+interface ReferralApiResponse {
+  stats: {
+    totalEarnings: number;
+    totalReferred: number;
+    activeReferred: number;
+    commissionRate: number;
+  };
+  referralLink: string;
+  referrals: {
+    data: ReferredUser[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
   };
 }
 
-export async function getReferredUsers(): Promise<ReferredUser[]> {
-  // NANTI GANTI: fetch('/api/referral/list')
-  await new Promise((resolve) => setTimeout(resolve, 800));
-  return [
-    {
-      id: "1",
-      name: "Budi Santoso",
-      emailHidden: "bu***@gmail.com",
-      dateJoined: "2025-10-01",
-      totalEarningsForMe: 12.5,
-      status: "active",
-    },
-    {
-      id: "2",
-      name: "Siti Aminah",
-      emailHidden: "si***@yahoo.com",
-      dateJoined: "2025-10-05",
-      totalEarningsForMe: 5.2,
-      status: "inactive",
-    },
-    {
-      id: "3",
-      name: "Joko Anwar",
-      emailHidden: "jo***@gmail.com",
-      dateJoined: "2025-10-12",
-      totalEarningsForMe: 25.0,
-      status: "active",
-    },
-    // ... data lain
-  ];
+// Cache to avoid duplicate API calls
+let cachedData: ReferralApiResponse | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 60000; // 1 minute
+
+async function fetchReferralData(): Promise<ReferralApiResponse> {
+  const now = Date.now();
+  if (cachedData && now - cacheTimestamp < CACHE_TTL) {
+    return cachedData;
+  }
+
+  const response = await apiClient.get<{ data: ReferralApiResponse }>(
+    "/referrals"
+  );
+  cachedData = response.data.data;
+  cacheTimestamp = now;
+  return cachedData;
 }
 
-// Tambahan: Fetch Link Referral User (Biar gak hardcoded di UI)
+// Fetch referral stats
+export async function getReferralStats(): Promise<ReferralStats> {
+  const data = await fetchReferralData();
+  return data.stats;
+}
+
+// Fetch referred users list
+export async function getReferredUsers(): Promise<ReferredUser[]> {
+  const data = await fetchReferralData();
+  return data.referrals.data;
+}
+
+// Fetch referral link
 export async function getReferralLink(): Promise<string> {
-  // NANTI GANTI: fetch('/api/user/referral-link')
-  await new Promise((resolve) => setTimeout(resolve, 400));
-  return "https://shortlinkmu.com/ref/kevin123";
+  const data = await fetchReferralData();
+  return data.referralLink;
+}
+
+// Force refetch (clear cache)
+export function clearReferralCache(): void {
+  cachedData = null;
+  cacheTimestamp = 0;
 }

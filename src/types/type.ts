@@ -171,7 +171,6 @@ export interface AdLevelConfig {
 export interface ReferredUser {
   id: string;
   name: string; // cth: "Udin Petot"
-  emailHidden: string; // cth: "ud***@gmail.com"
   dateJoined: string;
   totalEarningsForMe: number; // Berapa yang dihasilkan user ini buat kita
   status: "active" | "inactive";
@@ -284,6 +283,7 @@ export interface LevelConfig {
   no: number;
   id: UserLevel;
   name: string;
+  icon: string; // lucide icon name: "shield", "star", etc.
   minEarnings: number; // <--- GANTI INI (Dulu minViews)
   cpmBonus: number;
   benefits: string[];
@@ -316,7 +316,7 @@ export interface PrivacySettings {
 
 export interface UserPreferences {
   language: "en" | "id";
-  currency: "USD" | "IDR" | "MYR" | "SGD";
+  currency: "USD" | "IDR" | "MYR" | "SGD" | "EUR" | "GBP";
   timezone: string;
   // 👇 GANTI KEY JADI 'privacy'
   privacy: PrivacySettings;

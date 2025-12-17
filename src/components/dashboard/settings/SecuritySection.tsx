@@ -52,8 +52,11 @@ export default function SecuritySection({ initialData }: SecuritySectionProps) {
     }
 
     // Panggil fungsi update dari Hook
-    // Note: Backend nanti harus handle logic isSocialLogin (skip cek current pass)
-    const success = await updatePass(passwords.current, passwords.new);
+    const success = await updatePass(
+      passwords.current,
+      passwords.new,
+      passwords.confirm
+    );
 
     if (success) {
       setPasswords({ current: "", new: "", confirm: "" });
@@ -153,10 +156,10 @@ export default function SecuritySection({ initialData }: SecuritySectionProps) {
         </form>
       </div>
 
-      {/* 2FA Card */}
+      {/* 2FA Card - Disabled for now, will implement later
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-start gap-6">
-          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-bluelight flex-shrink-0">
+          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-bluelight shrink-0">
             <Shield className="w-8 h-8" />
           </div>
           <div>
@@ -182,6 +185,7 @@ export default function SecuritySection({ initialData }: SecuritySectionProps) {
           {is2FAEnabled ? "Disable" : "Enable"}
         </button>
       </div>
+      */}
     </motion.div>
   );
 }

@@ -150,7 +150,7 @@ export default function ShortLink() {
                 <a
                   href={`https://${shortLink}`}
                   target="_blank"
-                  rel="noopener noreferrer"
+                  rel="noopener"
                   className="text-shortblack text-[1.6em] font-semibold hover:underline truncate"
                 >
                   {shortLink}
