@@ -2,37 +2,77 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, ArrowRight } from "lucide-react";
 import * as linkService from "@/services/linkService";
 import { useAlert } from "@/hooks/useAlert";
+
+interface SessionData {
+  code: string;
+  token: string;
+  step: number;
+  max_steps: number;
+  ad_level: number;
+  is_guest: boolean;
+}
 
 export default function GuestGoPage() {
   const searchParams = useSearchParams();
   const { showAlert } = useAlert();
 
-  const code = searchParams.get("code");
-  const token = searchParams.get("token");
+  const sessionId = searchParams.get("s");
 
-  const [timeLeft, setTimeLeft] = useState(3);
-  const [status, setStatus] = useState<"counting" | "redirecting" | "error">(
-    "counting"
-  );
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
+  const [status, setStatus] = useState<
+    "loading" | "ready" | "redirecting" | "error"
+  >("loading");
+  const [timeLeft, setTimeLeft] = useState(2);
 
+  // Fetch session data on mount
   useEffect(() => {
-    // Timer Count Down
-    if (timeLeft > 0 && status === "counting") {
+    if (!sessionId) {
+      setStatus("error");
+      return;
+    }
+
+    const fetchSession = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/links/session/${sessionId}`
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          setStatus("error");
+          return;
+        }
+
+        setSessionData(data.data);
+      } catch (err) {
+        console.error("Error fetching session:", err);
+        setStatus("error");
+      }
+    };
+
+    fetchSession();
+  }, [sessionId]);
+
+  // 2-second countdown for "security check"
+  useEffect(() => {
+    if (status !== "loading" || !sessionData) return;
+
+    if (timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     }
 
-    // Timer Finished -> Trigger Redirect
-    if (timeLeft === 0 && status === "counting") {
-      handleAutoRedirect();
+    // After 2 seconds, show the Continue button
+    if (timeLeft === 0) {
+      setStatus("ready");
     }
-  }, [timeLeft, status]);
+  }, [timeLeft, status, sessionData]);
 
-  const handleAutoRedirect = async () => {
-    if (!code || !token) {
+  const handleContinue = async () => {
+    if (!sessionData) {
       setStatus("error");
       return;
     }
@@ -40,11 +80,12 @@ export default function GuestGoPage() {
     setStatus("redirecting");
 
     try {
-      // Reuse the same validation logic
-      const originalUrl = await linkService.validateContinueToken(code, token);
-
-      // Hard Redirect
-      window.location.href = originalUrl;
+      const originalUrl = await linkService.validateContinueToken(
+        sessionData.code,
+        sessionData.token
+      );
+      window.open(originalUrl, "_blank");
+      setStatus("ready");
     } catch (error: any) {
       console.error(error);
       showAlert("Gagal mengalihkan. Link mungkin kadaluarsa.", "error");
@@ -69,12 +110,16 @@ export default function GuestGoPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#fcfcfc] px-4 text-[#404040]">
       <div className="w-full max-w-md rounded-lg border border-[#e5e5e5] bg-white p-8 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
         <div className="mb-6 flex items-center gap-4">
-          {status === "counting" ? (
+          {status === "loading" ? (
             <div className="relative h-12 w-12 flex-shrink-0">
               <div className="absolute inset-0 animate-ping rounded-full bg-blue-100 opacity-75"></div>
               <div className="relative flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                 <Loader2 className="h-6 w-6 animate-spin" />
               </div>
+            </div>
+          ) : status === "redirecting" ? (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
@@ -84,8 +129,10 @@ export default function GuestGoPage() {
 
           <div>
             <h1 className="text-xl font-semibold text-gray-900">
-              {status === "counting"
+              {status === "loading"
                 ? "Checking your connection..."
+                : status === "redirecting"
+                ? "Redirecting..."
                 : "Secure Connection Verified"}
             </h1>
             <p className="text-sm text-gray-500">Shortlinkmu Security System</p>
@@ -96,35 +143,51 @@ export default function GuestGoPage() {
           <div className="flex items-center justify-between">
             <span>Ray ID:</span>
             <span className="font-mono">
-              {code}-{token?.substring(0, 8)}
+              {sessionId?.substring(0, 8) || "..."}-{sessionData?.code || "..."}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span>Status:</span>
             <span
               className={
-                status === "counting" ? "text-amber-600" : "text-green-600"
+                status === "loading" ? "text-amber-600" : "text-green-600"
               }
             >
-              {status === "counting" ? "Verifying..." : "Verified"}
+              {status === "loading" ? "Verifying..." : "Verified"}
             </span>
           </div>
         </div>
 
-        {status === "counting" && (
-          <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+        {status === "loading" && (
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
             <div
               className="h-full bg-blue-600 transition-all duration-1000 ease-linear"
-              style={{ width: `${((3 - timeLeft) / 3) * 100}%` }}
+              style={{ width: `${((2 - timeLeft) / 2) * 100}%` }}
             ></div>
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-400">
-          {status === "redirecting"
-            ? "Redirecting to destination..."
-            : "Please wait while we verify your browser..."}
-        </p>
+        {status === "ready" && (
+          <button
+            onClick={handleContinue}
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition-all hover:bg-blue-700 active:scale-[0.98]"
+          >
+            Continue to Destination
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        )}
+
+        {status === "redirecting" && (
+          <div className="text-center text-sm text-gray-500">
+            Redirecting to destination...
+          </div>
+        )}
+
+        {status === "loading" && (
+          <p className="text-center text-xs text-gray-400">
+            Please wait while we verify your browser...
+          </p>
+        )}
       </div>
     </div>
   );

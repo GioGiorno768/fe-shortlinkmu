@@ -114,7 +114,7 @@ export default function SidebarItem({
                   // Safety Check buat Child Icon juga
                   const ChildIcon = child.icon || Circle;
                   const isChildItemActive =
-                    pathname === child.href || pathname === `/id${child.href}`;
+                    pathname === child.href || pathname.endsWith(child.href!);
 
                   return (
                     <Link
@@ -160,7 +160,7 @@ export default function SidebarItem({
           {item.children.map((child) => {
             const ChildIcon = child.icon || Circle;
             const isChildItemActive =
-              pathname === child.href || pathname === `/id${child.href}`;
+              pathname === child.href || pathname.endsWith(child.href!);
             return (
               <Link
                 key={child.href}

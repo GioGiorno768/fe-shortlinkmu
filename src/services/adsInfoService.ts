@@ -1,85 +1,81 @@
 // src/services/adsInfoService.ts
 import type { AdLevelConfig } from "@/types/type";
 
-// --- MOCK API CALLS ---
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
+// Helper: Get auth token (same pattern as other services)
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+
+  let token = sessionStorage.getItem("auth_token");
+  if (!token) {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token" && value) {
+        token = value;
+        break;
+      }
+    }
+  }
+  return token;
+}
+
+// API response type
+interface ApiAdLevel {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  cpm_rate: number;
+  cpm_rate_display: string;
+  demo_url: string | null;
+  color_theme: string;
+  revenue_share: number;
+  is_popular: boolean;
+  features: { label: string; value: string | boolean; included: boolean }[];
+  display_order: number;
+}
+
+/**
+ * Fetch ad levels from API
+ * Used by: ads-info page, create link dropdown
+ */
 export async function getAdLevels(): Promise<AdLevelConfig[]> {
-  // NANTI GANTI: fetch('/api/ads-levels')
-  console.log("MANGGIL API: /api/ads-levels");
+  try {
+    const token = getAuthToken();
+    const res = await fetch(`${API_URL}/ad-levels`, {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      credentials: "include",
+    });
 
-  // Simulasi loading
-  await new Promise((resolve) => setTimeout(resolve, 800));
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status}`);
+    }
 
-  // --- MOCK DATA ---
-  return [
-    {
-      id: "1",
-      name: "Low",
-      slug: "low",
-      description: "User-friendly, minimal ads focused on retention.",
-      cpmRate: "Variable",
-      revenueShare: 30,
-      demoUrl: "https://demo.shortlinkmu.com/low",
-      colorTheme: "green",
-      features: [
-        { label: "Banner Ads", value: true, included: true },
-        { label: "Interstitial", value: false, included: false },
-        { label: "Popunder", value: "1 / 24h", included: true },
-        { label: "Push Notif", value: false, included: false },
-        { label: "Captcha", value: "Simple", included: true },
-      ],
-    },
-    {
-      id: "2",
-      name: "Medium",
-      slug: "medium",
-      description: "Balanced experience between earnings and comfort.",
-      cpmRate: "Variable",
-      revenueShare: 50,
-      isPopular: true,
-      demoUrl: "https://demo.shortlinkmu.com/medium",
-      colorTheme: "blue",
-      features: [
-        { label: "Banner Ads", value: true, included: true },
-        { label: "Interstitial", value: "On Page Load", included: true },
-        { label: "Popunder", value: "2 / 24h", included: true },
-        { label: "Push Notif", value: false, included: false },
-        { label: "Captcha", value: "Standard", included: true },
-      ],
-    },
-    {
-      id: "3",
-      name: "High",
-      slug: "high",
-      description: "Maximized for earnings with more ad formats.",
-      cpmRate: "Variable",
-      revenueShare: 75,
-      demoUrl: "https://demo.shortlinkmu.com/high",
-      colorTheme: "orange",
-      features: [
-        { label: "Banner Ads", value: "Aggressive", included: true },
-        { label: "Interstitial", value: "Every Page", included: true },
-        { label: "Popunder", value: "3 / 24h", included: true },
-        { label: "Push Notif", value: true, included: true },
-        { label: "Captcha", value: "Double", included: true },
-      ],
-    },
-    {
-      id: "4",
-      name: "Aggressive",
-      slug: "aggressive",
-      description: "Highest possible revenue. Not for sensitive traffic.",
-      cpmRate: "Variable",
-      revenueShare: 100,
-      demoUrl: "https://demo.shortlinkmu.com/aggressive",
-      colorTheme: "red",
-      features: [
-        { label: "Banner Ads", value: "Max", included: true },
-        { label: "Interstitial", value: "Multipoint", included: true },
-        { label: "Popunder", value: "Unlimited", included: true },
-        { label: "Push Notif", value: "High Freq", included: true },
-        { label: "Captcha", value: "Triple", included: true },
-      ],
-    },
-  ];
+    const json = await res.json();
+    const data: ApiAdLevel[] = json.data;
+
+    // Transform to frontend format
+    return data.map((level) => ({
+      id: level.id.toString(),
+      name: level.name,
+      slug: level.slug,
+      description: level.description || "",
+      cpmRate: level.cpm_rate_display, // Use formatted display
+      revenueShare: level.revenue_share,
+      demoUrl: level.demo_url || "",
+      colorTheme: level.color_theme as "green" | "blue" | "orange" | "red",
+      isPopular: level.is_popular,
+      features: level.features,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch ad levels:", error);
+    // Return empty array on error - UI should handle empty state
+    return [];
+  }
 }

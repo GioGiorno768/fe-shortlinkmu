@@ -34,11 +34,31 @@ export default function TrafficHistory({ data }: TrafficHistoryProps) {
   const formatViews = (val: number) => val.toLocaleString("en-US");
 
   // Find top month for highlighting
+  // Priority: earnings > views (earnings is more reliable indicator)
+  // Edge case: if all months have 0 data, return last item (current month)
   const topMonth = useMemo(() => {
     if (!data || data.length === 0) return null;
-    return data.reduce((prev, current) =>
-      prev.views > current.views ? prev : current
+
+    const hasAnyActivity = data.some(
+      (item) => item.earnings > 0 || item.views > 0
     );
+
+    if (!hasAnyActivity) {
+      // If no activity at all, show current month (first in array since it's reversed)
+      return data[0];
+    }
+
+    return data.reduce((prev, current) => {
+      // If current item has higher earnings, it's the top
+      if (current.earnings > prev.earnings) {
+        return current;
+      }
+      // If earnings are equal, compare views
+      if (current.earnings === prev.earnings && current.views > prev.views) {
+        return current;
+      }
+      return prev;
+    });
   }, [data]);
 
   // Pagination logic

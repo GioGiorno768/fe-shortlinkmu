@@ -89,7 +89,7 @@ export default function TopTrafficCard({ data }: TopTrafficCardProps) {
                 <p className="text-[1.6em] font-medium text-grays">
                   All Time
                 </p>
-              </div>
+              </div>                                                              
             </div>
 
             {/* Card 2: Top Year */}

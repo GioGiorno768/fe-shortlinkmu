@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import type { Transaction } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -34,7 +35,8 @@ export default function TransactionTable({
   setSearch,
   isLoading,
 }: TransactionTableProps) {
-  const formatCurrency = (val: number) => `$${val.toFixed(2)}`;
+  // 💱 Use global currency context
+  const { format: formatCurrency } = useCurrency();
   const formatDate = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("id-ID", {
       day: "numeric",

@@ -19,6 +19,8 @@ import {
 import { useAlert } from "@/hooks/useAlert";
 import type { PaymentMethod } from "@/types/type";
 import clsx from "clsx";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { convertFromUSD, getExchangeRates } from "@/utils/currency";
 
 // --- KONFIGURASI PAYMENT (Tetap di sini sesuai request lu) ---
 const PAYMENT_CONFIG = {
@@ -158,12 +160,30 @@ export default function WithdrawalRequestModal({
   onSuccess,
 }: WithdrawalRequestModalProps) {
   const { showAlert } = useAlert();
+  // 💱 Use global currency context
+  const { format: formatCurrency, symbol, currency } = useCurrency();
+
+  // --- CURRENCY CONVERSION HELPERS ---
+  // Convert USD to local currency
+  const toLocalCurrency = (amountUSD: number): number => {
+    return convertFromUSD(amountUSD, currency);
+  };
+
+  // Convert local currency back to USD
+  const toUSD = (amountLocal: number): number => {
+    const rates = getExchangeRates();
+    return amountLocal / rates[currency];
+  };
+
+  // Get minimum withdrawal in local currency
+  const minWithdrawalLocal = toLocalCurrency(2);
+  const maxWithdrawalLocal = toLocalCurrency(Number(availableBalance) || 0);
 
   // --- STATE UTAMA ---
   const [step, setStep] = useState(1);
   const [useDefault, setUseDefault] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState<string>("");
+  const [withdrawAmount, setWithdrawAmount] = useState<string>(""); // In local currency
 
   // --- STATE METODE MANUAL (Buat fitur 'Use Different Method') ---
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
@@ -218,17 +238,24 @@ export default function WithdrawalRequestModal({
 
   // --- LOGIC STEP 2: SUBMIT ---
   const handleSubmit = async () => {
-    const amount = parseFloat(withdrawAmount);
-    if (isNaN(amount) || amount < 2.0) {
-      showAlert("Minimal penarikan adalah $2.00", "error");
+    const amountLocal = parseFloat(withdrawAmount);
+
+    // Validate minimum in local currency
+    if (isNaN(amountLocal) || amountLocal < minWithdrawalLocal) {
+      showAlert(`Minimal penarikan adalah ${formatCurrency(2)}`, "error");
       return;
     }
-    if (amount > availableBalance) {
+
+    // Validate max in local currency
+    if (amountLocal > maxWithdrawalLocal) {
       showAlert("Saldo tidak mencukupi.", "error");
       return;
     }
 
     setIsLoading(true);
+
+    // Convert back to USD for backend
+    const amountUSD = toUSD(amountLocal);
 
     // Tentukan metode mana yang dipake (Default atau Input Baru)
     const finalMethod: PaymentMethod =
@@ -241,7 +268,7 @@ export default function WithdrawalRequestModal({
           };
 
     try {
-      await onSuccess(amount, finalMethod);
+      await onSuccess(amountUSD, finalMethod); // Send USD to backend
       onClose(); // Tutup modal kalo sukses
     } catch (err) {
       // Error udah dihandle di parent (hook)
@@ -250,9 +277,23 @@ export default function WithdrawalRequestModal({
     }
   };
 
+  // Set amount in local currency
   const setPercentage = (percent: number) => {
-    const val = availableBalance * (percent / 100);
-    setWithdrawAmount(val.toFixed(2));
+    const valLocal = maxWithdrawalLocal * (percent / 100);
+    // Format based on currency (no decimals for IDR)
+    const formatted =
+      currency === "IDR"
+        ? Math.round(valLocal).toString()
+        : valLocal.toFixed(2);
+    setWithdrawAmount(formatted);
+  };
+
+  const setMinAmount = () => {
+    const formatted =
+      currency === "IDR"
+        ? Math.round(minWithdrawalLocal).toString()
+        : minWithdrawalLocal.toFixed(2);
+    setWithdrawAmount(formatted);
   };
 
   return (
@@ -457,7 +498,7 @@ export default function WithdrawalRequestModal({
                         Available Balance
                       </p>
                       <p className="text-[2.4em] font-bold text-bluelight">
-                        ${availableBalance.toFixed(4)}
+                        {formatCurrency(Number(availableBalance) || 0)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -480,11 +521,11 @@ export default function WithdrawalRequestModal({
                   {/* Input Amount */}
                   <div>
                     <label className="block text-[1.6em] font-bold text-shortblack mb-3">
-                      Withdrawal Amount ($)
+                      Withdrawal Amount ({symbol})
                     </label>
                     <div className="relative">
                       <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[2em] font-bold text-grays">
-                        $
+                        {symbol}
                       </span>
                       <input
                         type="number"
@@ -499,10 +540,10 @@ export default function WithdrawalRequestModal({
                     {/* Tombol Cepat % */}
                     <div className="flex gap-3 mt-4">
                       <button
-                        onClick={() => setWithdrawAmount("2.00")}
+                        onClick={setMinAmount}
                         className="px-4 py-2 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.2em] font-medium transition-colors"
                       >
-                        Min ($2)
+                        Min ({formatCurrency(2)})
                       </button>
                       <button
                         onClick={() => setPercentage(50)}
@@ -514,7 +555,7 @@ export default function WithdrawalRequestModal({
                         onClick={() => setPercentage(100)}
                         className="px-4 py-2 rounded-lg bg-blue-100 text-bluelight hover:bg-blue-200 text-[1.2em] font-medium transition-colors"
                       >
-                        Max (${availableBalance.toFixed(2)})
+                        Max ({formatCurrency(Number(availableBalance) || 0)})
                       </button>
                     </div>
                   </div>

@@ -1,34 +1,32 @@
 // src/hooks/useAdsInfo.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import * as adsInfoService from "@/services/adsInfoService";
 import type { AdLevelConfig } from "@/types/type";
 
-export function useAdsInfo() {
-  const [levels, setLevels] = useState<AdLevelConfig[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Query keys for cache management
+export const adsInfoKeys = {
+  all: ["adsInfo"] as const,
+  levels: () => [...adsInfoKeys.all, "levels"] as const,
+};
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await adsInfoService.getAdLevels();
-        setLevels(data);
-      } catch (err) {
-        console.error(err);
-        setError("Gagal memuat data level iklan.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+export function useAdsInfo() {
+  const {
+    data: levels,
+    isLoading,
+    error: queryError,
+  } = useQuery({
+    queryKey: adsInfoKeys.levels(),
+    queryFn: adsInfoService.getAdLevels,
+    staleTime: 10 * 60 * 1000, // 10 minutes - ad config rarely changes
+  });
+
+  // Convert error to string for consistency
+  const error = queryError ? "Gagal memuat data level iklan." : null;
 
   return {
-    levels,
+    levels: levels ?? [],
     isLoading,
     error,
   };

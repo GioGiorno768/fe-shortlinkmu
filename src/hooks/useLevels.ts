@@ -1,45 +1,50 @@
 // src/hooks/useLevels.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import * as levelsService from "@/services/levelsService";
 import type { UserLevelProgress, LevelConfig } from "@/types/type";
 
+// Query keys for cache management
+export const levelsKeys = {
+  all: ["levels"] as const,
+  progress: () => [...levelsKeys.all, "progress"] as const,
+  config: () => [...levelsKeys.all, "config"] as const,
+};
+
 export function useLevels() {
-  // State sesuai tipe data yang bener
-  const [userProgress, setUserProgress] = useState<UserLevelProgress | null>(
-    null
-  );
-  const [levelsConfig, setLevelsConfig] = useState<LevelConfig[]>([]);
+  // Fetch user progress with React Query
+  const {
+    data: userProgress,
+    isLoading: progressLoading,
+    error: progressError,
+  } = useQuery({
+    queryKey: levelsKeys.progress(),
+    queryFn: levelsService.getUserLevelProgress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch levels config with React Query
+  const {
+    data: levelsConfig,
+    isLoading: configLoading,
+    error: configError,
+  } = useQuery({
+    queryKey: levelsKeys.config(),
+    queryFn: levelsService.getLevelsConfig,
+    staleTime: 10 * 60 * 1000, // 10 minutes - config rarely changes
+  });
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        // Fetch paralel biar kenceng
-        const [progressData, configData] = await Promise.all([
-          levelsService.getUserLevelProgress(),
-          levelsService.getLevelsConfig(),
-        ]);
+  // Combined loading state
+  const isLoading = progressLoading || configLoading;
 
-        setUserProgress(progressData);
-        setLevelsConfig(configData);
-      } catch (err) {
-        console.error(err);
-        setError("Gagal memuat data level.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Combined error state
+  const error =
+    progressError || configError ? "Gagal memuat data level." : null;
 
   return {
-    userProgress,
-    levelsConfig,
+    userProgress: userProgress ?? null,
+    levelsConfig: levelsConfig ?? [],
     isLoading,
     error,
   };

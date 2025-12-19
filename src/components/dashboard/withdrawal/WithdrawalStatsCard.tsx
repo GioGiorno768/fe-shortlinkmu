@@ -8,10 +8,10 @@ import {
   CheckCircle,
   ArrowRight,
   TrendingUp,
-  AlertTriangle,
   Wallet2,
 } from "lucide-react";
 import type { WithdrawalStats } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface WithdrawalStatsCardProps {
   stats: WithdrawalStats | null;
@@ -22,7 +22,8 @@ export default function WithdrawalStatsCard({
   stats,
   onOpenModal,
 }: WithdrawalStatsCardProps) {
-  const formatCurrency = (val: number) => `$${val.toFixed(4)}`;
+  // 💱 Use global currency context
+  const { format: formatCurrency, symbol } = useCurrency();
 
   return (
     <motion.div
@@ -45,10 +46,9 @@ export default function WithdrawalStatsCard({
         {/* Tombol Request Payout ditaruh di atas biar gampang dijangkau */}
         <button
           onClick={onOpenModal}
-          disabled={(stats?.availableBalance || 0) < 2.0}
           className="hidden bg-bluelight text-white px-6 py-3 rounded-xl font-bold text-[1.4em] 
                    hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
-                   disabled:opacity-50 disabled:cursor-not-allowed md:flex items-center gap-2 shadow-blue-200 shadow-md"
+                   md:flex items-center gap-2 shadow-blue-200 shadow-md"
         >
           <span>Request Payout</span>
           <ArrowRight className="w-4 h-4" />
@@ -76,16 +76,17 @@ export default function WithdrawalStatsCard({
             </h1>
             <p className="text-[1.3em] text-grays opacity-80">
               Minimum payout threshold:{" "}
-              <span className="font-semibold text-shortblack">$2.00</span>
+              <span className="font-semibold text-shortblack">
+                {formatCurrency(2)}
+              </span>
             </p>
           </div>
           {/* Tombol Request Payout ditaruh di atas biar gampang dijangkau */}
           <button
             onClick={onOpenModal}
-            disabled={(stats?.availableBalance || 0) < 2.0}
             className="md:hidden lg:hidden bg-bluelight text-white px-6 py-3 rounded-xl font-bold text-[1.4em] 
                    hover:bg-opacity-90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
-                   disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-blue-200 shadow-md"
+                   flex items-center gap-2 shadow-blue-200 shadow-md"
           >
             <span>Request Payout</span>
             <ArrowRight className="w-4 h-4" />

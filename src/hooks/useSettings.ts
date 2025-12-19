@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as settingsService from "@/services/settingsService";
 import { useAlert } from "@/hooks/useAlert";
 import type {
@@ -96,75 +97,124 @@ export function useSecurityLogic() {
 }
 
 // =======================
-// 3. HOOK PAYMENT
+// 3. HOOK PAYMENT (React Query)
 // =======================
-export function usePaymentLogic(initialMethods: SavedPaymentMethod[]) {
-  const { showAlert } = useAlert();
-  const [methods, setMethods] = useState<SavedPaymentMethod[]>(initialMethods);
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Tambah Metode
+// Query keys for payment methods
+export const paymentKeys = {
+  all: ["payment-methods"] as const,
+  list: () => [...paymentKeys.all, "list"] as const,
+};
+
+export function usePaymentLogic() {
+  const { showAlert } = useAlert();
+  const queryClient = useQueryClient();
+
+  // Fetch payment methods with React Query
+  const {
+    data: methods = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: paymentKeys.list(),
+    queryFn: settingsService.getPaymentMethods,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Mutation: Add payment method
+  const addMutation = useMutation({
+    mutationFn: (data: Omit<SavedPaymentMethod, "id" | "isDefault">) =>
+      settingsService.addPaymentMethod(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: paymentKeys.all });
+      showAlert("Metode pembayaran ditambahkan!", "success");
+    },
+    onError: () => {
+      showAlert("Gagal menambah metode.", "error");
+    },
+  });
+
+  // Mutation: Remove payment method
+  const removeMutation = useMutation({
+    mutationFn: (id: string) => settingsService.deletePaymentMethod(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: paymentKeys.all });
+      showAlert("Metode pembayaran dihapus.", "info");
+    },
+    onError: () => {
+      showAlert("Gagal menghapus metode.", "error");
+    },
+  });
+
+  // Mutation: Set as default
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) => settingsService.setDefaultPaymentMethod(id),
+    onMutate: async (id: string) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: paymentKeys.list() });
+      const previousMethods = queryClient.getQueryData<SavedPaymentMethod[]>(
+        paymentKeys.list()
+      );
+      queryClient.setQueryData<SavedPaymentMethod[]>(
+        paymentKeys.list(),
+        (old) => old?.map((m) => ({ ...m, isDefault: m.id === id })) ?? []
+      );
+      return { previousMethods };
+    },
+    onSuccess: () => {
+      showAlert("Metode utama diperbarui.", "success");
+    },
+    onError: (_, __, context) => {
+      // Revert on error
+      if (context?.previousMethods) {
+        queryClient.setQueryData(paymentKeys.list(), context.previousMethods);
+      }
+      showAlert("Gagal mengatur default.", "error");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: paymentKeys.all });
+    },
+  });
+
+  // Action wrappers for backwards compatibility
   const addMethod = async (
     data: Omit<SavedPaymentMethod, "id" | "isDefault">
   ) => {
-    setIsProcessing(true);
     try {
-      // Logic: Kalau list kosong, otomatis jadi default
-      const isFirst = methods.length === 0;
-
-      const newMethod = await settingsService.addPaymentMethod(data);
-
-      // Override isDefault jika dia satu-satunya
-      const finalMethod = { ...newMethod, isDefault: isFirst };
-
-      setMethods((prev) => [...prev, finalMethod]);
-      showAlert("Metode pembayaran ditambahkan!", "success");
+      await addMutation.mutateAsync(data);
       return true;
-    } catch (error) {
-      console.error(error);
-      showAlert("Gagal menambah metode.", "error");
+    } catch {
       return false;
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  // Hapus Metode
   const removeMethod = async (id: string) => {
-    setIsProcessing(true);
     try {
-      await settingsService.deletePaymentMethod(id);
-      setMethods((prev) => prev.filter((m) => m.id !== id));
-      showAlert("Metode pembayaran dihapus.", "info");
+      await removeMutation.mutateAsync(id);
       return true;
-    } catch (error) {
-      console.error(error);
-      showAlert("Gagal menghapus metode.", "error");
+    } catch {
       return false;
-    } finally {
-      setIsProcessing(false);
     }
   };
 
-  // Set Default
   const setAsDefault = async (id: string) => {
-    // Optimistic Update
-    const previousMethods = [...methods];
-    setMethods((prev) => prev.map((m) => ({ ...m, isDefault: m.id === id })));
-
     try {
-      await settingsService.setDefaultPaymentMethod(id);
-      showAlert("Metode utama diperbarui.", "success");
-    } catch (error) {
-      console.error(error);
-      // Revert kalau gagal
-      setMethods(previousMethods);
-      showAlert("Gagal mengatur default.", "error");
+      await setDefaultMutation.mutateAsync(id);
+      return true;
+    } catch {
+      return false;
     }
   };
+
+  const isProcessing =
+    addMutation.isPending ||
+    removeMutation.isPending ||
+    setDefaultMutation.isPending;
 
   return {
     methods,
+    isLoading,
+    error: error ? "Gagal memuat metode pembayaran." : null,
     addMethod,
     removeMethod,
     setAsDefault,

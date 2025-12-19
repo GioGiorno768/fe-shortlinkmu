@@ -1,142 +1,166 @@
 // src/hooks/useWithdrawal.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as withdrawalService from "@/services/withdrawalService";
 import type { WithdrawalStats, PaymentMethod, Transaction } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
 
+interface WithdrawalSettings {
+  minWithdrawal: number;
+  maxWithdrawal: number;
+  limitCount: number;
+  limitDays: number;
+}
+
+// Query keys for cache management
+export const withdrawalKeys = {
+  all: ["withdrawal"] as const,
+  data: (page: number, search: string) =>
+    [...withdrawalKeys.all, "data", page, search] as const,
+  method: () => [...withdrawalKeys.all, "method"] as const,
+  transactions: (page: number, search: string) =>
+    [...withdrawalKeys.all, "transactions", page, search] as const,
+};
+
 export function useWithdrawal() {
   const { showAlert } = useAlert();
-
-  // Data States
-  const [stats, setStats] = useState<WithdrawalStats | null>(null);
-  const [method, setMethod] = useState<PaymentMethod | null>(null);
+  const queryClient = useQueryClient();
 
   // Table States (Pagination & Search)
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  // Loading States
-  const [isLoading, setIsLoading] = useState(true); // Loading awal
-  const [isTableLoading, setIsTableLoading] = useState(false); // Loading pas ganti page/search
-  const [isProcessing, setIsProcessing] = useState(false); // Loading pas submit/cancel
+  // Debounced search for API call
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // 1. Fetch Data Awal (Stats & Method)
+  // Debounce search input
   useEffect(() => {
-    async function loadInitialData() {
-      setIsLoading(true);
-      try {
-        const [statsData, methodData] = await Promise.all([
-          withdrawalService.getUserWithdrawalStats(),
-          withdrawalService.getPrimaryPaymentMethod(),
-        ]);
-        setStats(statsData);
-        setMethod(methodData);
-      } catch (error) {
-        console.error(error);
-        showAlert("Gagal memuat data withdrawal.", "error");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadInitialData();
-  }, []);
-
-  // 2. Fetch Transactions (Triggered by page/search)
-  useEffect(() => {
-    async function loadTransactions() {
-      setIsTableLoading(true);
-      try {
-        const res = await withdrawalService.getTransactionHistory({
-          page,
-          search,
-        });
-        setTransactions(res.data);
-        setTotalPages(res.totalPages);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsTableLoading(false);
-      }
-    }
-
-    const timeout = setTimeout(loadTransactions, 500); // Debounce search
+    const timeout = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(timeout);
-  }, [page, search]);
-
-  // Reset page ke 1 kalau search berubah
-  useEffect(() => {
-    setPage(1);
   }, [search]);
 
-  // Action: Request Payout
-  const requestPayout = async (amount: number, usedMethod: PaymentMethod) => {
-    setIsProcessing(true);
-    try {
-      await withdrawalService.requestWithdrawal(amount, usedMethod);
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
-      // Update UI Optimis
-      if (stats) {
-        setStats({
-          ...stats,
-          availableBalance: stats.availableBalance - amount,
-          pendingWithdrawn: stats.pendingWithdrawn + amount,
-        });
-      }
+  // 1. Initial Data Query (stats, settings, first page transactions)
+  const {
+    data: initialData,
+    isLoading,
+    error: initialError,
+  } = useQuery({
+    queryKey: withdrawalKeys.data(1, ""),
+    queryFn: () => withdrawalService.getWithdrawalData(1, ""),
+    staleTime: 2 * 60 * 1000, // 2 minutes - stats change with withdrawals
+  });
 
-      // Refresh tabel transaksi biar data baru muncul (opsional: atau push manual)
-      setPage(1);
-      setSearch(""); // Reset search biar kelihatan data paling baru
+  // 2. Payment Method Query
+  const { data: method } = useQuery({
+    queryKey: withdrawalKeys.method(),
+    queryFn: withdrawalService.getPrimaryPaymentMethod,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
+  // 3. Transactions Query (paginated - only when page/search changes from initial)
+  const {
+    data: transactionsData,
+    isLoading: isTableLoading,
+    isFetching: isTableFetching,
+  } = useQuery({
+    queryKey: withdrawalKeys.transactions(page, debouncedSearch),
+    queryFn: () =>
+      withdrawalService.getTransactionHistory({
+        page,
+        search: debouncedSearch,
+      }),
+    staleTime: 2 * 60 * 1000,
+    enabled: page !== 1 || debouncedSearch !== "", // Only fetch if not initial state
+  });
+
+  // Determine which data to use
+  const stats = initialData?.stats ?? null;
+  const settings = initialData?.settings ?? null;
+  const transactions =
+    page === 1 && debouncedSearch === ""
+      ? initialData?.transactions ?? []
+      : transactionsData?.data ?? [];
+  const totalPages =
+    page === 1 && debouncedSearch === ""
+      ? initialData?.totalPages ?? 1
+      : transactionsData?.totalPages ?? 1;
+
+  // Mutation: Request Payout
+  const requestPayoutMutation = useMutation({
+    mutationFn: ({
+      amount,
+      usedMethod,
+    }: {
+      amount: number;
+      usedMethod: PaymentMethod;
+    }) => withdrawalService.requestWithdrawal(amount, usedMethod),
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });
       showAlert("Permintaan penarikan berhasil dikirim!", "success");
-      return true;
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       showAlert(error.message || "Gagal memproses penarikan.", "error");
-      return false;
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    },
+  });
 
-  // Action: Cancel Transaction
-  const cancelTransaction = async (id: string) => {
-    const txToCancel = transactions.find((t) => t.id === id);
-    if (!txToCancel) return false;
-
-    setIsProcessing(true);
-    try {
-      await withdrawalService.cancelWithdrawal(id);
-
-      // Update UI Optimis: Balikin saldo
-      if (stats) {
-        setStats({
-          ...stats,
-          availableBalance: stats.availableBalance + txToCancel.amount,
-          pendingWithdrawn: stats.pendingWithdrawn - txToCancel.amount,
-        });
-      }
-
-      // Update status di list lokal
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, status: "cancelled" } : t))
-      );
-
+  // Mutation: Cancel Transaction
+  const cancelTransactionMutation = useMutation({
+    mutationFn: (id: string) => withdrawalService.cancelWithdrawal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });
       showAlert("Permintaan penarikan dibatalkan.", "info");
+    },
+    onError: (error: any) => {
+      showAlert(error.message || "Gagal membatalkan transaksi.", "error");
+    },
+  });
+
+  // Action wrappers for backwards compatibility
+  const requestPayout = async (amount: number, usedMethod: PaymentMethod) => {
+    try {
+      await requestPayoutMutation.mutateAsync({ amount, usedMethod });
       return true;
-    } catch (error) {
-      showAlert("Gagal membatalkan transaksi.", "error");
+    } catch {
       return false;
-    } finally {
-      setIsProcessing(false);
     }
   };
+
+  const cancelTransaction = async (id: string) => {
+    try {
+      await cancelTransactionMutation.mutateAsync(id);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // Refresh all data
+  const refreshData = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });
+  }, [queryClient]);
+
+  const isProcessing =
+    requestPayoutMutation.isPending || cancelTransactionMutation.isPending;
+
+  // Show error alert if initial load fails
+  useEffect(() => {
+    if (initialError) {
+      showAlert("Gagal memuat data withdrawal.", "error");
+    }
+  }, [initialError, showAlert]);
 
   return {
     stats,
-    method,
+    method: method ?? null,
+    settings,
     transactions,
     totalPages,
     page,
@@ -144,9 +168,10 @@ export function useWithdrawal() {
     search,
     setSearch,
     isLoading,
-    isTableLoading,
+    isTableLoading: isTableLoading || isTableFetching,
     isProcessing,
     requestPayout,
     cancelTransaction,
+    refreshData,
   };
 }

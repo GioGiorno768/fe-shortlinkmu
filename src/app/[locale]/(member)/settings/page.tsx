@@ -74,8 +74,14 @@ export default function SettingsPage() {
     window.history.replaceState(null, "", `#${tabId}`);
   };
 
-  // Listen for hash changes
+  // Listen for hash changes AND check initial hash on mount
   useEffect(() => {
+    // Check hash on mount (fixes navigation from other pages)
+    const initialHash = window.location.hash.slice(1);
+    if (initialHash && TABS.some((t) => t.id === initialHash)) {
+      setActiveTab(initialHash as TabId);
+    }
+
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1);
       if (TABS.some((t) => t.id === hash)) {
@@ -141,9 +147,7 @@ export default function SettingsPage() {
               {activeTab === "security" && securityData && (
                 <SecuritySection initialData={securityData} />
               )}
-              {activeTab === "payment" && (
-                <PaymentSection initialMethods={paymentData} />
-              )}
+              {activeTab === "payment" && <PaymentSection />}
               {activeTab === "preferences" && preferencesData && (
                 <PreferencesSection initialData={preferencesData} />
               )}

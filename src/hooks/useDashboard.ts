@@ -1,10 +1,11 @@
 // src/hooks/useDashboard.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as dashboardService from "@/services/dashboardService";
+import { DASHBOARD_SLIDES } from "@/services/dashboardService";
 import type {
-  DashboardSlide,
   MilestoneData,
   ReferralCardData,
   TopTrafficStats,
@@ -14,78 +15,75 @@ import type {
   StatType,
 } from "@/types/type";
 
-export function useDashboard() {
-  // State Data Statis (Load sekali pas mount)
-  const [slides, setSlides] = useState<DashboardSlide[]>([]);
-  const [milestone, setMilestone] = useState<MilestoneData | null>(null);
-  const [referralData, setReferralData] = useState<ReferralCardData | null>(
-    null
-  );
-  const [trafficStats, setTrafficStats] = useState<TopTrafficStats | null>(
-    null
-  );
-  const [topLinks, setTopLinks] = useState<TopPerformingLink[] | null>(null);
+// Query keys for cache management
+export const dashboardKeys = {
+  all: ["dashboard"] as const,
+  milestone: () => [...dashboardKeys.all, "milestone"] as const,
+  referral: () => [...dashboardKeys.all, "referral"] as const,
+  traffic: () => [...dashboardKeys.all, "traffic"] as const,
+  topLinks: () => [...dashboardKeys.all, "topLinks"] as const,
+  analytics: (range: TimeRange, stat: StatType) =>
+    [...dashboardKeys.all, "analytics", range, stat] as const,
+};
 
-  // State Analytics (Bisa berubah2 via filter)
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
-    null
-  );
-  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+export function useDashboard() {
+  const queryClient = useQueryClient();
+
+  // Analytics Filter State (still need local state for filters)
   const [analyticsRange, setAnalyticsRange] = useState<TimeRange>("perWeek");
   const [analyticsStat, setAnalyticsStat] = useState<StatType>("totalViews");
 
-  // 1. Fetch Data Awal (Sekali jalan)
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [slidesData, milestoneData, refData, trafficData, linksData] =
-          await Promise.all([
-            dashboardService.getSlides(),
-            dashboardService.getMilestone(),
-            dashboardService.getReferralData(),
-            dashboardService.getTrafficStats(),
-            dashboardService.getTopLinks(),
-          ]);
+  // 1. Slides - HARDCODED, no fetch needed
+  const slides = DASHBOARD_SLIDES;
 
-        setSlides(slidesData);
-        setMilestone(milestoneData);
-        setReferralData(refData);
-        setTrafficStats(trafficData);
-        setTopLinks(linksData);
-      } catch (error) {
-        console.error("Failed to load dashboard data", error);
-      }
-    };
-    loadInitialData();
-  }, []);
+  // 2. Milestone Query
+  const { data: milestone } = useQuery({
+    queryKey: dashboardKeys.milestone(),
+    queryFn: dashboardService.getMilestone,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  // 2. Fetch Analytics (Jalan setiap filter berubah)
-  useEffect(() => {
-    const loadAnalytics = async () => {
-      setAnalyticsLoading(true);
-      try {
-        const data = await dashboardService.getAnalytics(
-          analyticsRange,
-          analyticsStat
-        );
-        setAnalyticsData(data);
-      } catch (error) {
-        console.error("Failed to load analytics", error);
-      } finally {
-        setAnalyticsLoading(false);
-      }
-    };
-    loadAnalytics();
-  }, [analyticsRange, analyticsStat]);
+  // 3. Referral Data Query
+  const { data: referralData } = useQuery({
+    queryKey: dashboardKeys.referral(),
+    queryFn: dashboardService.getReferralData,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 4. Traffic Stats Query
+  const { data: trafficStats } = useQuery({
+    queryKey: dashboardKeys.traffic(),
+    queryFn: dashboardService.getTrafficStats,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 5. Top Links Query
+  const { data: topLinks } = useQuery({
+    queryKey: dashboardKeys.topLinks(),
+    queryFn: dashboardService.getTopLinks,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 6. Analytics Data Query (depends on filters)
+  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+    queryKey: dashboardKeys.analytics(analyticsRange, analyticsStat),
+    queryFn: () => dashboardService.getAnalytics(analyticsRange, analyticsStat),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Refresh all dashboard data
+  const refreshAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: dashboardKeys.all });
+  }, [queryClient]);
 
   return {
     // Data
-    slides,
-    milestone,
-    referralData,
-    trafficStats,
-    topLinks,
-    analyticsData,
+    slides, // Hardcoded constant, always available
+    milestone: milestone ?? null,
+    referralData: referralData ?? null,
+    trafficStats: trafficStats ?? null,
+    topLinks: topLinks ?? null,
+    analyticsData: analyticsData ?? null,
 
     // Analytics Controls
     analyticsLoading,
@@ -93,5 +91,8 @@ export function useDashboard() {
     analyticsStat,
     setAnalyticsRange,
     setAnalyticsStat,
+
+    // Actions
+    refreshAll,
   };
 }

@@ -6,7 +6,7 @@ export const routing = defineRouting({
   locales: ["en", "id"],
 
   // Bahasa default jika user tidak terdeteksi atau langsung buka '/'
-  defaultLocale: "en",
+  defaultLocale: "id",
 
   // Opsional: matikan prefix untuk default locale (misal '/about' bukan '/en/about')
   localePrefix: 'as-needed'

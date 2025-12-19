@@ -39,7 +39,7 @@ export const getMemberMenu = (t: any): NavItem[] => [
   { icon: Crown, label: "Levels", href: "/levels" },
   { icon: UserPlus2, label: t("referral"), href: "/referral" },
   { icon: BanknoteArrowDown, label: t("withdrawal"), href: "/withdrawal" },
-  { icon: History, label: t("history"), href: "/history" },
+  // { icon: History, label: t("history"), href: "/history" },
 ];
 
 // === MENU ADMIN & SUPER ADMIN (REVISI FIX) ===
@@ -57,11 +57,11 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
       href: "/admin/withdrawals",
     },
     { icon: ShieldAlert, label: "Abuse Reports", href: "/admin/reports" },
-    {
-      icon: FileText,
-      label: "Announcements",
-      href: "/admin/announcements",
-    },
+    // {
+    //   icon: FileText,
+    //   label: "Announcements",
+    //   href: "/admin/announcements",
+    // },
   ];
 
   // 2. CORE SYSTEM (Menu Owner / Super Admin)
@@ -122,11 +122,11 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
         label: "Abuse Reports",
         href: "/super-admin/reports",
       },
-      {
-        icon: FileText,
-        label: "Announcements",
-        href: "/super-admin/announcements",
-      },
+      // {
+      //   icon: FileText,
+      //   label: "Announcements",
+      //   href: "/super-admin/announcements",
+      // },
     ];
 
     // Super Admin = Operational (Special Routes) + Core System

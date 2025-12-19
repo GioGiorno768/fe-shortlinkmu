@@ -193,13 +193,15 @@ export default function TopPerformingLinksCard({
                       </p>
                     </div>
                     <div className="flex items-center justify-between">
-                      <Link
+                      <a
                         onClick={(e) => e.stopPropagation()}
                         href={link.shortUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-[1.4em] text-grays truncate max-w-[150px] opacity-80 hover:underline hover:text-bluelight transition-colors"
                       >
                         {link.shortUrl}
-                      </Link>
+                      </a>
                     </div>
                   </div>
 

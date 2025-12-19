@@ -28,7 +28,8 @@ export default function WithdrawalMethodCard({
   const [showDetail, setShowDetail] = useState(false);
 
   // --- HELPER BUAT NYARI GAMBAR ---
-  const getPaymentBrandInfo = (providerName: string) => {
+  const getPaymentBrandInfo = (providerName: string | undefined) => {
+    if (!providerName) return null;
     const slug = providerName.toLowerCase().replace(/\s+/g, "-");
     const logoPath = `/payment-icons/${slug}.png`;
 
@@ -75,7 +76,7 @@ export default function WithdrawalMethodCard({
           Payment Method
         </h3>
         <Link
-          href="/settings/payment"
+          href="/settings#payment"
           className="p-2 text-grays hover:text-bluelight hover:bg-blues rounded-xl transition-colors"
           title="Change Method"
         >
@@ -192,7 +193,7 @@ export default function WithdrawalMethodCard({
             </p>
 
             <Link
-              href="/settings/payment"
+              href="/settings#payment"
               className="bg-shortblack text-white px-8 py-3 rounded-xl font-semibold text-[1.4em] hover:bg-opacity-90 hover:shadow-lg transition-all w-full max-w-[200px]"
             >
               Setup Now

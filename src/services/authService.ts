@@ -1,5 +1,6 @@
 // Auth Service - Handle semua API calls untuk authentication
 import apiClient from "./apiClient";
+import { clearAllCaches } from "@/utils/cacheUtils";
 
 const TOKEN_KEY = "auth_token";
 const USER_KEY = "user_data";
@@ -239,6 +240,8 @@ export const logout = async (): Promise<void> => {
   } catch (error) {
     console.error("Logout error:", error);
   } finally {
+    // 🧹 Clear ALL cached data to prevent stale data for next user
+    clearAllCaches();
     removeToken();
     // 📢 Broadcast logout to all tabs
     broadcastLogout();

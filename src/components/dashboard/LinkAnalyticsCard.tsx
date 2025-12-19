@@ -13,6 +13,7 @@ import {
 import { usePathname } from "next/navigation";
 import { Link } from "@/i18n/routing";
 import type { AnalyticsData, TimeRange, StatType } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // WAJIB: Import dinamis buat ApexCharts
 const Chart = dynamic(() => import("react-apexcharts"), {
@@ -51,6 +52,7 @@ export default function LinkAnalyticsCard({
 }: LinkAnalyticsCardProps) {
   const t = useTranslations("Dashboard");
   const path = usePathname();
+  const { format: formatCurrency } = useCurrency();
 
   // State UI lokal (Dropdown Open/Close)
   const [isRangeOpen, setIsRangeOpen] = useState(false);
@@ -65,10 +67,11 @@ export default function LinkAnalyticsCard({
     { key: "perYear", label: t("perYear") },
   ];
 
+  // 🔧 Note: Only showing options that backend analytics endpoint supports
+  // Backend supports: clicks, earnings, valid_clicks (no referrals)
   const statOptions: { key: StatType; label: string }[] = [
     { key: "totalViews", label: t("totalViews") },
     { key: "totalEarnings", label: t("totalEarnings") },
-    { key: "totalReferral", label: t("referral") },
   ];
 
   // Helper Warna Chart Dinamis
@@ -133,6 +136,11 @@ export default function LinkAnalyticsCard({
           show: true,
           format: range === "perMonth" ? "Week" : undefined,
         },
+        y: {
+          // 🔧 FIX: Format tooltip value with currency for earnings
+          formatter: (val) =>
+            stat === "totalEarnings" ? formatCurrency(val) : val.toFixed(0),
+        },
       },
       xaxis: {
         type: "category",
@@ -142,7 +150,9 @@ export default function LinkAnalyticsCard({
       },
       yaxis: {
         labels: {
-          formatter: (val) => val.toFixed(0),
+          // 🔧 FIX: Show currency format for earnings, integers for views
+          formatter: (val) =>
+            stat === "totalEarnings" ? formatCurrency(val) : val.toFixed(0),
         },
       },
       grid: {
@@ -151,7 +161,7 @@ export default function LinkAnalyticsCard({
         strokeDashArray: 4,
       },
     }),
-    [data, stat, range]
+    [data, stat, range, formatCurrency]
   ); // Dependency array: update kalo data/stat/range ganti
 
   // Close dropdown on click outside

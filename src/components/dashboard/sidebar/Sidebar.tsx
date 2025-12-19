@@ -235,8 +235,9 @@ export default function Sidebar({
 
               const isActive = item.href === pathname;
               const isChildActive =
-                item.children?.some((child) => child.href === pathname) ??
-                false;
+                item.children?.some(
+                  (child) => child.href && pathname.endsWith(child.href)
+                ) ?? false;
 
               return (
                 <SidebarItem
@@ -257,7 +258,7 @@ export default function Sidebar({
         {/* ===================================== */}
         <div
           ref={userPopupRef}
-          className="sticky bottom-0 p-[1em] border-t border-slate-800 bg-inherit z-50"
+          className="absolute bottom-0 left-0 right-0 p-[1em] border-t border-slate-800 bg-inherit z-50"
         >
           {/* Popup Expanded */}
           <div

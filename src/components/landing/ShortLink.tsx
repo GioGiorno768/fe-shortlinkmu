@@ -148,7 +148,7 @@ export default function ShortLink() {
               <div className="gap-[.5em] flex flex-col">
                 <span className="text-[1.4em]">Your Link</span>
                 <a
-                  href={`https://${shortLink}`}
+                  href={`http://${shortLink}`}
                   target="_blank"
                   rel="noopener"
                   className="text-shortblack text-[1.6em] font-semibold hover:underline truncate"

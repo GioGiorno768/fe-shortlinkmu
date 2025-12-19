@@ -48,6 +48,15 @@ export async function refreshHeaderStats(): Promise<HeaderStats> {
 }
 
 /**
+ * Clear header cache completely.
+ * Call this on logout to prevent stale data for next user.
+ */
+export function clearHeaderCache(): void {
+  cachedStats = null;
+  cacheTimestamp = 0;
+}
+
+/**
  * Get cached stats immediately (no fetch).
  * Returns null if cache is empty.
  */

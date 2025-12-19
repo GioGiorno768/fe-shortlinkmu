@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { TrendingUp, ChevronRight, Loader2, Lock, Star } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import type { MilestoneData } from "@/types/type";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 // Terima data lewat props
 interface MilestoneCardProps {
@@ -12,7 +13,7 @@ interface MilestoneCardProps {
 }
 
 export default function MilestoneCard({ data }: MilestoneCardProps) {
-  const formatCurrency = (num: number) => "$" + num.toFixed(2);
+  const { format: formatCurrency } = useCurrency();
 
   // Handle Loading State (Kalau data belum ada)
   if (!data) {

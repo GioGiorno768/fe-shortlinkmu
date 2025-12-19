@@ -80,14 +80,17 @@ const PAYMENT_CONFIG = {
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
-export default function PaymentSection({
-  initialMethods,
-}: {
-  initialMethods: SavedPaymentMethod[];
-}) {
-  // Panggil Hook Sakti
-  const { methods, addMethod, removeMethod, setAsDefault, isProcessing } =
-    usePaymentLogic(initialMethods);
+export default function PaymentSection() {
+  // Panggil Hook Sakti - sekarang fetch data sendiri
+  const {
+    methods,
+    isLoading,
+    error,
+    addMethod,
+    removeMethod,
+    setAsDefault,
+    isProcessing,
+  } = usePaymentLogic();
 
   // State Form Lokal
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
@@ -124,6 +127,20 @@ export default function PaymentSection({
   const currentMethodConfig = currentCategoryConfig.methods.find(
     (m) => m.id === selectedMethodId
   );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return <div className="text-center py-20 text-red-500">{error}</div>;
+  }
 
   return (
     <div className="space-y-8 font-figtree">

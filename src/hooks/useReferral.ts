@@ -1,46 +1,65 @@
 // src/hooks/useReferral.ts
 "use client";
 
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import * as referralService from "@/services/referralService";
 import type { ReferralStats, ReferredUser } from "@/types/type";
 
+// Query keys for cache management
+export const referralKeys = {
+  all: ["referral"] as const,
+  stats: () => [...referralKeys.all, "stats"] as const,
+  users: () => [...referralKeys.all, "users"] as const,
+  link: () => [...referralKeys.all, "link"] as const,
+};
+
 export function useReferral() {
-  const [stats, setStats] = useState<ReferralStats | null>(null);
-  const [users, setUsers] = useState<ReferredUser[]>([]);
-  const [referralLink, setReferralLink] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Fetch referral stats
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery({
+    queryKey: referralKeys.stats(),
+    queryFn: referralService.getReferralStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Fetch paralel biar cepet
-        const [statsData, usersData, linkData] = await Promise.all([
-          referralService.getReferralStats(),
-          referralService.getReferredUsers(),
-          referralService.getReferralLink(),
-        ]);
+  // Fetch referred users list
+  const {
+    data: users,
+    isLoading: usersLoading,
+    error: usersError,
+  } = useQuery({
+    queryKey: referralKeys.users(),
+    queryFn: referralService.getReferredUsers,
+    staleTime: 5 * 60 * 1000,
+  });
 
-        setStats(statsData);
-        setUsers(usersData);
-        setReferralLink(linkData);
-      } catch (err) {
-        console.error(err);
-        setError("Gagal memuat data referral.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  // Fetch referral link
+  const {
+    data: referralLink,
+    isLoading: linkLoading,
+    error: linkError,
+  } = useQuery({
+    queryKey: referralKeys.link(),
+    queryFn: referralService.getReferralLink,
+    staleTime: 30 * 60 * 1000, // 30 minutes - link rarely changes
+  });
+
+  // Combined loading state
+  const isLoading = statsLoading || usersLoading || linkLoading;
+
+  // Combined error state
+  const error =
+    statsError || usersError || linkError
+      ? "Gagal memuat data referral."
+      : null;
 
   return {
-    stats,
-    users,
-    referralLink,
+    stats: stats ?? null,
+    users: users ?? [],
+    referralLink: referralLink ?? "",
     isLoading,
     error,
   };

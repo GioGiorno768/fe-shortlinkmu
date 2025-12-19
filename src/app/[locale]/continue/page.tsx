@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter, useParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Loader2, ArrowRight, ShieldCheck, Lock } from "lucide-react";
 import * as linkService from "@/services/linkService";
 import { useAlert } from "@/hooks/useAlert";
+
+interface SessionData {
+  code: string;
+  token: string;
+  step: number;
+  max_steps: number;
+  ad_level: number;
+  is_guest: boolean;
+}
 
 export default function ContinuePage() {
   const searchParams = useSearchParams();
@@ -13,74 +22,95 @@ export default function ContinuePage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { showAlert } = useAlert();
 
-  const code = searchParams.get("code");
-  const token = searchParams.get("token");
-  const visitorId = searchParams.get("visitor_id"); // 🛡️ Anti-Fraud Device Fingerprint
+  const sessionId = searchParams.get("s");
 
   // Don't auto-load, wait for user to click
+  const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true); // New state for initial check
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [isValid, setIsValid] = useState(true);
   const [password, setPassword] = useState("");
   const [isPasswordRequired, setIsPasswordRequired] = useState(false);
   const [error, setError] = useState("");
 
-  // Validation on mount to prevent flash
+  // Fetch session and validate on mount
   useEffect(() => {
     const checkStatus = async () => {
-      if (!code || !token) {
+      if (!sessionId) {
+        setError("Session ID tidak ditemukan.");
         setIsValid(false);
         setIsCheckingStatus(false);
         return;
       }
 
       try {
-        // Just check if token is valid without activating (reuse validate endpoint but expect error if inactive)
-        // For now since we don't have a specific "check-status" endpoint, we can rely on the fact that
-        // if we try to validate it via linkService.validateContinueToken, it will throw if inactive.
-        // BUT validateContinueToken actually consumes the token if valid (which we don't want yet).
+        // 1. Fetch session data
+        const sessionResponse = await fetch(
+          `http://localhost:8000/api/links/session/${sessionId}`
+        );
+        const sessionResult = await sessionResponse.json();
 
-        // BETTER APPROACH: Just show loading for a split second to smooth UI,
-        // OR implement a lightweight check.
-        // For now, let's keep it simple: Show loading, try to "dry run" or just let it render but hidden?
+        if (!sessionResponse.ok) {
+          setError("Session tidak ditemukan atau sudah kadaluarsa.");
+          setIsValid(false);
+          setIsCheckingStatus(false);
+          return;
+        }
 
-        // Actually, the user asked to prevent seeing the content if bypassing.
-        // Since we can't easily "dry run" validate without consuming or modifying backend complexity again,
-        // let's do a trick:
+        const data: SessionData = sessionResult.data;
+        setSessionData(data);
 
-        // We will TRY to validate. If it fails with "Token belum diaktivasi" (403), we redirect/block instantly.
-        // If it succeeds (already active), we show the page.
+        // 2. Check if all steps are completed
+        const statusResponse = await fetch(
+          `http://localhost:8000/api/links/${data.code}/check-step-status`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: data.token }),
+          }
+        );
 
-        // However, standard validateContinueToken consumes the token/activates link processing.
-        // We need the page to be visible for the user to click "Continue".
+        const statusResult = await statusResponse.json();
 
-        // Let's rely on a fail-fast approach:
+        if (!statusResponse.ok || !statusResult.data?.all_complete) {
+          console.warn("🛡️ Direct continue access blocked:", statusResult);
+          setError(
+            "Anda harus menyelesaikan semua langkah artikel terlebih dahulu."
+          );
+          setIsValid(false);
+          setIsCheckingStatus(false);
+          return;
+        }
+
+        // All steps completed - allow access
         setIsCheckingStatus(false);
       } catch (err) {
+        console.error("Validation error:", err);
+        setError("Gagal memverifikasi status link.");
+        setIsValid(false);
         setIsCheckingStatus(false);
       }
     };
 
     checkStatus();
-  }, [code, token]);
+  }, [sessionId]);
 
   const handleContinue = async () => {
-    if (!code || !token) return;
+    if (!sessionData) return;
 
     setIsLoading(true);
     setError("");
 
     try {
-      // Pass password if state is set, and visitor_id for anti-fraud
+      // Pass password if state is set
       const originalUrl = await linkService.validateContinueToken(
-        code,
-        token,
-        password || undefined,
-        visitorId || undefined // 🛡️ Anti-Fraud
+        sessionData.code,
+        sessionData.token,
+        password || undefined
       );
 
-      // Success! Redirect to destination
-      window.location.href = originalUrl;
+      // Success! Redirect to destination (open in new tab)
+      window.open(originalUrl, "_blank");
     } catch (err: any) {
       const status = err.response?.status;
       const msg = err.response?.data?.message || err.message;

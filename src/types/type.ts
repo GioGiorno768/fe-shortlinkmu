@@ -183,19 +183,24 @@ export interface WithdrawalStats {
 }
 
 export interface PaymentMethod {
+  id: string; // Payment method ID
   provider: string; // cth: "PayPal", "Bank Transfer"
   accountName: string; // cth: "Kevin Ragil"
   accountNumber: string; // cth: "1234567890" (masked)
+  fee?: number; // Admin fee for this method
+  isDefault?: boolean; // Is this the default method
 }
 
 export interface Transaction {
   id: string;
   date: string;
   amount: number;
+  fee?: number; // Admin fee
   method: string; // cth: "PayPal"
   account: string; // cth: "kevin***@gmail.com"
   status: "pending" | "approved" | "rejected" | "paid" | "cancelled";
   txId?: string; // ID referensi transfer
+  note?: string; // Note/reason from admin
 }
 
 export interface UserProfile {

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import * as headerService from "@/services/headerService";
+import { getToken } from "@/services/authService";
 import type { HeaderStats, AdminHeaderStats } from "@/types/type";
 
 export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
@@ -11,7 +12,34 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
   );
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🔐 Track auth token to detect user change
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  // Check for auth token changes
   useEffect(() => {
+    const checkToken = () => {
+      const currentToken = getToken();
+      if (currentToken !== authToken) {
+        setAuthToken(currentToken);
+      }
+    };
+
+    checkToken();
+
+    // Listen for storage and focus events
+    window.addEventListener("storage", checkToken);
+    window.addEventListener("focus", checkToken);
+
+    return () => {
+      window.removeEventListener("storage", checkToken);
+      window.removeEventListener("focus", checkToken);
+    };
+  }, [authToken]);
+
+  // Fetch data when token changes (user changed)
+  useEffect(() => {
+    if (!authToken) return; // Don't fetch if no token
+
     async function loadData() {
       setIsLoading(true);
       try {
@@ -19,12 +47,12 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
         if (role === "admin" || role === "super-admin") {
           data = await headerService.getAdminHeaderStats();
         } else {
-          data = await headerService.getHeaderStats();
+          // Force fresh fetch when user changes
+          data = await headerService.refreshHeaderStats();
         }
         setStats(data);
       } catch (error) {
         console.error("Gagal load header stats", error);
-        // Opsional: Set default 0 kalo error
         if (role === "admin" || role === "super-admin") {
           setStats({
             pendingWithdrawals: 0,
@@ -39,7 +67,7 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
       }
     }
     loadData();
-  }, [role]);
+  }, [role, authToken]); // 🔐 Re-fetch when token changes
 
   return { stats, isLoading };
 }

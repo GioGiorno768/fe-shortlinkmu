@@ -12,170 +12,330 @@ import type {
 } from "@/types/type";
 import { Sparkles, Megaphone, Wallet, Star } from "lucide-react";
 
-// --- MOCK API CALLS ---
+// --- API BASE URL ---
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
-export const getSlides = async (): Promise<DashboardSlide[]> => {
-  await new Promise((r) => setTimeout(r, 500));
-  return [
-    {
-      id: "welcome",
-      title: "Selamat Datang, Kevin! 👋",
-      desc: "Semoga harimu menyenangkan. Yuk cek performa link kamu dan tingkatkan trafik hari ini!",
-      cta: "Buat Link Baru",
-      link: "/new-link",
-      icon: Sparkles,
-      theme: "blue",
-    },
-    {
-      id: "event",
-      title: "Bonus CPM Weekend! 🚀",
-      desc: "Dapatkan kenaikan CPM +15% untuk semua traffic dari Indonesia khusus Sabtu & Minggu ini.",
-      cta: "Lihat Info",
-      link: "/ads-info",
-      icon: Megaphone,
-      theme: "purple",
-    },
-    {
-      id: "feature",
-      title: "Withdraw via Crypto 💎",
-      desc: "Kabar gembira! Sekarang kamu bisa menarik saldo ke wallet USDT (TRC20) dengan fee rendah.",
-      cta: "Atur Payment",
-      link: "/settings?tab=payment",
-      icon: Wallet,
-      theme: "orange",
-    },
-  ];
+// Helper: Get auth token (matches withdrawalService.ts pattern)
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+
+  // First check sessionStorage
+  let token = sessionStorage.getItem("auth_token");
+
+  // If not in sessionStorage, try to get from cookie
+  if (!token) {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token" && value) {
+        token = value;
+        break;
+      }
+    }
+  }
+
+  return token;
+}
+
+// Helper: Auth headers
+function authHeaders(): HeadersInit {
+  const token = getAuthToken();
+  return {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+// Helper untuk API call
+const apiCall = async <T>(endpoint: string): Promise<T> => {
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw new Error(`API Error: ${res.status}`);
+  }
+
+  const json = await res.json();
+  return json.data;
 };
 
+// --- SLIDES: HARDCODED (Static, no fetch needed) ---
+export const DASHBOARD_SLIDES: DashboardSlide[] = [
+  {
+    id: "welcome",
+    title: "Selamat Datang! 👋",
+    desc: "Semoga harimu menyenangkan. Yuk cek performa link kamu dan tingkatkan trafik hari ini!",
+    cta: "Buat Link Baru",
+    link: "/new-link",
+    icon: Sparkles,
+    theme: "blue",
+  },
+  {
+    id: "event",
+    title: "Bonus CPM Weekend! 🚀",
+    desc: "Dapatkan kenaikan CPM +15% untuk semua traffic dari Indonesia khusus Sabtu & Minggu ini.",
+    cta: "Lihat Info",
+    link: "/levels",
+    icon: Megaphone,
+    theme: "purple",
+  },
+  {
+    id: "feature",
+    title: "Withdraw via Crypto 💎",
+    desc: "Kabar gembira! Sekarang kamu bisa menarik saldo ke wallet USDT (TRC20) dengan fee rendah.",
+    cta: "Atur Payment",
+    link: "/settings#payment",
+    icon: Wallet,
+    theme: "orange",
+  },
+];
+
+// --- MILESTONE: Connect to /api/user/levels ---
 export const getMilestone = async (): Promise<MilestoneData> => {
-  await new Promise((r) => setTimeout(r, 800));
-  return {
-    icon: Star,
-    currentLevel: "Rookie",
-    nextLevel: "Elite",
-    currentEarnings: 35.5,
-    nextTarget: 50.0,
-    currentBonus: 5,
-    nextBonus: 10,
-    progress: 71,
-  };
+  try {
+    const data = await apiCall<{
+      card: {
+        current_level: string;
+        current_level_name: string;
+        current_earnings: number;
+        current_level_cpm: number;
+        next_level_name: string | null;
+        next_level_min: number;
+        next_level_cpm: number;
+        progress_percent: number;
+      };
+    }>("/user/levels");
+
+    return {
+      icon: Star,
+      currentLevel: data.card.current_level_name,
+      nextLevel: data.card.next_level_name || "Max Level",
+      currentEarnings: data.card.current_earnings,
+      nextTarget: data.card.next_level_min,
+      currentBonus: data.card.current_level_cpm,
+      nextBonus: data.card.next_level_cpm,
+      progress: data.card.progress_percent,
+    };
+  } catch (error) {
+    console.error("Failed to fetch milestone data:", error);
+    // Fallback data
+    return {
+      icon: Star,
+      currentLevel: "Beginner",
+      nextLevel: "Rookie",
+      currentEarnings: 0,
+      nextTarget: 50,
+      currentBonus: 0,
+      nextBonus: 5,
+      progress: 0,
+    };
+  }
 };
 
+// --- REFERRAL: Connect to /api/dashboard/overview ---
 export const getReferralData = async (): Promise<ReferralCardData> => {
-  await new Promise((r) => setTimeout(r, 800));
-  return {
-    referralLink: "https://shortlinkmu.com/ref?id=kevin123",
-    totalUsers: 25,
-  };
+  try {
+    const data = await apiCall<{
+      referral: {
+        code: string;
+        users: number;
+      };
+    }>("/dashboard/overview");
+
+    const baseUrl =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://shortlinkmu.com";
+
+    return {
+      referralLink: `${baseUrl}/register?ref=${data.referral.code}`,
+      totalUsers: data.referral.users,
+    };
+  } catch (error) {
+    console.error("Failed to fetch referral data:", error);
+    return {
+      referralLink: "",
+      totalUsers: 0,
+    };
+  }
 };
 
 export const getTrafficStats = async (): Promise<TopTrafficStats> => {
-  await new Promise((r) => setTimeout(r, 1000));
-  return {
-    topMonth: { month: "February", views: 405123 },
-    topYear: { year: "2025", views: 805678 },
-    topLevel: { level: "mythic", cpmBonusPercent: 20 },
-  };
+  try {
+    const data = await apiCall<{
+      items: {
+        month: string;
+        label: string;
+        valid_clicks: number;
+        earnings: number;
+        average_cpm: number;
+        user_level: string;
+        level_cpm_bonus: number;
+      }[];
+    }>("/analytics/monthly-performance?range=12months");
+
+    // Find the month with highest activity
+    // Priority: earnings > valid_clicks (earnings is more reliable indicator)
+    // Edge case: if all months have 0 data, use current month (last in array)
+    const hasAnyActivity = data.items.some(
+      (item) => item.earnings > 0 || item.valid_clicks > 0
+    );
+
+    let topMonth;
+    if (!hasAnyActivity) {
+      // If no activity at all, show current month instead of defaulting to January
+      topMonth = data.items[data.items.length - 1];
+    } else {
+      topMonth = data.items.reduce((max, item) => {
+        // If current item has higher earnings, it's the top
+        if (item.earnings > (max?.earnings || 0)) {
+          return item;
+        }
+        // If earnings are equal, compare valid_clicks
+        if (
+          item.earnings === (max?.earnings || 0) &&
+          item.valid_clicks > (max?.valid_clicks || 0)
+        ) {
+          return item;
+        }
+        return max;
+      }, data.items[0]);
+    }
+
+    // Get current month's level (last item in array)
+    const currentMonth = data.items[data.items.length - 1];
+
+    // Calculate total views this year
+    const totalViewsYear = data.items.reduce(
+      (sum, item) => sum + item.valid_clicks,
+      0
+    );
+
+    // Extract month name only (remove year from "December 2025" -> "December")
+    const monthLabel = topMonth?.label || "N/A";
+    const monthNameOnly = monthLabel.split(" ")[0]; // Get first word (month name)
+
+    return {
+      topMonth: {
+        month: monthNameOnly,
+        views: topMonth?.valid_clicks || 0,
+      },
+      topYear: {
+        year: new Date().getFullYear().toString(),
+        views: totalViewsYear,
+      },
+      topLevel: {
+        level: (currentMonth?.user_level?.toLowerCase() || "beginner") as any,
+        cpmBonusPercent: currentMonth?.level_cpm_bonus || 0,
+      },
+    };
+  } catch (error) {
+    console.error("Failed to fetch traffic stats:", error);
+    return {
+      topMonth: { month: "N/A", views: 0 },
+      topYear: { year: new Date().getFullYear().toString(), views: 0 },
+      topLevel: { level: "beginner", cpmBonusPercent: 0 },
+    };
+  }
 };
 
+// --- TOP LINKS: Connect to /api/dashboard/overview (limit 10) ---
 export const getTopLinks = async (): Promise<TopPerformingLink[]> => {
-  await new Promise((r) => setTimeout(r, 1200));
-  return Array.from({ length: 5 }, (_, i) => ({
-    id: `link-${i}`,
-    title: `Link ${i}`,
-    shortUrl: `short.link/${i}`,
-    originalUrl: "https://example.com",
-    validViews: 1000,
-    totalEarnings: 50,
-    cpm: 5,
-    adsLevel: "level1",
-  }));
+  try {
+    const data = await apiCall<{
+      top_links: {
+        id: number;
+        title: string | null;
+        short_url: string;
+        original_url: string;
+        views: number;
+        valid_views: number;
+        earnings: number;
+        cpm: number;
+      }[];
+    }>("/dashboard/overview");
+
+    // Viewer app base URL (shortlink redirector)
+    const viewerBaseUrl =
+      process.env.NEXT_PUBLIC_VIEWER_URL || "http://localhost:3000";
+
+    let untitledCounter = 0;
+    return data.top_links.slice(0, 10).map((link) => {
+      // Extract code from backend URL: "http://localhost:8000/links/{code}" -> "{code}"
+      const urlParts = link.short_url.split("/");
+      const code = urlParts[urlParts.length - 1]; // Get last segment as code
+      const cleanShortUrl = `${viewerBaseUrl}/${code}`;
+
+      // Use title from backend, or "Untitled" with counter if no title
+      let displayTitle = link.title;
+      if (!displayTitle || displayTitle.trim() === "") {
+        untitledCounter++;
+        displayTitle = `Untitled ${untitledCounter}`;
+      }
+
+      return {
+        id: link.id.toString(),
+        title: displayTitle,
+        shortUrl: cleanShortUrl,
+        originalUrl: link.original_url,
+        validViews: link.valid_views,
+        totalEarnings: link.earnings,
+        cpm: link.cpm,
+        adsLevel: "level1", // Default
+      };
+    });
+  } catch (error) {
+    console.error("Failed to fetch top links:", error);
+    return [];
+  }
 };
 
+// --- ANALYTICS: Connect to /api/dashboard/analytics (Weekly Only) ---
 export const getAnalytics = async (
   range: TimeRange,
   stat: StatType
 ): Promise<AnalyticsData> => {
-  console.log(`MANGGIL API: /api/analytics?range=${range}&stat=${stat}`);
-  await new Promise((resolve) => setTimeout(resolve, 700));
-
-  let data: AnalyticsData = {
-    series: [{ name: "Data", data: [] }],
-    categories: [],
-  };
-
-  // Label Chart
-  let statName = "Total Views";
-  if (stat === "totalEarnings") statName = "Earnings";
-  if (stat === "totalReferral") statName = "New Referrals";
-
-  // Dummy Data berdasarkan Range
-  if (range === "perWeek") {
-    data = {
-      series: [{ name: statName, data: [10, 41, 35, 51, 49, 62, 69] }],
-      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  try {
+    // Map stat type to backend metric
+    const metricMap: Record<StatType, string> = {
+      totalViews: "valid_clicks",
+      totalEarnings: "earnings",
+      totalReferral: "valid_clicks", // Referral uses same metric for now
     };
-  } else if (range === "perMonth") {
-    data = {
-      series: [
-        {
-          name: statName,
-          data: [30, 40, 25, 50, 49, 60, 70, 91, 125, 100, 80, 110],
-        },
-      ],
-      categories: [
-        "Wk1",
-        "Wk2",
-        "Wk3",
-        "Wk4",
-        "Wk5",
-        "Wk6",
-        "Wk7",
-        "Wk8",
-        "Wk9",
-        "Wk10",
-        "Wk11",
-        "Wk12",
-      ],
+
+    const metric = metricMap[stat];
+
+    // Always fetch weekly data for dashboard (Mon-Sun)
+    const data = await apiCall<{
+      metric: string;
+      points: { label: string; value: number; date: string }[];
+      total: number;
+    }>(`/dashboard/analytics?range=week&metric=${metric}&group_by=day`);
+
+    // Extract labels and values
+    const categories = data.points.map((p) => p.label);
+    const values = data.points.map((p) => p.value);
+
+    // Get stat name for chart legend
+    let statName = "Valid Clicks";
+    if (stat === "totalEarnings") statName = "Earnings";
+    if (stat === "totalReferral") statName = "Referrals";
+
+    return {
+      series: [{ name: statName, data: values }],
+      categories,
     };
-  } else {
-    // perYear
-    data = {
-      series: [
-        {
-          name: statName,
-          data: [300, 400, 250, 500, 490, 600, 700, 910, 1250, 1000, 800, 1100],
-        },
-      ],
-      categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
+  } catch (error) {
+    console.error("Failed to fetch analytics:", error);
+    // Return empty data
+    return {
+      series: [{ name: "Data", data: [] }],
+      categories: [],
     };
   }
-
-  // Modifikasi angka berdasarkan Stat Type biar kelihatan beda
-  if (stat === "totalEarnings") {
-    data.series[0].data = data.series[0].data.map((n) =>
-      parseFloat((n / 10).toFixed(2))
-    );
-  } else if (stat === "totalViews") {
-    data.series[0].data = data.series[0].data.map((n) => Math.floor(n * 0.8));
-  } else if (stat === "totalReferral") {
-    data.series[0].data = data.series[0].data.map((n) => Math.floor(n / 15));
-  }
-
-  return data;
 };
 
 // === ADMIN DASHBOARD SERVICE (FINAL) ===
