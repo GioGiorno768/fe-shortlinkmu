@@ -13,13 +13,15 @@ export default async function RootNotFound() {
   // Deteksi bahasa dari browser
   const locale = acceptLanguage.includes("id") ? "id" : "en";
 
-  // Redirect ke 404 page dengan locale
-  redirect(`/${locale}/not-found`);
-
-  // Return dummy structure to satisfy root layout requirement
   return (
-    <html>
-      <body></body>
+    <html lang={locale}>
+      <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.location.replace("/${locale}/not-found")`,
+          }}
+        />
+      </body>
     </html>
   );
 }

@@ -8,6 +8,7 @@ import type { UserProfile } from "@/types/type";
 import Image from "next/image";
 import AvatarSelectionModal from "./AvatarSelectionModal";
 import { useProfileLogic } from "@/hooks/useSettings"; // Pake Hook baru
+import { DEFAULT_AVATAR_URL } from "@/utils/avatarUtils";
 
 interface ProfileSectionProps {
   initialData: UserProfile | null;
@@ -29,8 +30,7 @@ export default function ProfileSection({
     email: initialData?.email || "",
     phone: initialData?.phone || "",
     username: initialData?.username || "",
-    avatarUrl:
-      initialData?.avatarUrl || "https://avatar.iran.liara.run/public/35",
+    avatarUrl: initialData?.avatarUrl || DEFAULT_AVATAR_URL,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -13,7 +13,7 @@ const MOCK_USERS: AdminUser[] = Array.from({ length: 20 }, (_, i) => ({
   email: `user${i}@example.com`,
   // Simulasi: User genap punya avatar, ganjil kosong (biar kita tes inisial)
   avatarUrl:
-    i % 2 === 0 ? `https://avatar.iran.liara.run/public/${i + 10}` : "",
+    i % 2 === 0 ? `/avatars/avatar-1.webp` : "",
   status: i % 10 === 0 ? "suspended" : "active",
   joinedAt: new Date(Date.now() - i * 100000000).toISOString(),
   // Random last login (antara sekarang sampai 7 hari lalu)

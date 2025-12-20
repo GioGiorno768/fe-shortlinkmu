@@ -3,9 +3,10 @@
 
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Settings, LogOut } from "lucide-react";
 import SidebarItem from "./SidebarItem";
+import { getLocalAvatarUrl } from "@/utils/avatarUtils";
 import { NavItem, Role } from "@/types/type";
 import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
@@ -162,7 +163,7 @@ export default function Sidebar({
       {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 custom:hidden"
+          className="fixed inset-0 bg-black/50 z-[100] custom:hidden"
           onClick={onClose}
         />
       )}
@@ -173,7 +174,7 @@ export default function Sidebar({
           ${sidebarBg} text-shortblack h-screen fixed left-0 top-0 
           transition-all duration-300 ease-in-out
           ${isCollapsed ? "w-20" : "w-64"}
-          ${isMobileOpen ? "translate-x-0 z-50" : "-translate-x-full z-50"}
+          ${isMobileOpen ? "translate-x-0 z-[100]" : "-translate-x-full z-[100]"}
           custom:translate-x-0 custom:z-40 font-figtree custom:text-[10px] text-[8px] flex flex-col justify-between
         `}
       >
@@ -322,10 +323,7 @@ export default function Sidebar({
                 <div className="flex-shrink-0 relative">
                   <div className="w-[2.5em] h-[2.5em] rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-[1.6em] overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all relative">
                     <Image
-                      src={
-                        user?.avatarUrl ||
-                        "https://avatar.iran.liara.run/public/35"
-                      }
+                      src={user?.avatarUrl || getLocalAvatarUrl(user?.username)}
                       alt="User"
                       fill
                       className="object-cover"

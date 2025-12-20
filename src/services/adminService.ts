@@ -9,7 +9,7 @@ const MOCK_ADMINS: Admin[] = Array.from({ length: 10 }, (_, i) => ({
   username: `admin_${i}`,
   email: `admin${i}@shortlink.com`,
   avatarUrl:
-    i % 3 === 0 ? `https://avatar.iran.liara.run/public/${i + 20}` : "",
+    i % 3 === 0 ? `/avatars/avatar-1.webp` : "",
   role: i === 0 ? "super-admin" : "admin",
   status: i % 7 === 0 ? "suspended" : "active",
   joinedAt: new Date(Date.now() - i * 50000000).toISOString(),

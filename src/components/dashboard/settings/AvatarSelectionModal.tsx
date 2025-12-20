@@ -5,15 +5,11 @@ import { motion, AnimatePresence } from "motion/react";
 import { X, Check } from "lucide-react";
 import Image from "next/image";
 
-// Kita pake ID angka (1-50) biar dapet variasi cowok & cewek yang pasti
-const AVATAR_IDS = [
-  5, 10, 15, 20, 25, 30, 35, 40, 45, 48, 12, 22, 68, 88, 73, 100, 64, 78, 99,
-  94, 56, 96, 86, 67
-];
+// Local avatar files (1-4)
+const AVATAR_IDS = [1, 2, 3, 4];
 
-// URL Generator yang BENER
-const getAvatarUrl = (id: number) =>
-  `https://avatar.iran.liara.run/public/${id}`;
+// Local avatar URL generator
+const getAvatarUrl = (id: number) => `/avatars/avatar-${id}.webp`;
 
 interface AvatarSelectionModalProps {
   isOpen: boolean;

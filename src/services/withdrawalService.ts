@@ -282,8 +282,7 @@ export async function getWithdrawals(
       name: w.user?.name || "Unknown",
       email: w.user?.email || "",
       avatar:
-        w.user?.avatar ||
-        `https://avatar.iran.liara.run/public/${w.user?.id || 1}`,
+        w.user?.avatar || `/avatars/avatar-${((w.user?.id || 1) % 4) + 1}.webp`,
       level: w.user?.level || "beginner",
     },
     amount: w.amount,

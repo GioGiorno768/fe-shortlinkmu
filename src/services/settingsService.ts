@@ -18,7 +18,9 @@ export async function getUserProfile(): Promise<UserProfile> {
       name: userData.name,
       email: userData.email,
       phone: "", // Not returned from API yet
-      avatarUrl: "https://avatar.iran.liara.run/public/35",
+      avatarUrl: userData.avatar
+        ? `/avatars/${userData.avatar}.webp`
+        : "/avatars/avatar-1.webp",
       username: userData.name, // Use name as username
     };
   } catch (error) {
@@ -28,7 +30,7 @@ export async function getUserProfile(): Promise<UserProfile> {
       name: "Guest",
       email: "",
       phone: "",
-      avatarUrl: "https://avatar.iran.liara.run/public/35",
+      avatarUrl: "/avatars/avatar-1.webp",
       username: "Guest",
     };
   }
@@ -37,12 +39,20 @@ export async function getUserProfile(): Promise<UserProfile> {
 export async function updateUserProfile(
   data: UserProfile
 ): Promise<UserProfile> {
+  // Extract avatar name from URL (e.g., "/avatars/avatar-2.webp" -> "avatar-2")
+  const avatarMatch = data.avatarUrl?.match(/\/avatars\/(avatar-\d+)\.webp/);
+  const avatarName = avatarMatch ? avatarMatch[1] : "avatar-1";
+
   const response = await apiClient.put("/user/profile", {
     name: data.name,
+    avatar: avatarName,
   });
   return {
     ...data,
     name: response.data.data.name,
+    avatarUrl: response.data.data.avatar
+      ? `/avatars/${response.data.data.avatar}.webp`
+      : data.avatarUrl,
   };
 }
 
@@ -163,7 +173,7 @@ export async function getAdminProfile(): Promise<UserProfile> {
       name: userData.name,
       email: userData.email,
       phone: "",
-      avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
+      avatarUrl: "/avatars/avatar-2.webp",
       username: userData.name,
     };
   } catch (error) {
@@ -172,7 +182,7 @@ export async function getAdminProfile(): Promise<UserProfile> {
       name: "Admin",
       email: "",
       phone: "",
-      avatarUrl: "https://avatar.iran.liara.run/public/job/police/male",
+      avatarUrl: "/avatars/avatar-2.webp",
       username: "Admin",
     };
   }

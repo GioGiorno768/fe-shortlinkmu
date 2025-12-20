@@ -20,7 +20,7 @@ const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
       name: i % 2 === 0 ? `Budi Santoso ${i}` : `Siti Aminah ${i}`,
       username: `user_${i}`,
       email: `user${i}@gmail.com`,
-      avatarUrl: `https://avatar.iran.liara.run/public/${i}`,
+      avatarUrl: `/avatars/avatar-1.webp`,
     },
     views: Math.floor(Math.random() * 10000),
     earnings: parseFloat((Math.random() * 50).toFixed(2)),

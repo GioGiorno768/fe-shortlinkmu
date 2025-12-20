@@ -206,6 +206,27 @@ export const register = async (
 };
 
 /**
+ * Forgot Password - Request Reset Link
+ */
+export const forgotPassword = async (email: string) => {
+  return await apiClient.post("/forgot-password", { email });
+};
+
+/**
+ * Reset Password - Submit New Password
+ */
+export interface ResetPasswordData {
+  token: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+export const resetPassword = async (data: ResetPasswordData) => {
+  return await apiClient.post("/reset-password", data);
+};
+
+/**
  * Google OAuth Login
  * @param credential - Credential JWT dari Google OAuth popup
  * @param visitorId - Device fingerprint for anti-fraud (optional)
@@ -311,6 +332,8 @@ const authService = {
   markAsRegistered,
   hasEverRegistered,
   setupCrossTabLogoutListener,
+  forgotPassword,
+  resetPassword,
 };
 
 export default authService;
