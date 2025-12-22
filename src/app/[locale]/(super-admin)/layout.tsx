@@ -7,7 +7,7 @@ export default function SuperAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardAuthCheck>
+    <DashboardAuthCheck requiredRole="super-admin">
       <DashboardLayout role="super-admin">{children}</DashboardLayout>
     </DashboardAuthCheck>
   );

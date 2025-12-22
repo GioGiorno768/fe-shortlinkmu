@@ -49,14 +49,14 @@ export const getAdminMenu = (role: Role = "admin"): NavItem[] => {
   const operationalMenu: NavItem[] = [
     { label: "OPERATIONAL", isHeader: true },
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    { icon: Users, label: "Manage Users", href: "/admin/users" },
+    // { icon: Users, label: "Manage Users", href: "/admin/users" },
     { icon: LinkIcon, label: "Manage Links", href: "/admin/links" },
     {
       icon: Wallet,
       label: "Withdrawals",
       href: "/admin/withdrawals",
     },
-    { icon: ShieldAlert, label: "Abuse Reports", href: "/admin/reports" },
+    // { icon: ShieldAlert, label: "Abuse Reports", href: "/admin/reports" },
     // {
     //   icon: FileText,
     //   label: "Announcements",

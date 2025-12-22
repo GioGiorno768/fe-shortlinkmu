@@ -1,7 +1,7 @@
 // src/app/[locale]/(member)/withdrawal/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Loader2, Info } from "lucide-react";
 import { useWithdrawal } from "@/hooks/useWithdrawal";
 
@@ -18,18 +18,28 @@ export default function WithdrawalPage() {
   const {
     stats,
     method,
+    allMethods,
     transactions,
     totalPages,
     page,
     setPage,
     search,
     setSearch,
+    sortOrder,
+    setSortOrder,
+    methodFilter,
+    setMethodFilter,
     isLoading,
     isTableLoading,
     isProcessing,
     requestPayout,
     cancelTransaction,
   } = useWithdrawal();
+
+  // Extract available payment methods for filter dropdown
+  const availableMethods = useMemo(() => {
+    return allMethods.map((m) => m.provider);
+  }, [allMethods]);
 
   // UI State
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
@@ -60,7 +70,9 @@ export default function WithdrawalPage() {
     await requestPayout(amount, usedMethod);
   };
 
-  if (isLoading) {
+  // Only show full-page loading on initial load (no data yet)
+  // Filter/pagination changes will show loading only in TransactionTable
+  if (isLoading && !stats) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-bluelight" />
@@ -101,7 +113,7 @@ export default function WithdrawalPage() {
         </div>
       </div>
 
-      {/* Transaction History (Controlled Component) */}
+      {/* Transaction History (Server-side filtered) */}
       <TransactionTable
         transactions={transactions}
         totalPages={totalPages}
@@ -109,6 +121,11 @@ export default function WithdrawalPage() {
         setPage={setPage}
         search={search}
         setSearch={setSearch}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        methodFilter={methodFilter}
+        setMethodFilter={setMethodFilter}
+        availableMethods={availableMethods}
         onCancel={openCancelModal}
         isLoading={isTableLoading}
       />
@@ -118,6 +135,7 @@ export default function WithdrawalPage() {
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
         defaultMethod={method}
+        allMethods={allMethods}
         availableBalance={stats?.availableBalance || 0}
         onSuccess={onConfirmRequest}
       />

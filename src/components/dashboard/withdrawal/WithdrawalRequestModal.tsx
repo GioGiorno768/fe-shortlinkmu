@@ -144,10 +144,13 @@ const PAYMENT_CONFIG = {
 
 type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
+import type { SavedPaymentMethod } from "@/types/type";
+
 interface WithdrawalRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMethod: PaymentMethod | null;
+  allMethods: SavedPaymentMethod[];
   availableBalance: number;
   onSuccess: (amount: number, method: PaymentMethod) => Promise<void>;
 }
@@ -156,6 +159,7 @@ export default function WithdrawalRequestModal({
   isOpen,
   onClose,
   defaultMethod,
+  allMethods,
   availableBalance,
   onSuccess,
 }: WithdrawalRequestModalProps) {
@@ -175,8 +179,28 @@ export default function WithdrawalRequestModal({
     return amountLocal / rates[currency];
   };
 
-  // Get minimum withdrawal in local currency
-  const minWithdrawalLocal = toLocalCurrency(2);
+  // 🔄 Round minimum withdrawal up to a clean number per currency
+  const roundMinimumUp = (amount: number): number => {
+    switch (currency) {
+      case "IDR":
+        // Round up to nearest 1000 (e.g., 33478 → 34000)
+        return Math.ceil(amount / 1000) * 1000;
+      case "MYR":
+      case "SGD":
+        // Round up to nearest 1 (e.g., 8.15 → 9)
+        return Math.ceil(amount);
+      case "EUR":
+      case "GBP":
+        // Round up to nearest 0.5 (e.g., 1.84 → 2)
+        return Math.ceil(amount * 2) / 2;
+      default:
+        // USD: Keep as is (already $2)
+        return amount;
+    }
+  };
+
+  // Get minimum withdrawal in local currency (rounded up for clean display)
+  const minWithdrawalLocal = roundMinimumUp(toLocalCurrency(2));
   const maxWithdrawalLocal = toLocalCurrency(Number(availableBalance) || 0);
 
   // --- STATE UTAMA ---
@@ -185,13 +209,18 @@ export default function WithdrawalRequestModal({
   const [isLoading, setIsLoading] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState<string>(""); // In local currency
 
-  // --- STATE METODE MANUAL (Buat fitur 'Use Different Method') ---
-  const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
-  const [selectedMethodId, setSelectedMethodId] = useState(
-    PAYMENT_CONFIG.wallet.methods[0].id
-  );
-  const [newAccountName, setNewAccountName] = useState("");
-  const [newAccountNumber, setNewAccountNumber] = useState("");
+  // --- STATE FOR "Use Different Method" ---
+  // Store the ID of selected non-default method
+  const [selectedOtherMethodId, setSelectedOtherMethodId] = useState<
+    string | null
+  >(null);
+
+  // Get list of other methods (exclude default)
+  const otherMethods = allMethods.filter((m) => !m.isDefault);
+
+  // Get selected other method object
+  const selectedOtherMethod =
+    otherMethods.find((m) => m.id === selectedOtherMethodId) || null;
 
   // Reset state pas modal dibuka
   useEffect(() => {
@@ -200,33 +229,18 @@ export default function WithdrawalRequestModal({
       setUseDefault(!!defaultMethod);
       setWithdrawAmount("");
       setIsLoading(false);
-
-      // Reset form manual
-      setActiveCategory("wallet");
-      setSelectedMethodId(PAYMENT_CONFIG.wallet.methods[0].id);
-      setNewAccountName("");
-      setNewAccountNumber("");
+      // Set first other method as default selection
+      setSelectedOtherMethodId(
+        otherMethods.length > 0 ? otherMethods[0].id : null
+      );
     }
   }, [isOpen, defaultMethod]);
-
-  // Helper Config Aktif
-  const currentCategoryConfig = PAYMENT_CONFIG[activeCategory];
-  const currentMethodConfig =
-    currentCategoryConfig.methods.find((m) => m.id === selectedMethodId) ||
-    currentCategoryConfig.methods[0];
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCat = e.target.value as CategoryKey;
-    setActiveCategory(newCat);
-    setSelectedMethodId(PAYMENT_CONFIG[newCat].methods[0].id);
-    setNewAccountNumber("");
-  };
 
   // --- LOGIC STEP 1: VALIDASI METODE ---
   const handleNextStep = () => {
     if (!useDefault) {
-      if (!newAccountName || !newAccountNumber) {
-        showAlert("Harap lengkapi detail akun pembayaran.", "warning");
+      if (!selectedOtherMethod) {
+        showAlert("Pilih metode pembayaran yang valid.", "warning");
         return;
       }
     } else if (!defaultMethod) {
@@ -257,14 +271,15 @@ export default function WithdrawalRequestModal({
     // Convert back to USD for backend
     const amountUSD = toUSD(amountLocal);
 
-    // Tentukan metode mana yang dipake (Default atau Input Baru)
+    // Tentukan metode mana yang dipake (Default atau Selected Other)
     const finalMethod: PaymentMethod =
       useDefault && defaultMethod
         ? defaultMethod
         : {
-            provider: selectedMethodId,
-            accountName: newAccountName,
-            accountNumber: newAccountNumber,
+            id: selectedOtherMethod?.id || "",
+            provider: selectedOtherMethod?.provider || "",
+            accountName: selectedOtherMethod?.accountName || "",
+            accountNumber: selectedOtherMethod?.accountNumber || "",
           };
 
     try {
@@ -392,97 +407,68 @@ export default function WithdrawalRequestModal({
                       </span>
                     </div>
 
-                    {/* Form Dinamis (Muncul kalau pilih Different Method) */}
+                    {/* Saved Methods List (Muncul kalau pilih Different Method) */}
                     <AnimatePresence>
                       {!useDefault && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          className=" space-y-4 pt-2"
+                          className="space-y-3 pt-2"
                         >
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Dropdown 1: Category */}
-                            <div className="space-y-2">
-                              <label className="text-[1.2em] font-medium text-grays">
-                                Method Type
-                              </label>
-                              <div className="relative">
-                                <select
-                                  value={activeCategory}
-                                  onChange={handleCategoryChange}
-                                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-blues text-[1.4em] text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
-                                >
-                                  {Object.entries(PAYMENT_CONFIG).map(
-                                    ([key, config]) => (
-                                      <option key={key} value={key}>
-                                        {config.label}
-                                      </option>
-                                    )
-                                  )}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-grays pointer-events-none" />
-                              </div>
-                            </div>
-
-                            {/* Dropdown 2: Provider */}
-                            <div className="space-y-2">
-                              <label className="text-[1.2em] font-medium text-grays">
-                                Provider
-                              </label>
-                              <div className="relative">
-                                <select
-                                  value={selectedMethodId}
-                                  onChange={(e) =>
-                                    setSelectedMethodId(e.target.value)
-                                  }
-                                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-blues text-[1.4em] text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
-                                >
-                                  {currentCategoryConfig.methods.map((m) => (
-                                    <option key={m.id} value={m.id}>
-                                      {m.label}
-                                    </option>
-                                  ))}
-                                </select>
-                                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-grays pointer-events-none" />
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Input Account Name */}
-                          <div className="space-y-2">
-                            <label className="text-[1.2em] font-medium text-grays">
-                              Account Name
-                            </label>
-                            <div className="relative">
-                              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-grays" />
-                              <input
-                                type="text"
-                                value={newAccountName}
-                                onChange={(e) =>
-                                  setNewAccountName(e.target.value)
+                          {otherMethods.length > 0 ? (
+                            otherMethods.map((method) => (
+                              <div
+                                key={method.id}
+                                onClick={() =>
+                                  setSelectedOtherMethodId(method.id)
                                 }
-                                placeholder="e.g. Kevin Ragil"
-                                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-blues text-[1.4em] focus:outline-none focus:ring-2 focus:ring-bluelight/50"
-                              />
+                                className={clsx(
+                                  "p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3",
+                                  selectedOtherMethodId === method.id
+                                    ? "border-bluelight bg-blue-50"
+                                    : "border-gray-200 hover:border-gray-300"
+                                )}
+                              >
+                                <div
+                                  className={clsx(
+                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                    selectedOtherMethodId === method.id
+                                      ? "border-bluelight"
+                                      : "border-gray-300"
+                                  )}
+                                >
+                                  {selectedOtherMethodId === method.id && (
+                                    <div className="w-2.5 h-2.5 rounded-full bg-bluelight" />
+                                  )}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-[1.4em] font-semibold text-shortblack">
+                                    {method.provider}
+                                  </p>
+                                  <p className="text-[1.2em] text-grays">
+                                    {method.accountName} •{" "}
+                                    {method.accountNumber}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-6 text-grays">
+                              <p className="text-[1.4em]">
+                                Tidak ada metode pembayaran lain tersimpan.
+                              </p>
+                              <p className="text-[1.2em] mt-1">
+                                Tambahkan di{" "}
+                                <a
+                                  href="/settings"
+                                  className="text-bluelight underline"
+                                >
+                                  Settings
+                                </a>
+                              </p>
                             </div>
-                          </div>
-
-                          {/* Input Account Number */}
-                          <div className="space-y-2">
-                            <label className="text-[1.2em] font-medium text-grays">
-                              {currentMethodConfig.inputLabel}
-                            </label>
-                            <input
-                              type={currentMethodConfig.inputType}
-                              value={newAccountNumber}
-                              onChange={(e) =>
-                                setNewAccountNumber(e.target.value)
-                              }
-                              placeholder={currentMethodConfig.placeholder}
-                              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-blues text-[1.4em] focus:outline-none focus:ring-2 focus:ring-bluelight/50 font-mono"
-                            />
-                          </div>
+                          )}
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -508,12 +494,12 @@ export default function WithdrawalRequestModal({
                       <p className="text-[1.6em] font-semibold text-shortblack truncate max-w-[200px]">
                         {useDefault && defaultMethod
                           ? defaultMethod.provider
-                          : selectedMethodId}
+                          : selectedOtherMethod?.provider}
                       </p>
                       <p className="text-[1.2em] text-grays truncate max-w-[200px]">
                         {useDefault && defaultMethod
                           ? defaultMethod.accountNumber
-                          : newAccountNumber}
+                          : selectedOtherMethod?.accountNumber}
                       </p>
                     </div>
                   </div>
@@ -543,7 +529,11 @@ export default function WithdrawalRequestModal({
                         onClick={setMinAmount}
                         className="px-4 py-2 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.2em] font-medium transition-colors"
                       >
-                        Min ({formatCurrency(2)})
+                        Min ({symbol}
+                        {currency === "IDR"
+                          ? minWithdrawalLocal.toLocaleString("id-ID")
+                          : minWithdrawalLocal.toLocaleString()}
+                        )
                       </button>
                       <button
                         onClick={() => setPercentage(50)}

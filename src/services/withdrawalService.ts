@@ -50,12 +50,18 @@ function authHeaders(): HeadersInit {
 // ============================
 
 /**
- * Get withdrawal data: stats + paginated history
+ * Get withdrawal data: stats + paginated history with filters
  * Endpoint: GET /withdrawals
+ * @param page - current page
+ * @param search - search by transaction_id
+ * @param sort - 'newest' or 'oldest'
+ * @param method - payment method filter (e.g., 'OVO', 'BCA', 'all')
  */
 export async function getWithdrawalData(
   page: number = 1,
-  search: string = ""
+  search: string = "",
+  sort: "newest" | "oldest" = "newest",
+  method: string = "all"
 ): Promise<{
   stats: WithdrawalStats;
   transactions: Transaction[];
@@ -69,8 +75,10 @@ export async function getWithdrawalData(
 }> {
   const params = new URLSearchParams({
     page: page.toString(),
-    per_page: "10",
+    per_page: "8",
+    sort,
     ...(search ? { search } : {}),
+    ...(method && method !== "all" ? { method } : {}),
   });
 
   const res = await fetch(`${API_URL}/withdrawals?${params}`, {
@@ -99,10 +107,12 @@ export async function getWithdrawalData(
   const payouts = data.payouts?.data || [];
   const transactions: Transaction[] = payouts.map((p: any) => ({
     id: p.id.toString(),
+    txId: p.transaction_id || null, // Transaction ID untuk display
     date: p.created_at,
     amount: p.amount,
     fee: p.fee || 0,
-    method: p.payment_method?.provider || "Unknown",
+    method:
+      p.payment_method?.bank_name || p.payment_method?.provider || "Unknown",
     account: p.payment_method?.account_number || "",
     status: p.status,
     note: p.note,
@@ -110,10 +120,12 @@ export async function getWithdrawalData(
 
   // Calculate pending & total from transactions
   payouts.forEach((p: any) => {
+    const amount = parseFloat(p.amount) || 0;
+    const fee = parseFloat(p.fee) || 0;
     if (p.status === "pending") {
-      stats.pendingWithdrawn += p.amount + (p.fee || 0);
+      stats.pendingWithdrawn += amount + fee;
     } else if (p.status === "paid") {
-      stats.totalWithdrawn += p.amount;
+      stats.totalWithdrawn += amount;
     }
   });
 
@@ -273,32 +285,46 @@ export async function getWithdrawals(
   }
 
   const json = await res.json();
-  const data = json.data;
+  // Backend paginatedResponse returns: { data: [...items], meta: { last_page, ... } }
+  const items = Array.isArray(json.data) ? json.data : [];
+  const lastPage = json.meta?.last_page || 1;
 
-  const withdrawals: RecentWithdrawal[] = (data.data || []).map((w: any) => ({
-    id: w.id.toString(),
-    user: {
-      id: w.user?.id?.toString() || "",
-      name: w.user?.name || "Unknown",
-      email: w.user?.email || "",
-      avatar:
-        w.user?.avatar || `/avatars/avatar-${((w.user?.id || 1) % 4) + 1}.webp`,
-      level: w.user?.level || "beginner",
-    },
-    amount: w.amount,
-    method: w.payment_method?.provider || "Unknown",
-    accountNumber: w.payment_method?.account_number || "",
-    status: w.status,
-    date: w.created_at,
-    proofUrl: w.proof_url,
-    rejectionReason: w.note,
-    riskScore: "safe",
-    processed_by: w.processed_by,
-  }));
+  const withdrawals: RecentWithdrawal[] = items.map((w: any) => {
+    // Ensure avatar is a valid URL or path
+    let avatar = w.user?.avatar;
+    if (!avatar || (!avatar.startsWith("/") && !avatar.startsWith("http"))) {
+      // Use simple fallback avatar with user ID - PNG format for Next.js Image compatibility
+      const userId = w.user?.id || 1;
+      avatar = `https://api.dicebear.com/7.x/avataaars/png?seed=user${userId}&size=64`;
+    }
+
+    return {
+      id: w.id.toString(),
+      user: {
+        id: w.user?.id?.toString() || "",
+        name: w.user?.name || "Unknown",
+        email: w.user?.email || "",
+        avatar,
+        level: w.user?.level || "beginner",
+      },
+      amount: w.amount,
+      method:
+        w.payment_method?.bank_name ||
+        w.payment_method?.method_type ||
+        "Unknown",
+      accountNumber: w.payment_method?.account_number || "",
+      status: w.status,
+      date: w.created_at,
+      proofUrl: w.proof_url,
+      rejectionReason: w.notes,
+      riskScore: "safe",
+      processed_by: w.processed_by,
+    };
+  });
 
   return {
     data: withdrawals,
-    totalPages: data.last_page || 1,
+    totalPages: lastPage,
   };
 }
 

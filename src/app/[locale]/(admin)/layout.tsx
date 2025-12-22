@@ -8,7 +8,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardAuthCheck>
+    <DashboardAuthCheck requiredRole="admin">
       <DashboardLayout role="admin">{children}</DashboardLayout>
     </DashboardAuthCheck>
   );

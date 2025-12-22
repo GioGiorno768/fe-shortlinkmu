@@ -4,7 +4,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as withdrawalService from "@/services/withdrawalService";
-import type { WithdrawalStats, PaymentMethod, Transaction } from "@/types/type";
+import * as settingsService from "@/services/settingsService";
+import { refreshHeaderStats } from "@/services/headerService";
+import type {
+  WithdrawalStats,
+  PaymentMethod,
+  Transaction,
+  SavedPaymentMethod,
+} from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
 
 interface WithdrawalSettings {
@@ -17,20 +24,23 @@ interface WithdrawalSettings {
 // Query keys for cache management
 export const withdrawalKeys = {
   all: ["withdrawal"] as const,
-  data: (page: number, search: string) =>
-    [...withdrawalKeys.all, "data", page, search] as const,
+  data: (page: number, search: string, sort: string, method: string) =>
+    [...withdrawalKeys.all, "data", page, search, sort, method] as const,
   method: () => [...withdrawalKeys.all, "method"] as const,
-  transactions: (page: number, search: string) =>
-    [...withdrawalKeys.all, "transactions", page, search] as const,
+  allMethods: () => [...withdrawalKeys.all, "allMethods"] as const,
 };
+
+type SortOrder = "newest" | "oldest";
 
 export function useWithdrawal() {
   const { showAlert } = useAlert();
   const queryClient = useQueryClient();
 
-  // Table States (Pagination & Search)
+  // Table States (Pagination, Search, Filters)
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [methodFilter, setMethodFilter] = useState("all");
 
   // Debounced search for API call
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -41,56 +51,54 @@ export function useWithdrawal() {
     return () => clearTimeout(timeout);
   }, [search]);
 
-  // Reset page when search changes
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, sortOrder, methodFilter]);
 
-  // 1. Initial Data Query (stats, settings, first page transactions)
+  // Main Data Query with all filters
   const {
-    data: initialData,
+    data: withdrawalData,
     isLoading,
-    error: initialError,
+    isFetching,
+    error: dataError,
   } = useQuery({
-    queryKey: withdrawalKeys.data(1, ""),
-    queryFn: () => withdrawalService.getWithdrawalData(1, ""),
-    staleTime: 2 * 60 * 1000, // 2 minutes - stats change with withdrawals
+    queryKey: withdrawalKeys.data(
+      page,
+      debouncedSearch,
+      sortOrder,
+      methodFilter
+    ),
+    queryFn: () =>
+      withdrawalService.getWithdrawalData(
+        page,
+        debouncedSearch,
+        sortOrder,
+        methodFilter
+      ),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching new
   });
 
-  // 2. Payment Method Query
+  // 2. Payment Method Query (default method)
   const { data: method } = useQuery({
     queryKey: withdrawalKeys.method(),
     queryFn: withdrawalService.getPrimaryPaymentMethod,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // 3. Transactions Query (paginated - only when page/search changes from initial)
-  const {
-    data: transactionsData,
-    isLoading: isTableLoading,
-    isFetching: isTableFetching,
-  } = useQuery({
-    queryKey: withdrawalKeys.transactions(page, debouncedSearch),
-    queryFn: () =>
-      withdrawalService.getTransactionHistory({
-        page,
-        search: debouncedSearch,
-      }),
-    staleTime: 2 * 60 * 1000,
-    enabled: page !== 1 || debouncedSearch !== "", // Only fetch if not initial state
+  // 2b. All Payment Methods Query (for "Use Different Method")
+  const { data: allMethods } = useQuery({
+    queryKey: withdrawalKeys.allMethods(),
+    queryFn: settingsService.getPaymentMethods,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Determine which data to use
-  const stats = initialData?.stats ?? null;
-  const settings = initialData?.settings ?? null;
-  const transactions =
-    page === 1 && debouncedSearch === ""
-      ? initialData?.transactions ?? []
-      : transactionsData?.data ?? [];
-  const totalPages =
-    page === 1 && debouncedSearch === ""
-      ? initialData?.totalPages ?? 1
-      : transactionsData?.totalPages ?? 1;
+  // Extract data
+  const stats = withdrawalData?.stats ?? null;
+  const settings = withdrawalData?.settings ?? null;
+  const transactions = withdrawalData?.transactions ?? [];
+  const totalPages = withdrawalData?.totalPages ?? 1;
 
   // Mutation: Request Payout
   const requestPayoutMutation = useMutation({
@@ -104,6 +112,8 @@ export function useWithdrawal() {
     onSuccess: () => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });
+      // Refresh header stats to update balance
+      refreshHeaderStats();
       showAlert("Permintaan penarikan berhasil dikirim!", "success");
     },
     onError: (error: any) => {
@@ -116,6 +126,8 @@ export function useWithdrawal() {
     mutationFn: (id: string) => withdrawalService.cancelWithdrawal(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });
+      // Refresh header stats to update balance
+      refreshHeaderStats();
       showAlert("Permintaan penarikan dibatalkan.", "info");
     },
     onError: (error: any) => {
@@ -150,16 +162,17 @@ export function useWithdrawal() {
   const isProcessing =
     requestPayoutMutation.isPending || cancelTransactionMutation.isPending;
 
-  // Show error alert if initial load fails
+  // Show error alert if load fails
   useEffect(() => {
-    if (initialError) {
+    if (dataError) {
       showAlert("Gagal memuat data withdrawal.", "error");
     }
-  }, [initialError, showAlert]);
+  }, [dataError, showAlert]);
 
   return {
     stats,
     method: method ?? null,
+    allMethods: allMethods ?? [],
     settings,
     transactions,
     totalPages,
@@ -167,8 +180,12 @@ export function useWithdrawal() {
     setPage,
     search,
     setSearch,
+    sortOrder,
+    setSortOrder,
+    methodFilter,
+    setMethodFilter,
     isLoading,
-    isTableLoading: isTableLoading || isTableFetching,
+    isTableLoading: isFetching,
     isProcessing,
     requestPayout,
     cancelTransaction,

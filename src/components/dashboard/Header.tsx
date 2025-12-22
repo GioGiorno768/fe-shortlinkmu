@@ -36,15 +36,18 @@ export default function Header({
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
 
+  // Determine if user is admin/super-admin first
+  const isAdminOrSuper = role === "admin" || role === "super-admin";
+
   const { stats: userStats, isLoading: userLoading } = useHeader();
-  const { stats: adminStats, isLoading: adminLoading } = useAdminStats();
+  // Only call admin stats API if user is admin/super-admin
+  const { stats: adminStats, isLoading: adminLoading } =
+    useAdminStats(isAdminOrSuper);
 
   // 💱 Use global currency context for formatting
   const { format: formatWithCurrency } = useCurrency();
 
-  // Logic loading & data stats juga perlu update dikit
-  // Kalau admin ATAU super-admin, pake loading admin
-  const isAdminOrSuper = role === "admin" || role === "super-admin";
+  // Logic loading & data stats
   const isLoading = isAdminOrSuper ? adminLoading : userLoading;
 
   // Use global currency format for monetary values
@@ -87,6 +90,7 @@ export default function Header({
     },
   ];
 
+  // Admin header items - Reports only shown for super-admin
   const adminHeadData = [
     {
       name: "Pending",
@@ -94,14 +98,19 @@ export default function Header({
       value: formatNumber(adminStats?.pendingWithdrawals),
       color: "text-orange-600",
     },
+    // Only show Reports for super-admin
+    ...(role === "super-admin"
+      ? [
+          {
+            name: "Reports",
+            icon: <ShieldAlert className="w-[2.5em] h-[2.5em] text-red-500" />,
+            value: formatNumber(adminStats?.abuseReports),
+            color: "text-red-600",
+          },
+        ]
+      : []),
     {
-      name: "Reports",
-      icon: <ShieldAlert className="w-[2.5em] h-[2.5em] text-red-500" />,
-      value: formatNumber(adminStats?.abuseReports),
-      color: "text-red-600",
-    },
-    {
-      name: "Users",
+      name: "New Users",
       icon: <UserPlus className="w-[2.5em] h-[2.5em] text-blue-500" />,
       value: `+${formatNumber(adminStats?.newUsers)}`,
       color: "text-blue-600",

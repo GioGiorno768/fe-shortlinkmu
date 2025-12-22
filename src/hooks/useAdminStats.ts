@@ -4,11 +4,22 @@ import { useState, useEffect } from "react";
 import * as headerService from "@/services/headerService";
 import type { AdminHeaderStats } from "@/types/type";
 
-export function useAdminStats() {
+/**
+ * Hook to fetch admin header stats
+ * @param enabled - Set to false to skip API call (for non-admin users)
+ */
+export function useAdminStats(enabled: boolean = true) {
   const [stats, setStats] = useState<AdminHeaderStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
 
   useEffect(() => {
+    // Skip API call if not enabled (non-admin user)
+    if (!enabled) {
+      setStats({ pendingWithdrawals: 0, abuseReports: 0, newUsers: 0 });
+      setIsLoading(false);
+      return;
+    }
+
     async function loadData() {
       try {
         const data = await headerService.getAdminHeaderStats();
@@ -22,7 +33,7 @@ export function useAdminStats() {
       }
     }
     loadData();
-  }, []);
+  }, [enabled]);
 
   return { stats, isLoading };
 }

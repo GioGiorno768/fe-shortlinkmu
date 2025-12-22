@@ -338,24 +338,109 @@ export const getAnalytics = async (
   }
 };
 
-// === ADMIN DASHBOARD SERVICE (FINAL) ===
+// === ADMIN DASHBOARD SERVICE (Connected to Real API) ===
+
+interface AdminDashboardApiResponse {
+  total_users: number;
+  total_links: number;
+  total_clicks: number;
+  payments_today_amount: number;
+  payments_today_count: number;
+  users_paid_today: number;
+  payments_trend: number;
+  links_created_today: number;
+  links_trend: number;
+  links_blocked_today: number;
+  blocked_trend: number;
+  pending_withdrawals: number;
+  total_withdrawals_amount: number;
+  pending_payments_total: number;
+  new_users_last_5_days: { date: string; count: number }[];
+  pending_withdrawals_list: {
+    id: string;
+    user: { id: string; name: string; email: string; avatar: string | null };
+    amount: number;
+    method: string;
+    account_number: string;
+    status: string;
+    date: string;
+  }[];
+  recent_links_list: {
+    id: string;
+    code: string;
+    title: string;
+    original_url: string;
+    short_url: string;
+    owner: { id: string; name: string; email: string };
+    views: number;
+    status: string;
+    created_at: string;
+  }[];
+  recent_users_list: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string | null;
+    joined_at: string;
+    status: string;
+  }[];
+}
+
+// Cache for admin dashboard data (avoid duplicate calls)
+let adminDashboardCache: AdminDashboardApiResponse | null = null;
+let adminDashboardCacheTimestamp = 0;
+const ADMIN_CACHE_TTL = 30 * 1000; // 30 seconds
+
+async function fetchAdminDashboard(): Promise<AdminDashboardApiResponse> {
+  const now = Date.now();
+
+  // Return cached data if still valid
+  if (
+    adminDashboardCache &&
+    now - adminDashboardCacheTimestamp < ADMIN_CACHE_TTL
+  ) {
+    return adminDashboardCache;
+  }
+
+  const data = await apiCall<AdminDashboardApiResponse>(
+    "/admin/dashboard/overview"
+  );
+
+  // Update cache
+  adminDashboardCache = data;
+  adminDashboardCacheTimestamp = now;
+
+  return data;
+}
+
 export const getAdminStats = async (): Promise<AdminDashboardStats> => {
-  await new Promise((r) => setTimeout(r, 800));
-  return {
-    financial: {
-      paidToday: 30.5,
-      usersPaidToday: 30,
-      trend: 12.0,
-    },
-    content: {
-      linksCreatedToday: 150,
-      trend: 8.5,
-    },
-    security: {
-      linksBlockedToday: 5,
-      trend: -2.4,
-    },
-  };
+  try {
+    const data = await fetchAdminDashboard();
+
+    return {
+      financial: {
+        paidToday: data.payments_today_amount,
+        usersPaidToday: data.users_paid_today,
+        trend: data.payments_trend,
+      },
+      content: {
+        linksCreatedToday: data.links_created_today,
+        trend: data.links_trend,
+      },
+      security: {
+        linksBlockedToday: data.links_blocked_today,
+        trend: data.blocked_trend,
+      },
+    };
+  } catch (error) {
+    console.error("Failed to fetch admin stats:", error);
+    // Return fallback data
+    return {
+      financial: { paidToday: 0, usersPaidToday: 0, trend: 0 },
+      content: { linksCreatedToday: 0, trend: 0 },
+      security: { linksBlockedToday: 0, trend: 0 },
+    };
+  }
 };
 
 export const getAdminActivities = async (): Promise<{
@@ -363,225 +448,73 @@ export const getAdminActivities = async (): Promise<{
   users: import("@/types/type").RecentUser[];
   links: import("@/types/type").AdminLink[];
 }> => {
-  await new Promise((r) => setTimeout(r, 1000));
-  return {
-    withdrawals: [
-      {
-        id: "wd-1",
+  try {
+    const data = await fetchAdminDashboard();
+
+    // Map withdrawals
+    const withdrawals: import("@/types/type").RecentWithdrawal[] =
+      data.pending_withdrawals_list.map((w) => ({
+        id: w.id,
         user: {
-          id: "u-101",
-          name: "Budi Santoso",
-          email: "budi@gmail.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Budi",
-          level: "Rookie",
+          id: w.user.id,
+          name: w.user.name,
+          email: w.user.email,
+          avatar:
+            w.user.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${w.user.name}`,
+          level: "Member", // Default, can be enhanced later
         },
-        amount: 50.0,
-        method: "PayPal",
-        accountNumber: "budi@gmail.com",
-        status: "pending",
-        date: new Date().toISOString(),
-        riskScore: "safe",
-      },
-      {
-        id: "wd-2",
-        user: {
-          id: "u-102",
-          name: "Siti Aminah",
-          email: "siti@yahoo.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Siti",
-          level: "Elite",
+        amount: w.amount,
+        method: w.method,
+        accountNumber: w.account_number,
+        status: w.status as "pending" | "approved" | "rejected" | "paid",
+        date: w.date,
+        riskScore: "safe" as const, // Default, can be enhanced later
+      }));
+
+    // Map users
+    const users: import("@/types/type").RecentUser[] =
+      data.recent_users_list.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        avatar:
+          u.avatar ||
+          `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`,
+        joinedAt: u.joined_at,
+        status: u.status as "active" | "suspended" | "process",
+      }));
+
+    // Map links
+    const links: import("@/types/type").AdminLink[] =
+      data.recent_links_list.map((l) => ({
+        id: l.id,
+        title: l.title,
+        shortUrl: l.short_url,
+        originalUrl: l.original_url,
+        owner: {
+          id: l.owner.id,
+          name: l.owner.name,
+          username: l.owner.name.toLowerCase().replace(/\s/g, ""),
+          email: l.owner.email,
+          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${l.owner.name}`,
         },
-        amount: 25.5,
-        method: "Bank Transfer",
-        accountNumber: "1234567890",
-        status: "pending",
-        date: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        riskScore: "medium",
-      },
-      {
-        id: "wd-3",
-        user: {
-          id: "u-103",
-          name: "John Doe",
-          email: "john@example.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-          level: "Pro",
-        },
-        amount: 100.0,
-        method: "Crypto (USDT)",
-        accountNumber: "TRC20-XYZ123",
-        status: "approved",
-        date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        processed_by: "Admin A",
-        riskScore: "safe",
-      },
-      {
-        id: "wd-4",
-        user: {
-          id: "u-104",
-          name: "Michael Jordan",
-          email: "mj@bulls.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
-          level: "Mythic",
-        },
-        amount: 500.0,
-        method: "PayPal",
-        accountNumber: "mj@bulls.com",
-        status: "paid",
-        date: new Date(Date.now() - 90000000).toISOString(),
-        processed_by: "Super Admin",
-        riskScore: "safe",
-      },
-      {
-        id: "wd-5",
-        user: {
-          id: "u-105",
-          name: "Elon Musk",
-          email: "elon@x.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elon",
-          level: "Master",
-        },
-        amount: 1200.0,
-        method: "Crypto (BTC)",
-        accountNumber: "BTC-ABC987",
-        status: "pending",
-        date: new Date(Date.now() - 95000000).toISOString(),
-        riskScore: "high",
-      },
-      {
-        id: "wd-6",
-        user: {
-          id: "u-106",
-          name: "Mark Zuckerberg",
-          email: "mark@meta.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mark",
-          level: "Elite",
-        },
-        amount: 350.0,
-        method: "Bank Transfer",
-        accountNumber: "9876543210",
-        status: "rejected",
-        date: new Date(Date.now() - 100000000).toISOString(),
-        processed_by: "Admin B",
-        riskScore: "medium",
-      },
-      {
-        id: "wd-7",
-        user: {
-          id: "u-107",
-          name: "Bill Gates",
-          email: "bill@microsoft.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bill",
-          level: "Mythic",
-        },
-        amount: 45.0,
-        method: "PayPal",
-        accountNumber: "bill@microsoft.com",
-        status: "paid",
-        date: new Date(Date.now() - 110000000).toISOString(),
-        processed_by: "Admin A",
-        riskScore: "safe",
-      },
-      {
-        id: "wd-8",
-        user: {
-          id: "u-108",
-          name: "Jeff Bezos",
-          email: "jeff@amazon.com",
-          avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jeff",
-          level: "Rookie",
-        },
-        amount: 99.9,
-        method: "Bank Transfer",
-        accountNumber: "1122334455",
-        status: "pending",
-        date: new Date(Date.now() - 120000000).toISOString(),
-        riskScore: "safe",
-      },
-    ],
-    users: [
-      {
-        id: "u-1",
-        name: "Asep Knalpot",
-        email: "asep@racing.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Asep",
-        joinedAt: new Date().toISOString(),
-        status: "active",
-      },
-      {
-        id: "u-2",
-        name: "Rina Nose",
-        email: "rina@tv.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rina",
-        joinedAt: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-        status: "active",
-      },
-      {
-        id: "u-3",
-        name: "Spammer Bot",
-        email: "bot@spam.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bot",
-        joinedAt: new Date(Date.now() - 10000000).toISOString(),
-        status: "suspended",
-      },
-      {
-        id: "u-4",
-        name: "User Baru 1",
-        email: "user1@test.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User1",
-        joinedAt: new Date(Date.now() - 15000000).toISOString(),
-        status: "active",
-      },
-      {
-        id: "u-5",
-        name: "User Baru 2",
-        email: "user2@test.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User2",
-        joinedAt: new Date(Date.now() - 20000000).toISOString(),
-        status: "active",
-      },
-      {
-        id: "u-6",
-        name: "User Baru 3",
-        email: "user3@test.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User3",
-        joinedAt: new Date(Date.now() - 25000000).toISOString(),
-        status: "active",
-      },
-      {
-        id: "u-7",
-        name: "User Baru 4",
-        email: "user4@test.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User4",
-        joinedAt: new Date(Date.now() - 30000000).toISOString(),
-        status: "active",
-      },
-      {
-        id: "u-8",
-        name: "User Baru 5",
-        email: "user5@test.com",
-        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=User5",
-        joinedAt: new Date(Date.now() - 35000000).toISOString(),
-        status: "active",
-      },
-    ],
-    links: Array.from({ length: 10 }, (_, i) => ({
-      id: `link-${i}`,
-      title: `Link ${i}`,
-      shortUrl: `short.link/xyz${i}`,
-      originalUrl: `https://example.com/long/url/${i}`,
-      owner: {
-        id: `user-${i}`,
-        name: `User ${i}`,
-        username: `user${i}`,
-        email: `user${i}@example.com`,
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`,
-      },
-      views: Math.floor(Math.random() * 1000),
-      earnings: parseFloat((Math.random() * 10).toFixed(2)),
-      createdAt: new Date(Date.now() - i * 3600000).toISOString(),
-      status: i % 5 === 0 ? "disabled" : "active",
-      adsLevel: "level1",
-    })),
-  };
+        views: l.views,
+        earnings: 0, // Not included in dashboard endpoint, default
+        createdAt: l.created_at,
+        status: l.status as "active" | "disabled" | "expired",
+        adsLevel: "level1", // Default
+      }));
+
+    return { withdrawals, users, links };
+  } catch (error) {
+    console.error("Failed to fetch admin activities:", error);
+    return { withdrawals: [], users: [], links: [] };
+  }
+};
+
+// Force refresh admin dashboard cache
+export const refreshAdminDashboard = () => {
+  adminDashboardCache = null;
+  adminDashboardCacheTimestamp = 0;
 };

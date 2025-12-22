@@ -163,7 +163,7 @@ export async function updateUserPreferences(
   return data;
 }
 // ==========================================
-// 5. ADMIN SERVICES (New)
+// 5. ADMIN SERVICES
 // ==========================================
 export async function getAdminProfile(): Promise<UserProfile> {
   try {
@@ -173,7 +173,9 @@ export async function getAdminProfile(): Promise<UserProfile> {
       name: userData.name,
       email: userData.email,
       phone: "",
-      avatarUrl: "/avatars/avatar-2.webp",
+      avatarUrl: userData.avatar
+        ? `/avatars/${userData.avatar}.webp`
+        : "/avatars/avatar-1.webp",
       username: userData.name,
     };
   } catch (error) {
@@ -182,7 +184,7 @@ export async function getAdminProfile(): Promise<UserProfile> {
       name: "Admin",
       email: "",
       phone: "",
-      avatarUrl: "/avatars/avatar-2.webp",
+      avatarUrl: "/avatars/avatar-1.webp",
       username: "Admin",
     };
   }
@@ -191,11 +193,25 @@ export async function getAdminProfile(): Promise<UserProfile> {
 export async function updateAdminProfile(
   data: UserProfile
 ): Promise<UserProfile> {
-  await new Promise((r) => setTimeout(r, 1000));
-  return data;
+  // Extract avatar name from URL (e.g., "/avatars/avatar-2.webp" -> "avatar-2")
+  const avatarMatch = data.avatarUrl?.match(/\/avatars\/(avatar-\d+)\.webp/);
+  const avatarName = avatarMatch ? avatarMatch[1] : "avatar-1";
+
+  const response = await apiClient.put("/user/profile", {
+    name: data.name,
+    avatar: avatarName,
+  });
+  return {
+    ...data,
+    name: response.data.data.name,
+    avatarUrl: response.data.data.avatar
+      ? `/avatars/${response.data.data.avatar}.webp`
+      : data.avatarUrl,
+  };
 }
 
 export async function getAdminPreferences(): Promise<UserPreferences> {
+  // TODO: Implement real API call when endpoint is ready
   await new Promise((r) => setTimeout(r, 500));
   return {
     language: "en",
@@ -212,6 +228,7 @@ export async function getAdminPreferences(): Promise<UserPreferences> {
 export async function updateAdminPreferences(
   data: UserPreferences
 ): Promise<UserPreferences> {
+  // TODO: Implement real API call when endpoint is ready
   await new Promise((r) => setTimeout(r, 1000));
   return data;
 }

@@ -26,13 +26,22 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
 
     checkToken();
 
-    // Listen for storage and focus events
+    // Listen for storage, focus, and header refresh events
     window.addEventListener("storage", checkToken);
     window.addEventListener("focus", checkToken);
+
+    // Listen for manual refresh (e.g., after withdrawal)
+    const handleRefresh = () => {
+      // Force re-fetch by changing authToken temporarily
+      setAuthToken((prev) => (prev ? prev + "_refresh" : null));
+      setTimeout(() => setAuthToken(getToken()), 100);
+    };
+    window.addEventListener("headerStatsRefresh", handleRefresh);
 
     return () => {
       window.removeEventListener("storage", checkToken);
       window.removeEventListener("focus", checkToken);
+      window.removeEventListener("headerStatsRefresh", handleRefresh);
     };
   }, [authToken]);
 
@@ -47,8 +56,8 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
         if (role === "admin" || role === "super-admin") {
           data = await headerService.getAdminHeaderStats();
         } else {
-          // Force fresh fetch when user changes
-          data = await headerService.refreshHeaderStats();
+          // Use cached getHeaderStats instead of refresh to avoid duplicate calls
+          data = await headerService.getHeaderStats();
         }
         setStats(data);
       } catch (error) {
