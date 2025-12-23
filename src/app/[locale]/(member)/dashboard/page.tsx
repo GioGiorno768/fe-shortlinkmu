@@ -38,8 +38,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Middle Section: Chart & Top Links */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+        <div className="col-span-1 lg:col-span-3">
           <LinkAnalyticsCard
             data={analyticsData}
             isLoading={analyticsLoading}
@@ -50,7 +50,7 @@ export default function DashboardPage() {
             onChangeStat={setAnalyticsStat}
           />
         </div>
-        <div>
+        <div className="col-span-1 lg:col-span-2">
           <TopPerformingLinksCard data={topLinks} />
         </div>
       </div>

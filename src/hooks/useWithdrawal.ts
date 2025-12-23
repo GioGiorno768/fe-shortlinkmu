@@ -13,6 +13,8 @@ import type {
   SavedPaymentMethod,
 } from "@/types/type";
 import { useAlert } from "@/hooks/useAlert";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { getExchangeRates, convertFromUSD } from "@/utils/currency";
 
 interface WithdrawalSettings {
   minWithdrawal: number;
@@ -35,6 +37,7 @@ type SortOrder = "newest" | "oldest";
 export function useWithdrawal() {
   const { showAlert } = useAlert();
   const queryClient = useQueryClient();
+  const { currency } = useCurrency(); // Get user's preferred currency
 
   // Table States (Pagination, Search, Filters)
   const [page, setPage] = useState(1);
@@ -108,7 +111,18 @@ export function useWithdrawal() {
     }: {
       amount: number;
       usedMethod: PaymentMethod;
-    }) => withdrawalService.requestWithdrawal(amount, usedMethod),
+    }) => {
+      // Get current exchange rate and calculate local amount
+      const rates = getExchangeRates();
+      const exchangeRate = rates[currency] || 1;
+      const localAmount = convertFromUSD(amount, currency);
+
+      return withdrawalService.requestWithdrawal(amount, usedMethod, {
+        currency,
+        localAmount,
+        exchangeRate,
+      });
+    },
     onSuccess: () => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: withdrawalKeys.all });

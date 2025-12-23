@@ -5,103 +5,165 @@ import type {
   LinkStatus,
 } from "@/types/type";
 
-// --- MOCK DATA (Diperkaya) ---
-const MOCK_LINKS: AdminLink[] = Array.from({ length: 50 }, (_, i) => {
-  const isExpired = i % 15 === 0;
-  const isDisabled = i % 20 === 0;
-  return {
-    id: `link-${i}`,
-    title: i % 3 === 0 ? `Tutorial Cara Cepat Kaya #${i}` : undefined,
-    shortUrl: `short.link/xYz${i}`,
-    originalUrl: `https://www.example.com/very/long/url/that/needs/shortening/${i}`,
-    alias: i % 5 === 0 ? `promo-${i}` : undefined,
-    owner: {
-      id: `user-${i}`,
-      name: i % 2 === 0 ? `Budi Santoso ${i}` : `Siti Aminah ${i}`,
-      username: `user_${i}`,
-      email: `user${i}@gmail.com`,
-      avatarUrl: `/avatars/avatar-1.webp`,
-    },
-    views: Math.floor(Math.random() * 10000),
-    earnings: parseFloat((Math.random() * 50).toFixed(2)),
-    createdAt: new Date(Date.now() - i * 86400000).toISOString(),
-    expiredAt: isExpired
-      ? new Date(Date.now() - 100000000).toISOString()
-      : undefined,
-    status: isDisabled ? "disabled" : isExpired ? "expired" : "active",
-    adsLevel: i % 4 === 0 ? "level4" : i % 3 === 0 ? "noAds" : "level1",
-  };
-});
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
+// Helper: Get auth token from sessionStorage or cookie
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+
+  // First check sessionStorage
+  let token = sessionStorage.getItem("auth_token");
+
+  // If not in sessionStorage, try to get from cookie
+  if (!token) {
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "auth_token" && value) {
+        token = value;
+        break;
+      }
+    }
+  }
+
+  return token;
+}
+
+function authHeaders(): HeadersInit {
+  const token = getAuthToken();
+  return {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
+
+// ===========================
+// GET LINKS (with filters)
+// ===========================
 export async function getLinks(
   page: number = 1,
   filters: AdminLinkFilters
 ): Promise<{ data: AdminLink[]; totalPages: number; totalCount: number }> {
-  await new Promise((r) => setTimeout(r, 600));
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: "10",
+  });
 
-  let filtered = [...MOCK_LINKS];
+  // Map frontend filters to backend params
+  if (filters.search) params.set("search", filters.search);
+  if (filters.status && filters.status !== "all") {
+    // Frontend uses 'active'/'disabled', backend uses is_banned 0/1
+    params.set("is_banned", filters.status === "disabled" ? "1" : "0");
+  }
+  if (filters.adsLevel && filters.adsLevel !== "all") {
+    // Map level1 -> 1, level2 -> 2, etc.
+    const levelMap: Record<string, string> = {
+      level1: "1",
+      level2: "2",
+      level3: "3",
+      level4: "4",
+    };
+    params.set("ad_level", levelMap[filters.adsLevel] || filters.adsLevel);
+  }
+  if (filters.ownerType && filters.ownerType !== "all") {
+    params.set("owner_type", filters.ownerType);
+  }
+  if (filters.sort) {
+    // Map frontend sort to backend sort_by
+    const sortMap: Record<string, string> = {
+      newest: "newest",
+      oldest: "oldest",
+      most_views: "most_views",
+      least_views: "least_views",
+      most_earnings: "most_earnings",
+      least_earnings: "least_earnings",
+    };
+    params.set("sort_by", sortMap[filters.sort] || "newest");
+  }
 
-  // 1. Search (Owner Name, ShortLink, Original Link)
-  if (filters.search) {
-    const s = filters.search.toLowerCase();
-    filtered = filtered.filter(
-      (l) =>
-        l.shortUrl.toLowerCase().includes(s) ||
-        l.originalUrl.toLowerCase().includes(s) ||
-        l.alias?.toLowerCase().includes(s) ||
-        l.title?.toLowerCase().includes(s)
+  const res = await fetch(`${API_URL}/admin/links?${params}`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    console.error("Admin Links API Error:", res.status, errorData);
+    throw new Error(
+      errorData.message || `Failed to fetch links (${res.status})`
     );
   }
 
-  // 2. Filter Status
-  if (filters.status && filters.status !== "all") {
-    filtered = filtered.filter((l) => l.status === filters.status);
-  }
+  const json = await res.json();
+  // Response structure: { data: Array, meta: { current_page, last_page, total, ... } }
+  const rawLinks = json.data || [];
 
-  // 3. Filter Ads Level
-  if (filters.adsLevel && filters.adsLevel !== "all") {
-    filtered = filtered.filter((l) => l.adsLevel === filters.adsLevel);
-  }
+  // Transform backend response to frontend format
+  const data: AdminLink[] = rawLinks.map((link: any) => {
+    // Debug log to check raw data
+    console.log("Raw link data:", {
+      id: link.id,
+      total_views: link.total_views,
+      total_earned: link.total_earned,
+      valid_views: link.valid_views,
+      user: link.user,
+    });
 
-  // 4. Sorting Complex
-  if (filters.sort) {
-    switch (filters.sort) {
-      case "default":
-      case "newest":
-        filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        break;
-      case "oldest":
-        filtered.sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-        break;
-      case "most_views":
-        filtered.sort((a, b) => b.views - a.views);
-        break;
-      case "least_views":
-        filtered.sort((a, b) => a.views - b.views);
-        break;
-      case "most_earnings":
-        filtered.sort((a, b) => b.earnings - a.earnings);
-        break;
-      case "least_earnings":
-        filtered.sort((a, b) => a.earnings - b.earnings);
-        break;
-    }
-  }
+    return {
+      id: String(link.id),
+      title: link.title || undefined,
+      shortUrl: `localhost:3000/${link.code}`,
+      originalUrl: link.original_url,
+      alias: link.alias || undefined,
+      owner: {
+        id: String(link.user?.id || ""),
+        name: link.user?.name || "Guest",
+        username: link.user?.email?.split("@")[0] || "guest",
+        email: link.user?.email || "",
+        // Use undefined instead of empty string to prevent img src error
+        avatarUrl: link.user?.avatar
+          ? `/avatars/${link.user.avatar}.webp`
+          : undefined,
+      },
+      views: link.total_views || 0,
+      validViews: link.valid_views || 0,
+      earnings: parseFloat(link.total_earned) || 0,
+      createdAt: link.created_at,
+      expiredAt: link.expired_at || undefined,
+      status: link.is_banned ? "disabled" : "active",
+      adsLevel: link.ad_level ? `level${link.ad_level}` : "level1",
+    };
+  });
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  return { data, totalPages, totalCount: filtered.length };
+  return {
+    data,
+    totalPages: json.meta?.last_page || 1,
+    totalCount: json.meta?.total || 0,
+  };
 }
 
-// Bulk Action
+// ===========================
+// GET LINK STATS
+// ===========================
+export async function getLinkStats(): Promise<AdminLinkStats> {
+  const res = await fetch(`${API_URL}/admin/links/stats`, {
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) throw new Error("Failed to fetch link stats");
+
+  const json = await res.json();
+  return {
+    totalLinks: json.data?.total_links || 0,
+    newToday: json.data?.links_today || 0,
+    disabledLinks: json.data?.banned_links || 0,
+    activeLinks: json.data?.active_links || 0,
+  };
+}
+
+// ===========================
+// BULK ACTION (by IDs or selectAll)
+// ===========================
 export async function bulkUpdateLinkStatus(params: {
   ids: string[];
   selectAll: boolean;
@@ -109,59 +171,96 @@ export async function bulkUpdateLinkStatus(params: {
   status: "active" | "disabled";
   reason?: string;
 }): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 800));
-  const { ids, selectAll, filters, status, reason } = params;
+  const { ids, selectAll, filters, status } = params;
 
-  if (selectAll) {
-    console.log(
-      `Bulk update ALL links matching filters to ${status}. Reason: ${
-        reason || "N/A"
-      }`,
-      filters
-    );
+  const body: Record<string, any> = {
+    action: status === "disabled" ? "ban" : "activate",
+    selectAll,
+  };
+
+  if (selectAll && filters) {
+    body.filters = {
+      is_banned:
+        filters.status === "disabled"
+          ? "1"
+          : filters.status === "active"
+          ? "0"
+          : undefined,
+      ad_level: filters.adsLevel !== "all" ? filters.adsLevel : undefined,
+      search: filters.search || undefined,
+    };
   } else {
-    console.log(
-      `Bulk update ${ids.length} links to ${status}. Reason: ${reason || "N/A"}`
+    body.ids = ids.map(
+      (id) => parseInt(id.replace("link-", ""), 10) || parseInt(id, 10)
     );
   }
+
+  const res = await fetch(`${API_URL}/admin/links/bulk-action`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error("Bulk action failed");
   return true;
 }
 
-export async function getLinkStats(): Promise<AdminLinkStats> {
-  await new Promise((r) => setTimeout(r, 500));
-  return {
-    totalLinks: MOCK_LINKS.length,
-    newToday: Math.floor(MOCK_LINKS.length * 0.1), // 10% new
-    disabledLinks: MOCK_LINKS.filter((l) => l.status === "disabled").length,
-  };
-}
-
+// ===========================
+// UPDATE SINGLE LINK STATUS
+// ===========================
 export async function updateLinkStatus(
   id: string,
   status: LinkStatus
 ): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 600));
-  console.log(`Updating link ${id} status to ${status}`);
-  const link = MOCK_LINKS.find((l) => l.id === id);
-  if (link) {
-    link.status = status;
-    return true;
-  }
-  return false;
-}
+  const linkId = id.replace("link-", "") || id;
 
-export async function deleteLinks(ids: string[]): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 800));
-  console.log(`Deleting links: ${ids.join(", ")}`);
+  const res = await fetch(`${API_URL}/admin/links/${linkId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      is_banned: status === "disabled",
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to update link status");
   return true;
 }
 
+// ===========================
+// DELETE LINKS
+// ===========================
+export async function deleteLinks(ids: string[]): Promise<boolean> {
+  // Delete one by one (could be optimized with bulk endpoint if needed)
+  for (const id of ids) {
+    const linkId = id.replace("link-", "") || id;
+    const res = await fetch(`${API_URL}/admin/links/${linkId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error(`Failed to delete link ${id}`);
+  }
+  return true;
+}
+
+// ===========================
+// SEND MESSAGE TO USER
+// ===========================
 export async function sendMessageToUser(
   linkId: string,
   message: string,
   type: "warning" | "announcement"
 ): Promise<boolean> {
-  await new Promise((r) => setTimeout(r, 1000));
-  console.log(`Sending ${type} message for link ${linkId}: ${message}`);
+  const id = linkId.replace("link-", "") || linkId;
+
+  // Use the update endpoint with admin_comment to send notification
+  const res = await fetch(`${API_URL}/admin/links/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      admin_comment: message,
+    }),
+  });
+
+  if (!res.ok) throw new Error("Failed to send message");
   return true;
 }

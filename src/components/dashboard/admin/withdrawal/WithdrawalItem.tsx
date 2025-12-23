@@ -93,10 +93,24 @@ export default function WithdrawalItem({
               <p className="text-[1.1em] text-grays truncate mb-0.5">
                 {trx.user.name}
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[1.6em] font-bold text-shortblack truncate">
                   {formatCurrency(trx.amount)}
                 </span>
+                {/* Show local currency amount if available */}
+                {trx.localAmount && trx.currency && trx.currency !== "USD" && (
+                  <span className="text-[1.2em] text-bluelight font-semibold bg-blue-50 px-2 py-0.5 rounded">
+                    ≈{" "}
+                    {trx.currency === "IDR"
+                      ? `Rp ${trx.localAmount.toLocaleString("id-ID", {
+                          maximumFractionDigits: 0,
+                        })}`
+                      : `${trx.localAmount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })} ${trx.currency}`}
+                  </span>
+                )}
                 <span
                   className={clsx(
                     "px-2 py-0.5 rounded text-[1em] font-bold uppercase tracking-wide",
@@ -151,15 +165,20 @@ export default function WithdrawalItem({
                       exit={{ opacity: 0, scale: 0.9 }}
                       className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
                     >
-                      {/* Detail Link */}
-                      <a
-                        href={`${detailBasePath}/${trx.id}`}
-                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
-                      >
-                        <ExternalLink className="w-4 h-4 text-grays" /> Detail
-                      </a>
+                      {/* Detail Link - Only for Super Admin */}
+                      {detailBasePath.includes("super-admin") && (
+                        <>
+                          <a
+                            href={`${detailBasePath}/${trx.id}`}
+                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
+                          >
+                            <ExternalLink className="w-4 h-4 text-grays" />{" "}
+                            Detail
+                          </a>
 
-                      <div className="h-px bg-gray-100 my-1" />
+                          <div className="h-px bg-gray-100 my-1" />
+                        </>
+                      )}
 
                       {/* Send Payment Proof (Optional) */}
                       <button
@@ -193,10 +212,13 @@ export default function WithdrawalItem({
           </div>
 
           {/* Payment Method Info */}
-          <div className="flex items-center gap-2 text-[1.2em] text-grays mb-4 group/link">
+          <div className="flex items-center gap-2 text-[1.2em] text-grays mb-4 group/link flex-wrap">
             <CreditCard className="w-3.5 h-3.5 shrink-0" />
             <p className="truncate max-w-[80%]">
-              {trx.method} - {trx.accountNumber}
+              {trx.method}
+              {trx.accountName && ` - ${trx.accountName}`}
+              {" - "}
+              {trx.accountNumber}
             </p>
             <button
               onClick={() => navigator.clipboard.writeText(trx.accountNumber)}
@@ -213,13 +235,19 @@ export default function WithdrawalItem({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-[1.2em]">
             {/* User */}
             <div className="flex items-center gap-3">
-              <Image
-                src={trx.user.avatar}
-                alt={trx.user.name}
-                width={32}
-                height={32}
-                className="rounded-full bg-gray-100 border border-white shadow-sm"
-              />
+              {trx.user.avatar ? (
+                <Image
+                  src={trx.user.avatar}
+                  alt={trx.user.name}
+                  width={32}
+                  height={32}
+                  className="rounded-full bg-gray-100 border border-white shadow-sm"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                  {trx.user.name?.charAt(0)?.toUpperCase() || "?"}
+                </div>
+              )}
               <div className="min-w-0">
                 <p className="font-bold text-shortblack truncate">
                   {trx.user.email}
@@ -230,11 +258,62 @@ export default function WithdrawalItem({
               </div>
             </div>
 
-            {/* Date */}
+            {/* Fee & Total */}
+            <div className="space-y-1">
+              <p className="text-grays text-[0.9em]">
+                Fee:{" "}
+                <span className="font-bold text-orange-600">
+                  {formatCurrency(trx.fee)}
+                  {/* Show local fee if we have valid localAmount and exchangeRate */}
+                  {trx.localAmount &&
+                    trx.exchangeRate &&
+                    trx.currency &&
+                    trx.currency !== "USD" && (
+                      <span className="text-grays font-normal ml-1">
+                        (≈{" "}
+                        {trx.currency === "IDR"
+                          ? `Rp ${Math.round(
+                              trx.fee * trx.exchangeRate
+                            ).toLocaleString("id-ID")}`
+                          : `${(trx.fee * trx.exchangeRate).toFixed(2)} ${
+                              trx.currency
+                            }`}
+                        )
+                      </span>
+                    )}
+                </span>
+              </p>
+              <p className="text-shortblack font-bold">
+                Total: {formatCurrency(trx.amount + trx.fee)}
+                {/* Show local total if we have valid localAmount */}
+                {trx.localAmount &&
+                  trx.exchangeRate &&
+                  trx.currency &&
+                  trx.currency !== "USD" && (
+                    <span className="text-bluelight font-semibold ml-1 text-[0.9em]">
+                      (≈{" "}
+                      {trx.currency === "IDR"
+                        ? `Rp ${Math.round(
+                            (trx.amount + trx.fee) * trx.exchangeRate
+                          ).toLocaleString("id-ID")}`
+                        : `${(
+                            (trx.amount + trx.fee) *
+                            trx.exchangeRate
+                          ).toFixed(2)} ${trx.currency}`}
+                      )
+                    </span>
+                  )}
+              </p>
+            </div>
+
+            {/* Date & Transaction ID */}
             <div className="space-y-1 text-grays">
               <p className="flex items-center gap-2">
                 <Calendar className="w-3.5 h-3.5" /> Date:{" "}
                 {formatDate(trx.date)}
+              </p>
+              <p className="text-[0.9em] font-mono text-bluelight">
+                ID: {trx.transactionId}
               </p>
             </div>
 

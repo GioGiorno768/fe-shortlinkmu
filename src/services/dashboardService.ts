@@ -465,10 +465,12 @@ export const getAdminActivities = async (): Promise<{
           level: "Member", // Default, can be enhanced later
         },
         amount: w.amount,
+        fee: (w as any).fee || 0,
         method: w.method,
         accountNumber: w.account_number,
         status: w.status as "pending" | "approved" | "rejected" | "paid",
         date: w.date,
+        transactionId: (w as any).transaction_id || `WD-${w.id}`,
         riskScore: "safe" as const, // Default, can be enhanced later
       }));
 

@@ -5,6 +5,7 @@ import {
   Link2,
   CalendarDays,
   Ban,
+  CheckCircle,
   TrendingUp,
   TrendingDown,
   Loader2,
@@ -56,6 +57,13 @@ export default function LinkStatsRow({
       color: "red",
       desc: "Requires attention",
     },
+    {
+      title: "Active Links",
+      value: formatCompact(stats.activeLinks),
+      icon: CheckCircle,
+      color: "teal",
+      desc: "Currently active",
+    },
   ];
 
   const getStyles = (color: string) => {
@@ -81,6 +89,13 @@ export default function LinkStatsRow({
           border: "border-red-100",
           iconBg: "bg-red-100",
         };
+      case "teal":
+        return {
+          text: "text-teal-600",
+          bg: "bg-teal-50",
+          border: "border-teal-100",
+          iconBg: "bg-teal-100",
+        };
       default:
         return {
           text: "text-gray-600",
@@ -93,8 +108,8 @@ export default function LinkStatsRow({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
             className="h-[120px] bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center"
@@ -107,7 +122,7 @@ export default function LinkStatsRow({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 font-figtree">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 font-figtree">
       {cards.map((card, index) => {
         const style = getStyles(card.color);
         // Mock trend logic for now since API doesn't return it yet

@@ -96,11 +96,11 @@ export async function getWithdrawalData(
   const json = await res.json();
   const data = json.data;
 
-  // Transform backend response to frontend format
+  // Use pre-calculated stats from backend (calculated from ALL payouts)
   const stats: WithdrawalStats = {
     availableBalance: data.balance || 0,
-    pendingWithdrawn: 0, // Calculated from pending payouts
-    totalWithdrawn: 0, // Calculated from paid payouts
+    pendingWithdrawn: data.total_pending || 0,
+    totalWithdrawn: data.total_withdrawn || 0,
   };
 
   // Transform payouts to transactions
@@ -114,20 +114,10 @@ export async function getWithdrawalData(
     method:
       p.payment_method?.bank_name || p.payment_method?.provider || "Unknown",
     account: p.payment_method?.account_number || "",
+    accountName: p.payment_method?.account_name || "",
     status: p.status,
     note: p.note,
   }));
-
-  // Calculate pending & total from transactions
-  payouts.forEach((p: any) => {
-    const amount = parseFloat(p.amount) || 0;
-    const fee = parseFloat(p.fee) || 0;
-    if (p.status === "pending") {
-      stats.pendingWithdrawn += amount + fee;
-    } else if (p.status === "paid") {
-      stats.totalWithdrawn += amount;
-    }
-  });
 
   return {
     stats,
@@ -201,7 +191,12 @@ export async function getPrimaryPaymentMethod(): Promise<PaymentMethod | null> {
  */
 export async function requestWithdrawal(
   amount: number,
-  method: PaymentMethod
+  method: PaymentMethod,
+  currencyInfo?: {
+    currency: string; // e.g., 'IDR', 'USD'
+    localAmount: number; // Amount in user's local currency
+    exchangeRate: number; // Exchange rate at time of request
+  }
 ): Promise<boolean> {
   const res = await fetch(`${API_URL}/withdrawals`, {
     method: "POST",
@@ -209,6 +204,9 @@ export async function requestWithdrawal(
     body: JSON.stringify({
       payment_method_id: method.id,
       amount: amount,
+      currency: currencyInfo?.currency ?? "USD",
+      local_amount: currencyInfo?.localAmount,
+      exchange_rate: currencyInfo?.exchangeRate ?? 1,
     }),
   });
 
@@ -274,6 +272,10 @@ export async function getWithdrawals(
     ...(filters?.status && filters.status !== "all"
       ? { status: filters.status }
       : {}),
+    ...(filters?.sort ? { sort: filters.sort } : {}),
+    ...(filters?.level && filters.level !== "all"
+      ? { level: filters.level }
+      : {}),
   });
 
   const res = await fetch(`${API_URL}/admin/withdrawals?${params}`, {
@@ -290,13 +292,11 @@ export async function getWithdrawals(
   const lastPage = json.meta?.last_page || 1;
 
   const withdrawals: RecentWithdrawal[] = items.map((w: any) => {
-    // Ensure avatar is a valid URL or path
-    let avatar = w.user?.avatar;
-    if (!avatar || (!avatar.startsWith("/") && !avatar.startsWith("http"))) {
-      // Use simple fallback avatar with user ID - PNG format for Next.js Image compatibility
-      const userId = w.user?.id || 1;
-      avatar = `https://api.dicebear.com/7.x/avataaars/png?seed=user${userId}&size=64`;
-    }
+    // Use local avatar from database (format: "avatar-1", "avatar-2", etc.)
+    // Same structure as adminLinkService.ts
+    const avatar = w.user?.avatar
+      ? `/avatars/${w.user.avatar}.webp`
+      : undefined;
 
     return {
       id: w.id.toString(),
@@ -307,18 +307,25 @@ export async function getWithdrawals(
         avatar,
         level: w.user?.level || "beginner",
       },
-      amount: w.amount,
+      amount: parseFloat(w.amount) || 0,
+      fee: parseFloat(w.fee) || 0,
       method:
         w.payment_method?.bank_name ||
         w.payment_method?.method_type ||
         "Unknown",
+      accountName: w.payment_method?.account_name || "",
       accountNumber: w.payment_method?.account_number || "",
       status: w.status,
       date: w.created_at,
+      transactionId: w.transaction_id || `WD-${w.id}`,
       proofUrl: w.proof_url,
       rejectionReason: w.notes,
       riskScore: "safe",
       processed_by: w.processed_by,
+      // Currency info for admin
+      currency: w.currency || "USD",
+      localAmount: w.local_amount ? parseFloat(w.local_amount) : undefined,
+      exchangeRate: w.exchange_rate ? parseFloat(w.exchange_rate) : undefined,
     };
   });
 

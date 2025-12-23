@@ -5,7 +5,7 @@ import apiClient from "./apiClient";
 // In-memory cache for header stats
 let cachedStats: HeaderStats | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 60000; // 1 minute client-side cache
+const CACHE_TTL = 0; // No cache - always fetch fresh balance
 
 /**
  * Get header stats with client-side caching.

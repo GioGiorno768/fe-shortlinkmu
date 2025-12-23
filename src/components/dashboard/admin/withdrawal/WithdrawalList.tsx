@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import WithdrawalItem from "./WithdrawalItem";
 import WithdrawalFilters from "./WithdrawalFilters";
 import WithdrawalActionModal from "./WithdrawalActionModal";
@@ -13,8 +13,6 @@ import * as withdrawalService from "@/services/withdrawalService";
 interface Props {
   transactions: RecentWithdrawal[];
   isLoading: boolean;
-  search: string;
-  setSearch: (s: string) => void;
   filters: AdminWithdrawalFilters;
   setFilters: (f: AdminWithdrawalFilters) => void;
   page: number;
@@ -30,8 +28,6 @@ interface Props {
 export default function WithdrawalList({
   transactions,
   isLoading,
-  search,
-  setSearch,
   filters,
   setFilters,
   page,
@@ -70,28 +66,8 @@ export default function WithdrawalList({
 
   return (
     <div className="space-y-6 font-figtree">
-      {/* TOOLBAR */}
-      {/* TOOLBAR */}
-      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row justify-between items-center gap-6">
-        <h3 className="text-[1.8em] font-bold text-shortblack">Withdrawals</h3>
-
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-          {/* Filter */}
-          <WithdrawalFilters filters={filters} setFilters={setFilters} />
-
-          {/* Search */}
-          <div className="relative flex-1 sm:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
-            <input
-              type="text"
-              placeholder="Search Transaction ID, Name, or Email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-[1.4em] text-shortblack transition-all"
-            />
-          </div>
-        </div>
-      </div>
+      {/* TOOLBAR - Now integrated in WithdrawalFilters */}
+      <WithdrawalFilters filters={filters} setFilters={setFilters} />
 
       {/* LIST */}
       <div className="space-y-4 min-h-[400px]">

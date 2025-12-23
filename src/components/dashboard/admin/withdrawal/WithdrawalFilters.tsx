@@ -1,17 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
-import {
-  Filter,
-  ChevronDown,
-  Check,
-  ArrowDownUp,
-  User,
-  Activity,
-} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Calendar, ChevronDown, Activity, User, Search } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import clsx from "clsx";
-import { useClickOutside } from "@/hooks/useClickOutside";
 import type { AdminWithdrawalFilters } from "@/types/type";
 
 interface Props {
@@ -20,163 +12,253 @@ interface Props {
 }
 
 export default function WithdrawalFilters({ filters, setFilters }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useClickOutside(ref, () => setIsOpen(false));
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [isLevelOpen, setIsLevelOpen] = useState(false);
 
-  const sections = [
-    {
-      id: "status",
-      title: "Status",
-      icon: Activity,
-      options: [
-        { label: "All Status", value: "all" },
-        { label: "Pending", value: "pending" },
-        { label: "Approved", value: "approved" },
-        { label: "Paid", value: "paid" },
-        { label: "Rejected", value: "rejected" },
-      ],
-    },
-    {
-      id: "sort",
-      title: "Sort Date",
-      icon: ArrowDownUp,
-      options: [
-        { label: "Newest First", value: "newest" },
-        { label: "Oldest First", value: "oldest" },
-      ],
-    },
-    {
-      id: "level",
-      title: "User Level",
-      icon: User,
-      options: [
-        { label: "All Levels", value: "all" },
-        { label: "Highest Level", value: "highest" },
-        { label: "Lowest Level", value: "lowest" },
-      ],
-    },
+  const sortRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
+  const levelRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+      if (
+        statusRef.current &&
+        !statusRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusOpen(false);
+      }
+      if (
+        levelRef.current &&
+        !levelRef.current.contains(event.target as Node)
+      ) {
+        setIsLevelOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const sortOptions = [
+    { label: "Newest", value: "newest" },
+    { label: "Oldest", value: "oldest" },
   ];
 
-  const handleSelect = (key: string, value: string) => {
-    setFilters({ ...filters, [key]: value });
+  const statusOptions = [
+    { label: "All Status", value: "all" },
+    { label: "Pending", value: "pending" },
+    { label: "Approved", value: "approved" },
+    { label: "Paid", value: "paid" },
+    { label: "Rejected", value: "rejected" },
+  ];
+
+  const levelOptions = [
+    { label: "All Levels", value: "all" },
+    { label: "Highest Level", value: "highest" },
+    { label: "Lowest Level", value: "lowest" },
+  ];
+
+  const getSortLabel = () => {
+    return sortOptions.find((o) => o.value === filters.sort)?.label || "Newest";
   };
 
-  const getActiveCount = () => {
-    let count = 0;
-    if (filters.status && filters.status !== "all") count++;
-    if (filters.level && filters.level !== "all") count++;
-    if (filters.sort && filters.sort !== "newest") count++;
-    return count;
+  const getStatusLabel = () => {
+    return (
+      statusOptions.find((o) => o.value === filters.status)?.label ||
+      "All Status"
+    );
   };
 
-  const activeCount = getActiveCount();
+  const getLevelLabel = () => {
+    return (
+      levelOptions.find((o) => o.value === filters.level)?.label || "All Levels"
+    );
+  };
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={clsx(
-          "flex items-center gap-3 px-5 py-3 rounded-xl border transition-all duration-200 min-w-[130px] justify-between group w-full sm:w-auto",
-          isOpen || activeCount > 0
-            ? "bg-shortblack text-white border-shortblack shadow-lg shadow-shortblack/20"
-            : "bg-blues border-blue-100 text-shortblack hover:bg-blue-50"
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <Filter
-            className={clsx(
-              "w-5 h-5",
-              isOpen || activeCount > 0 ? "text-white" : "text-bluelight"
-            )}
-          />
-          <span className="font-bold text-[1.1em]">Filter</span>
-          {activeCount > 0 && (
-            <span className="bg-bluelight text-white text-[0.8em] font-bold px-1.5 py-0.5 rounded-md text-center min-w-[20px]">
-              {activeCount}
-            </span>
-          )}
+    <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+      <div className="flex flex-col gap-5">
+        {/* Title Row */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-[1.8em] font-bold text-shortblack">
+            Manage Withdrawals
+          </h3>
         </div>
-        <ChevronDown
-          className={clsx(
-            "w-5 h-5 transition-transform duration-200",
-            isOpen && "rotate-180",
-            isOpen || activeCount > 0 ? "text-white" : "text-grays"
-          )}
-        />
-      </button>
 
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="absolute top-full right-0 mt-2 w-[280px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-10 overflow-hidden flex flex-col origin-top-right"
-          >
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <span className="text-[1.1em] font-bold text-grays uppercase tracking-wider">
-                Options
-              </span>
-              <button
-                onClick={() =>
-                  setFilters({ status: "all", sort: "newest", level: "all" })
-                }
-                className="text-[1em] font-bold text-bluelight hover:underline"
-              >
-                Reset
-              </button>
-            </div>
+        {/* Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
+            <input
+              type="text"
+              placeholder="Search by account name, email, or transaction ID..."
+              value={filters.search || ""}
+              onChange={(e) =>
+                setFilters({ ...filters, search: e.target.value })
+              }
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-bluelight/20 text-[1.4em] text-shortblack transition-all"
+            />
+          </div>
 
-            {/* List Sections */}
-            <div
-              onWheel={(e) => e.stopPropagation()}
-              className="overflow-y-auto max-h-[350px] custom-scrollbar-minimal p-2"
+          {/* Sort Dropdown */}
+          <div className="relative" ref={sortRef}>
+            <button
+              onClick={() => {
+                setIsSortOpen(!isSortOpen);
+                setIsStatusOpen(false);
+                setIsLevelOpen(false);
+              }}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-slate-50 transition-colors text-[1.4em] min-w-[130px] justify-between"
             >
-              {sections.map((section, idx) => (
-                <div
-                  key={section.id}
-                  className={clsx(
-                    "mb-2",
-                    idx !== sections.length - 1 &&
-                      "border-b border-gray-100 pb-2"
-                  )}
+              <Calendar className="w-4 h-4 text-grays" />
+              <span className="text-shortblack font-medium">
+                {getSortLabel()}
+              </span>
+              <ChevronDown
+                className={clsx(
+                  "w-4 h-4 text-grays transition-transform",
+                  isSortOpen && "rotate-180"
+                )}
+              />
+            </button>
+            <AnimatePresence>
+              {isSortOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden"
                 >
-                  <div className="px-3 py-2 flex items-center gap-2 text-shortblack font-bold text-[1.1em]">
-                    <section.icon className="w-4 h-4 text-grays" />
-                    {section.title}
-                  </div>
-                  <div className="grid grid-cols-1 gap-1">
-                    {section.options.map((opt) => {
-                      const currentVal = (filters as any)[section.id];
-                      const isActive =
-                        currentVal === opt.value ||
-                        (!currentVal && opt.value === "all");
+                  {sortOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        setFilters({ ...filters, sort: opt.value });
+                        setIsSortOpen(false);
+                      }}
+                      className={clsx(
+                        "w-full px-4 py-3 text-left text-[1.3em] hover:bg-blues transition-colors",
+                        filters.sort === opt.value
+                          ? "bg-blues text-bluelight font-medium"
+                          : "text-shortblack"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => handleSelect(section.id, opt.value)}
-                          className={clsx(
-                            "w-full text-left px-3 py-2.5 rounded-lg text-[1.1em] transition-all flex items-center justify-between group",
-                            isActive
-                              ? "bg-blue-50 text-bluelight font-bold"
-                              : "text-grays hover:bg-gray-50 hover:text-shortblack"
-                          )}
-                        >
-                          <span>{opt.label}</span>
-                          {isActive && <Check className="w-4 h-4" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Status Filter Dropdown */}
+          <div className="relative" ref={statusRef}>
+            <button
+              onClick={() => {
+                setIsStatusOpen(!isStatusOpen);
+                setIsSortOpen(false);
+                setIsLevelOpen(false);
+              }}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-slate-50 transition-colors text-[1.4em] min-w-[140px] justify-between"
+            >
+              <Activity className="w-4 h-4 text-grays" />
+              <span className="text-shortblack font-medium">
+                {getStatusLabel()}
+              </span>
+              <ChevronDown
+                className={clsx(
+                  "w-4 h-4 text-grays transition-transform",
+                  isStatusOpen && "rotate-180"
+                )}
+              />
+            </button>
+            <AnimatePresence>
+              {isStatusOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full right-0 mt-2 w-40 bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden"
+                >
+                  {statusOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        setFilters({ ...filters, status: opt.value });
+                        setIsStatusOpen(false);
+                      }}
+                      className={clsx(
+                        "w-full px-4 py-3 text-left text-[1.3em] hover:bg-blues transition-colors",
+                        filters.status === opt.value
+                          ? "bg-blues text-bluelight font-medium"
+                          : "text-shortblack"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* User Level Filter Dropdown */}
+          <div className="relative" ref={levelRef}>
+            <button
+              onClick={() => {
+                setIsLevelOpen(!isLevelOpen);
+                setIsSortOpen(false);
+                setIsStatusOpen(false);
+              }}
+              className="flex items-center gap-2 px-4 py-3 rounded-xl border border-gray-200 bg-white hover:bg-slate-50 transition-colors text-[1.4em] min-w-[140px] justify-between"
+            >
+              <User className="w-4 h-4 text-grays" />
+              <span className="text-shortblack font-medium">
+                {getLevelLabel()}
+              </span>
+              <ChevronDown
+                className={clsx(
+                  "w-4 h-4 text-grays transition-transform",
+                  isLevelOpen && "rotate-180"
+                )}
+              />
+            </button>
+            <AnimatePresence>
+              {isLevelOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full right-0 mt-2 w-40 bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden"
+                >
+                  {levelOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        setFilters({ ...filters, level: opt.value });
+                        setIsLevelOpen(false);
+                      }}
+                      className={clsx(
+                        "w-full px-4 py-3 text-left text-[1.3em] hover:bg-blues transition-colors",
+                        filters.level === opt.value
+                          ? "bg-blues text-bluelight font-medium"
+                          : "text-shortblack"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

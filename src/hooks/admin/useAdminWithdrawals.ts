@@ -16,8 +16,8 @@ export function useAdminWithdrawals() {
   // State Pagination & Filter
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<AdminWithdrawalFilters>({
+    search: "",
     status: "all",
     sort: "newest",
     level: "all",
@@ -28,7 +28,7 @@ export function useAdminWithdrawals() {
     try {
       // Paralel fetch: List (pake filter) & Stats (global)
       const [trxData, statsData] = await Promise.all([
-        withdrawalService.getWithdrawals(page, { ...filters, search }),
+        withdrawalService.getWithdrawals(page, filters),
         withdrawalService.getWithdrawalStats(),
       ]);
       setTransactions(trxData.data);
@@ -40,7 +40,7 @@ export function useAdminWithdrawals() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, filters, search, showAlert]);
+  }, [page, filters, showAlert]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,8 +125,6 @@ export function useAdminWithdrawals() {
     page,
     setPage,
     totalPages,
-    search,
-    setSearch,
     filters,
     setFilters, // Export filter controls
     handleApprove,

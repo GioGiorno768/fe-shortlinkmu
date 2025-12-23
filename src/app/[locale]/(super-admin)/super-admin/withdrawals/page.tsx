@@ -12,8 +12,6 @@ export default function SuperAdminWithdrawalsPage() {
     transactions,
     isLoading,
     // Filter & Search
-    search,
-    setSearch,
     filters,
     setFilters,
     // Pagination
@@ -37,8 +35,6 @@ export default function SuperAdminWithdrawalsPage() {
         transactions={transactions}
         isLoading={isLoading}
         // State Props
-        search={search}
-        setSearch={setSearch}
         filters={filters}
         setFilters={setFilters}
         page={page}

@@ -56,7 +56,6 @@ export function useHeader(role: "member" | "admin" | "super-admin" = "member") {
         if (role === "admin" || role === "super-admin") {
           data = await headerService.getAdminHeaderStats();
         } else {
-          // Use cached getHeaderStats instead of refresh to avoid duplicate calls
           data = await headerService.getHeaderStats();
         }
         setStats(data);

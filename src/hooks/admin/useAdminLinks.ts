@@ -15,15 +15,16 @@ export function useAdminLinks() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0); // <--- Total filtered links
 
-  // Pagination & Filters
+  // Pagination & Filters (search is now part of filters)
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [search, setSearch] = useState("");
-  // Satu state filter object biar rapi
+  // Satu state filter object biar rapi (search included)
   const [filters, setFilters] = useState<AdminLinkFilters>({
     sort: "newest",
     status: "all",
     adsLevel: "all",
+    ownerType: "all", // guest, user, all
+    search: "", // search is now part of filters
   });
 
   // Bulk Selection State
@@ -36,7 +37,7 @@ export function useAdminLinks() {
     setIsLoading(true);
     try {
       const [linksData, statsData] = await Promise.all([
-        adminLinkService.getLinks(page, { ...filters, search }),
+        adminLinkService.getLinks(page, filters),
         adminLinkService.getLinkStats(),
       ]);
       setLinks(linksData.data);
@@ -49,7 +50,7 @@ export function useAdminLinks() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, filters, search, showAlert]);
+  }, [page, filters, showAlert]);
 
   useEffect(() => {
     // Debounce search & filter fetch
@@ -59,12 +60,12 @@ export function useAdminLinks() {
     return () => clearTimeout(timer);
   }, [fetchData]);
 
-  // Reset page when filters or search change
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
     setSelectedItems(new Map());
     setIsAllSelected(false); // Reset select all
-  }, [filters, search]);
+  }, [filters]);
 
   // Bulk Actions Logic
   const toggleSelect = (id: string, status: string) => {
@@ -113,7 +114,7 @@ export function useAdminLinks() {
       await adminLinkService.bulkUpdateLinkStatus({
         ids: idsToUpdate,
         selectAll: isAllSelected && !targetIds, // Only true if not targeting specific IDs
-        filters: { ...filters, search },
+        filters,
         status,
         reason,
       });
@@ -139,8 +140,6 @@ export function useAdminLinks() {
     page,
     setPage,
     totalPages,
-    search,
-    setSearch,
     filters,
     setFilters,
     selectedItems,

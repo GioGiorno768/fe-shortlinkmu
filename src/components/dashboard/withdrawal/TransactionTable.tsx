@@ -229,6 +229,7 @@ export default function TransactionTable({
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    onWheel={(e) => e.stopPropagation()}
                     className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg z-20 overflow-hidden max-h-60 overflow-y-auto"
                   >
                     {paymentMethods.map((method) => (
@@ -294,12 +295,20 @@ export default function TransactionTable({
                   </div>
 
                   {/* Method Info */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Wallet className="w-4 h-4 text-bluelight" />
                     <span className="text-[1.4em] font-semibold text-shortblack">
                       {tx.method}
                     </span>
                     <span className="text-[1.3em] text-grays">·</span>
+                    {tx.accountName && (
+                      <>
+                        <span className="text-[1.3em] text-shortblack font-medium">
+                          {tx.accountName}
+                        </span>
+                        <span className="text-[1.3em] text-grays">·</span>
+                      </>
+                    )}
                     <span className="text-[1.3em] text-grays font-mono">
                       {tx.account}
                     </span>

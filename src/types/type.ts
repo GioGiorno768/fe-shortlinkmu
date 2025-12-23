@@ -198,6 +198,7 @@ export interface Transaction {
   fee?: number; // Admin fee
   method: string; // cth: "PayPal"
   account: string; // cth: "kevin***@gmail.com"
+  accountName?: string; // cth: "GOJO SATORU"
   status: "pending" | "approved" | "rejected" | "paid" | "cancelled";
   txId?: string; // ID referensi transfer
   note?: string; // Note/reason from admin
@@ -492,20 +493,27 @@ export interface RecentWithdrawal {
     id: string; // Butuh ID buat link ke detail
     name: string;
     email: string;
-    avatar: string;
+    avatar?: string;
     level: string; // Buat badge level
   };
   amount: number;
+  fee: number; // Admin fee
   method: string;
+  accountName?: string; // Nama pemilik rekening
   accountNumber: string; // Tambahan info rekening
   status: "pending" | "approved" | "rejected" | "paid";
   date: string;
+  transactionId: string; // WD-XXXXXX
 
   // 👇 FIELD BARU
   proofUrl?: string; // Link GDrive/Bukti
   rejectionReason?: string; // Alasan penolakan
   riskScore: "safe" | "medium" | "high"; // Fraud detection
   processed_by?: string;
+  // Currency info for admin to know exact local amount
+  currency?: string; // User's currency (e.g., 'IDR', 'USD')
+  localAmount?: number; // Amount in user's local currency
+  exchangeRate?: number; // Exchange rate at time of withdrawal
 }
 
 export interface FraudInfo {
@@ -521,7 +529,7 @@ export interface WithdrawalDetail extends RecentWithdrawal {
     id: string;
     name: string;
     email: string;
-    avatar: string;
+    avatar?: string;
     level: string;
     walletBalance: number; // New
   };
@@ -579,6 +587,7 @@ export interface AdminLinkStats {
   totalLinks: number;
   newToday: number;
   disabledLinks: number;
+  activeLinks: number;
 }
 
 // Update AdminLinkFilters
@@ -587,6 +596,7 @@ export interface AdminLinkFilters {
   status?: string; // active, disabled, expired
   adsLevel?: string; // level1, level2, ... noAds
   sort?: string; // newest, oldest, most_views, least_views, most_earnings, least_earnings
+  ownerType?: string; // all, guest, user
 }
 
 export type LinkStatus = "active" | "disabled" | "expired";
@@ -602,10 +612,11 @@ export interface AdminLink {
     id: string;
     name: string;
     username: string;
-    avatarUrl: string;
-    email: string; // Tambahan
+    avatarUrl?: string;
+    email: string;
   };
   views: number;
+  validViews: number; // Valid (non-fraudulent) views
   earnings: number;
   createdAt: string;
   expiredAt?: string;

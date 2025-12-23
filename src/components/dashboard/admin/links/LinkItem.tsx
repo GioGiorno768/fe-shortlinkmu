@@ -45,6 +45,9 @@ export default function LinkItem({
       year: "numeric",
     });
 
+  // Check if link is from guest (no user_id)
+  const isGuest = !link.owner.id;
+
   return (
     // 1. Container Utama: Clickable (Trigger Selection)
     <div
@@ -62,18 +65,24 @@ export default function LinkItem({
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          {/* Top Row: Title & Status */}
+          {/* Top Row: Title/Date & Status */}
           <div className="flex justify-between items-start mb-1">
             <div className="min-w-0">
-              {link.title && (
+              {/* For guest links without title, show created date here */}
+              {isGuest && !link.title ? (
+                <p className="text-[1.1em] text-grays truncate mb-0.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5" />
+                  Created: {formatDate(link.createdAt)}
+                </p>
+              ) : link.title ? (
                 <p className="text-[1.1em] text-grays truncate mb-0.5">
                   {link.title}
                 </p>
-              )}
+              ) : null}
               <div className="flex items-center gap-2">
                 {/* 2. Link Short URL: Stop Propagation biar gak trigger select pas diklik */}
                 <a
-                  href={`https://${link.shortUrl}`}
+                  href={`http://${link.shortUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
@@ -96,7 +105,7 @@ export default function LinkItem({
               </div>
             </div>
 
-            {/* Right Side: Dropdown & Selection Indicator */}
+            {/* Right Side: Action Button/Dropdown & Selection Indicator */}
             <div className="flex items-center gap-3 shrink-0">
               {/* Selection Indicator */}
               {isSelected && (
@@ -104,64 +113,95 @@ export default function LinkItem({
                   <CheckCircle2 className="w-6 h-6 text-bluelight fill-blue-50" />
                 </div>
               )}
-              {/* 3. Action Dropdown: Stop Propagation */}
-              <div
-                className="relative"
-                ref={menuRef}
-                onClick={(e) => e.stopPropagation()}
-              >
+
+              {/* Guest: Simple button, User: Dropdown with message option */}
+              {isGuest ? (
+                /* Guest Link: Direct block/activate button (no dropdown) */
                 <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
-                >
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
-                <AnimatePresence>
-                  {isMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
-                    >
-                      <button
-                        onClick={() => {
-                          onAction(
-                            link.id,
-                            link.status === "active" ? "block" : "activate"
-                          );
-                          setIsMenuOpen(false);
-                        }}
-                        className={clsx(
-                          "w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2",
-                          link.status === "active"
-                            ? "text-red-600 hover:bg-red-50"
-                            : "text-green-600 hover:bg-green-50"
-                        )}
-                      >
-                        {link.status === "active" ? (
-                          <>
-                            <Ban className="w-4 h-4" /> Block Link
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="w-4 h-4" /> Activate Link
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          onMessage(link.id);
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2 text-shortblack hover:bg-slate-50"
-                      >
-                        <MessageSquare className="w-4 h-4" /> Message User
-                      </button>
-                    </motion.div>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAction(
+                      link.id,
+                      link.status === "active" ? "block" : "activate"
+                    );
+                  }}
+                  className={clsx(
+                    "px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1.5 transition-colors",
+                    link.status === "active"
+                      ? "text-red-600 hover:bg-red-50 border border-red-200"
+                      : "text-green-600 hover:bg-green-50 border border-green-200"
                   )}
-                </AnimatePresence>
-              </div>
+                >
+                  {link.status === "active" ? (
+                    <>
+                      <Ban className="w-3.5 h-3.5" /> Block
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Activate
+                    </>
+                  )}
+                </button>
+              ) : (
+                /* User Link: Dropdown with block/activate + message options */
+                <div
+                  className="relative"
+                  ref={menuRef}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                  <AnimatePresence>
+                    {isMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
+                      >
+                        <button
+                          onClick={() => {
+                            onAction(
+                              link.id,
+                              link.status === "active" ? "block" : "activate"
+                            );
+                            setIsMenuOpen(false);
+                          }}
+                          className={clsx(
+                            "w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2",
+                            link.status === "active"
+                              ? "text-red-600 hover:bg-red-50"
+                              : "text-green-600 hover:bg-green-50"
+                          )}
+                        >
+                          {link.status === "active" ? (
+                            <>
+                              <Ban className="w-4 h-4" /> Block Link
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-4 h-4" /> Activate Link
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => {
+                            onMessage(link.id);
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2 text-shortblack hover:bg-slate-50"
+                        >
+                          <MessageSquare className="w-4 h-4" /> Message User
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
 
@@ -184,63 +224,92 @@ export default function LinkItem({
           <div className="h-px bg-gray-100 w-full mb-4" />
 
           {/* Details Row */}
-          {/* Details Row - HIDDEN (Super Admin Only) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-[1.2em]">
-            <div className="flex items-center gap-3">
-              <Image
-                src={link.owner.avatarUrl}
-                alt={link.owner.name}
-                width={32}
-                height={32}
-                className="rounded-full bg-gray-100 border border-white shadow-sm"
-              />
+          {isGuest ? (
+            /* Guest Link: Simplified view - only show "Guest" label */
+            <div className="flex items-center gap-3 text-[1.2em]">
+              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-sm border border-white shadow-sm">
+                G
+              </div>
               <div className="min-w-0">
-                <p className="font-bold text-shortblack truncate">
-                  {link.owner.name}
-                </p>
-                <p className="text-grays text-[0.9em] truncate">
-                  {link.owner.email}
-                </p>
+                <p className="font-medium text-gray-500">Guest Link</p>
+                <p className="text-grays text-[0.9em]">Created without login</p>
               </div>
             </div>
-
-            <div className="space-y-1">
-              <p className="flex items-center gap-2 text-grays">
-                <BarChart3 className="w-3.5 h-3.5" /> Views:{" "}
-                <b className="text-shortblack">{link.views.toLocaleString()}</b>
-              </p>
-              <p className="flex items-center gap-2 text-grays">
-                <DollarSign className="w-3.5 h-3.5" /> Earn:{" "}
-                <b className="text-green-600">${link.earnings}</b>
-              </p>
-            </div>
-
-            <div className="space-y-1 text-grays">
-              <p className="flex items-center gap-2">
-                <Calendar className="w-3.5 h-3.5" /> Created:{" "}
-                {formatDate(link.createdAt)}
-              </p>
-              {link.expiredAt && (
-                <p className="flex items-center gap-2 text-red-500">
-                  <Clock className="w-3.5 h-3.5" /> Exp:{" "}
-                  {formatDate(link.expiredAt)}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center">
-              <span
-                className={clsx(
-                  "px-3 py-1 rounded-full text-[0.9em] font-bold border",
-                  link.adsLevel === "noAds"
-                    ? "bg-gray-50 border-gray-200 text-gray-500"
-                    : "bg-purple-50 border-purple-200 text-purple-600"
+          ) : (
+            /* User Link: Full details */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-[1.2em]">
+              <div className="flex items-center gap-3">
+                {link.owner.avatarUrl ? (
+                  <Image
+                    src={link.owner.avatarUrl}
+                    alt={link.owner.name}
+                    width={32}
+                    height={32}
+                    className="rounded-full bg-gray-100 border border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm border border-white shadow-sm">
+                    {link.owner.name.charAt(0).toUpperCase()}
+                  </div>
                 )}
-              >
-                {link.adsLevel === "noAds" ? "No Ads" : `Ads: ${link.adsLevel}`}
-              </span>
+                <div className="min-w-0">
+                  <p className="font-bold text-shortblack truncate">
+                    {link.owner.name}
+                  </p>
+                  <p className="text-grays text-[0.9em] truncate">
+                    {link.owner.email || "No email"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="flex items-center gap-2 text-grays">
+                  <BarChart3 className="w-3.5 h-3.5" /> Views:{" "}
+                  <b className="text-shortblack">
+                    {link.views.toLocaleString()}
+                  </b>
+                </p>
+                <p className="flex items-center gap-2 text-grays">
+                  <DollarSign className="w-3.5 h-3.5" /> Earn:{" "}
+                  <b className="text-green-600">${link.earnings}</b>
+                </p>
+              </div>
+
+              <div className="space-y-1 text-grays">
+                <p className="flex items-center gap-2">
+                  <Calendar className="w-3.5 h-3.5" /> Created:{" "}
+                  {formatDate(link.createdAt)}
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> Valid:{" "}
+                  <b className="text-green-600">
+                    {link.validViews.toLocaleString()}
+                  </b>
+                </p>
+                {link.expiredAt && (
+                  <p className="flex items-center gap-2 text-red-500">
+                    <Clock className="w-3.5 h-3.5" /> Exp:{" "}
+                    {formatDate(link.expiredAt)}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center">
+                <span
+                  className={clsx(
+                    "px-3 py-1 rounded-full text-[0.9em] font-bold border",
+                    link.adsLevel === "noAds"
+                      ? "bg-gray-50 border-gray-200 text-gray-500"
+                      : "bg-purple-50 border-purple-200 text-purple-600"
+                  )}
+                >
+                  {link.adsLevel === "noAds"
+                    ? "No Ads"
+                    : `Ads: ${link.adsLevel}`}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
