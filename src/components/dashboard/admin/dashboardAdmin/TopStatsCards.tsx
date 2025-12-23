@@ -4,7 +4,6 @@ import { motion } from "motion/react";
 import {
   CheckCircle2, // Financial (Paid)
   Link2, // Content
-  Ban, // Security (Blocked)
   Users, // Growth (Users Paid)
   TrendingUp,
   TrendingDown,
@@ -25,7 +24,7 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
     "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
   const formatNumber = (val: number) => val.toLocaleString("en-US");
 
-  // Config Cards (4 ITEMS)
+  // Config Cards (3 ITEMS)
   const cards = [
     {
       id: "paid",
@@ -57,22 +56,12 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
       // Indigo: Simbol Konten
       color: ["text-indigo-600", "bg-indigo-50", "border-indigo-100"],
     },
-    {
-      id: "blocked",
-      title: t("blockedLinks"),
-      value: data ? formatNumber(data.security.linksBlockedToday) : "...",
-      subLabel: t("blockedToday"),
-      trend: data?.security.trend,
-      icon: Ban,
-      // Red: Simbol Bahaya
-      color: ["text-red-600", "bg-red-50", "border-red-100"],
-    },
   ];
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
           <div
             key={i}
             className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 h-[160px] flex items-center justify-center"
@@ -85,7 +74,7 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 font-figtree text-[10px]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-figtree text-[10px]">
       {cards.map((card, index) => {
         const [textColor, bgColor, borderColor] = card.color;
         const TrendIcon =
@@ -163,9 +152,7 @@ export default function TopStatsCards({ data, isLoading }: TopStatsCardsProps) {
                   ? "bg-green-600"
                   : card.id === "users_paid"
                   ? "bg-purple-600"
-                  : card.id === "created"
-                  ? "bg-indigo-600"
-                  : "bg-red-600"
+                  : "bg-indigo-600"
               }`}
             />
           </motion.div>

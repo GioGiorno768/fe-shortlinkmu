@@ -128,86 +128,88 @@ export default function WithdrawalItem({
               </div>
             </div>
 
-            {/* Actions Area: Button + Dropdown */}
+            {/* Actions Area: Inline Buttons */}
             <div className="flex items-center gap-2">
-              {/* PRIMARY ACTION BUTTON (Outside Dropdown) */}
               {/* PRIMARY ACTION BUTTON (Outside Dropdown) - DESKTOP ONLY */}
               {trx.status === "pending" && (
-                <button
-                  onClick={() => onApprove(trx.id, trx.status)}
-                  className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
-                >
-                  <ThumbsUp className="w-4 h-4" /> Approve
-                </button>
+                <>
+                  <button
+                    onClick={() => onApprove(trx.id, trx.status)}
+                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
+                  >
+                    <ThumbsUp className="w-4 h-4" /> Approve
+                  </button>
+                  <button
+                    onClick={() => openRejectModal(trx.id)}
+                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all items-center gap-1.5"
+                  >
+                    <XCircle className="w-4 h-4" /> Reject
+                  </button>
+                </>
               )}
               {trx.status === "approved" && (
-                <button
-                  onClick={() => onApprove(trx.id, trx.status)}
-                  className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
-                >
-                  <Send className="w-4 h-4" /> Pay Now
-                </button>
+                <>
+                  <button
+                    onClick={() => onApprove(trx.id, trx.status)}
+                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
+                  >
+                    <Send className="w-4 h-4" /> Pay Now
+                  </button>
+                  <button
+                    onClick={() => openRejectModal(trx.id)}
+                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all items-center gap-1.5"
+                  >
+                    <XCircle className="w-4 h-4" /> Reject
+                  </button>
+                </>
               )}
 
-              {/* Action Dropdown */}
-              <div className="relative" ref={menuRef}>
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
-                >
-                  <MoreHorizontal className="w-5 h-5" />
-                </button>
-                <AnimatePresence>
-                  {isMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
-                    >
-                      {/* Detail Link - Only for Super Admin */}
-                      {detailBasePath.includes("super-admin") && (
-                        <>
-                          <a
-                            href={`${detailBasePath}/${trx.id}`}
-                            className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
-                          >
-                            <ExternalLink className="w-4 h-4 text-grays" />{" "}
-                            Detail
-                          </a>
-
-                          <div className="h-px bg-gray-100 my-1" />
-                        </>
-                      )}
-
-                      {/* Send Payment Proof (Optional) */}
-                      <button
-                        onClick={() => {
-                          openProofModal(trx.id);
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg text-blue-600 font-medium text-[1.1em] flex items-center gap-2"
+              {/* Action Dropdown - Only for Super Admin (Detail link) */}
+              {detailBasePath.includes("super-admin") && (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                  </button>
+                  <AnimatePresence>
+                    {isMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
                       >
-                        <Link2 className="w-4 h-4" /> Send Payment Proof
-                      </button>
-
-                      {/* Reject */}
-                      {(trx.status === "pending" ||
-                        trx.status === "approved") && (
-                        <button
-                          onClick={() => {
-                            openRejectModal(trx.id);
-                            setIsMenuOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-red-50 rounded-lg text-red-600 font-medium text-[1.1em] flex items-center gap-2"
+                        {/* Detail Link - Only for Super Admin */}
+                        <a
+                          href={`${detailBasePath}/${trx.id}`}
+                          className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
                         >
-                          <XCircle className="w-4 h-4" /> Reject
-                        </button>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                          <ExternalLink className="w-4 h-4 text-grays" /> Detail
+                        </a>
+
+                        {/* 
+                          ===============================================
+                          PAYMENT PROOF FEATURE - DISABLED FOR NOW
+                          Uncomment this block to enable "Send Payment Proof" feature
+                          ===============================================
+                          <div className="h-px bg-gray-100 my-1" />
+                          <button
+                            onClick={() => {
+                              openProofModal(trx.id);
+                              setIsMenuOpen(false);
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg text-blue-600 font-medium text-[1.1em] flex items-center gap-2"
+                          >
+                            <Link2 className="w-4 h-4" /> Send Payment Proof
+                          </button>
+                        */}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
 
@@ -362,12 +364,20 @@ export default function WithdrawalItem({
       {/* MOBILE ACTION BUTTON (Bottom Full Width) */}
       <div className="md:hidden px-5 pb-5 pt-0">
         {trx.status === "pending" && (
-          <button
-            onClick={() => onApprove(trx.id, trx.status)}
-            className="w-full py-3 rounded-xl font-bold text-[1em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <ThumbsUp className="w-5 h-5" /> Approve Withdrawal
-          </button>
+          <>
+            <button
+              onClick={() => onApprove(trx.id, trx.status)}
+              className="w-full py-3 rounded-xl font-bold text-[1em] bg-blue-600 hover:bg-blue-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <ThumbsUp className="w-5 h-5" /> Approve Withdrawal
+            </button>
+            <button
+              onClick={() => openRejectModal(trx.id)}
+              className="w-full px-4 py-2 mt-4 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all flex items-center justify-center gap-1.5"
+            >
+              <XCircle className="w-4 h-4" /> Reject
+            </button>
+          </>
         )}
         {trx.status === "approved" && (
           <button

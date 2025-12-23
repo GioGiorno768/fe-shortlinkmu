@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
 import Image from "next/image";
 import {
   Link as LinkIcon,
-  MoreHorizontal,
   CheckCircle2,
   ExternalLink,
   Calendar,
@@ -12,19 +10,16 @@ import {
   BarChart3,
   Clock,
   Ban,
-  MessageSquare,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion, AnimatePresence } from "motion/react";
 import type { AdminLink } from "@/types/type";
-import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface LinkItemProps {
   link: AdminLink;
   isSelected: boolean;
   onToggleSelect: (id: string, status: string) => void;
   onAction: (id: string, action: "block" | "activate") => void;
-  onMessage: (id: string) => void;
+  onMessage: (id: string) => void; // Keep for future use
 }
 
 export default function LinkItem({
@@ -32,12 +27,8 @@ export default function LinkItem({
   isSelected,
   onToggleSelect,
   onAction,
-  onMessage,
-}: LinkItemProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useClickOutside(menuRef, () => setIsMenuOpen(false));
-
+}: // onMessage - kept in props for future use when message feature is enabled
+LinkItemProps) {
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString("id-ID", {
       day: "numeric",
@@ -114,94 +105,39 @@ export default function LinkItem({
                 </div>
               )}
 
-              {/* Guest: Simple button, User: Dropdown with message option */}
-              {isGuest ? (
-                /* Guest Link: Direct block/activate button (no dropdown) */
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAction(
-                      link.id,
-                      link.status === "active" ? "block" : "activate"
-                    );
-                  }}
-                  className={clsx(
-                    "px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1.5 transition-colors",
-                    link.status === "active"
-                      ? "text-red-600 hover:bg-red-50 border border-red-200"
-                      : "text-green-600 hover:bg-green-50 border border-green-200"
-                  )}
-                >
-                  {link.status === "active" ? (
-                    <>
-                      <Ban className="w-3.5 h-3.5" /> Block
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Activate
-                    </>
-                  )}
-                </button>
-              ) : (
-                /* User Link: Dropdown with block/activate + message options */
-                <div
-                  className="relative"
-                  ref={menuRef}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
-                  >
-                    <MoreHorizontal className="w-5 h-5" />
-                  </button>
-                  <AnimatePresence>
-                    {isMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
-                      >
-                        <button
-                          onClick={() => {
-                            onAction(
-                              link.id,
-                              link.status === "active" ? "block" : "activate"
-                            );
-                            setIsMenuOpen(false);
-                          }}
-                          className={clsx(
-                            "w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2",
-                            link.status === "active"
-                              ? "text-red-600 hover:bg-red-50"
-                              : "text-green-600 hover:bg-green-50"
-                          )}
-                        >
-                          {link.status === "active" ? (
-                            <>
-                              <Ban className="w-4 h-4" /> Block Link
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-4 h-4" /> Activate Link
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => {
-                            onMessage(link.id);
-                            setIsMenuOpen(false);
-                          }}
-                          className="w-full text-left px-4 py-2.5 rounded-lg font-medium text-[1.3em] flex items-center gap-2 text-shortblack hover:bg-slate-50"
-                        >
-                          <MessageSquare className="w-4 h-4" /> Message User
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+              {/* Guest: Simple button, User: Direct button (same as guest) */}
+              {/* 
+                ===============================================
+                MESSAGE USER FEATURE - DISABLED FOR NOW
+                This was using a dropdown. Uncomment and restore if needed.
+                onMessage prop still exists in interface for future use.
+                ===============================================
+              */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction(
+                    link.id,
+                    link.status === "active" ? "block" : "activate"
+                  );
+                }}
+                className={clsx(
+                  "px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1.5 transition-colors",
+                  link.status === "active"
+                    ? "text-red-600 hover:bg-red-50 border border-red-200"
+                    : "text-green-600 hover:bg-green-50 border border-green-200"
+                )}
+              >
+                {link.status === "active" ? (
+                  <>
+                    <Ban className="w-3.5 h-3.5" /> Block
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Activate
+                  </>
+                )}
+              </button>
             </div>
           </div>
 

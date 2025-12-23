@@ -312,6 +312,7 @@ export interface SavedPaymentMethod {
   accountNumber: string; // Nomor rekening/HP/Email
   isDefault: boolean; // Penanda kalo ini metode utama
   category: "wallet" | "bank" | "crypto"; // Opsional, buat grouping icon
+  fee: number; // Admin fee for this method (in IDR)
 }
 
 export interface PrivacySettings {
@@ -446,10 +447,6 @@ export interface AdminDashboardStats {
   };
   content: {
     linksCreatedToday: number;
-    trend: number;
-  };
-  security: {
-    linksBlockedToday: number;
     trend: number;
   };
 }

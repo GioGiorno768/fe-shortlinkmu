@@ -427,10 +427,6 @@ export const getAdminStats = async (): Promise<AdminDashboardStats> => {
         linksCreatedToday: data.links_created_today,
         trend: data.links_trend,
       },
-      security: {
-        linksBlockedToday: data.links_blocked_today,
-        trend: data.blocked_trend,
-      },
     };
   } catch (error) {
     console.error("Failed to fetch admin stats:", error);
@@ -438,7 +434,6 @@ export const getAdminStats = async (): Promise<AdminDashboardStats> => {
     return {
       financial: { paidToday: 0, usersPaidToday: 0, trend: 0 },
       content: { linksCreatedToday: 0, trend: 0 },
-      security: { linksBlockedToday: 0, trend: 0 },
     };
   }
 };
@@ -459,9 +454,8 @@ export const getAdminActivities = async (): Promise<{
           id: w.user.id,
           name: w.user.name,
           email: w.user.email,
-          avatar:
-            w.user.avatar ||
-            `https://api.dicebear.com/7.x/avataaars/svg?seed=${w.user.name}`,
+          // Use local avatar format: "avatar-1" -> "/avatars/avatar-1.webp"
+          avatar: w.user.avatar ? `/avatars/${w.user.avatar}.webp` : undefined,
           level: "Member", // Default, can be enhanced later
         },
         amount: w.amount,
@@ -480,9 +474,8 @@ export const getAdminActivities = async (): Promise<{
         id: u.id,
         name: u.name,
         email: u.email,
-        avatar:
-          u.avatar ||
-          `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`,
+        // Use local avatar format: "avatar-1" -> "/avatars/avatar-1.webp"
+        avatar: u.avatar ? `/avatars/${u.avatar}.webp` : undefined,
         joinedAt: u.joined_at,
         status: u.status as "active" | "suspended" | "process",
       }));
@@ -499,7 +492,8 @@ export const getAdminActivities = async (): Promise<{
           name: l.owner.name,
           username: l.owner.name.toLowerCase().replace(/\s/g, ""),
           email: l.owner.email,
-          avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${l.owner.name}`,
+          // Owner avatar not in API response, use undefined for fallback
+          avatarUrl: undefined,
         },
         views: l.views,
         earnings: 0, // Not included in dashboard endpoint, default

@@ -8,6 +8,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import { useHeader } from "@/hooks/useHeader";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useNotifications } from "@/hooks/useNotifications";
 
 // 👇 1. IMPORT TIPE 'Role' DARI SINI
 import type { Role } from "@/types/type";
@@ -46,6 +47,9 @@ export default function Header({
 
   // 💱 Use global currency context for formatting
   const { format: formatWithCurrency } = useCurrency();
+
+  // 🔔 Get unread notification count for badge
+  const { unreadCount } = useNotifications();
 
   // Logic loading & data stats
   const isLoading = isAdminOrSuper ? adminLoading : userLoading;
@@ -233,7 +237,10 @@ export default function Header({
               className="p-2 custom:hover:-translate-y-1 transition-all duration-300 ease-in-out relative"
             >
               <Bell className="w-[2.8em] h-[2.8em] text-bluelight stroke-[.15em]" />
-              <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              {/* Red dot only shows when there are unread notifications */}
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+              )}
             </button>
 
             <NotificationDropdown

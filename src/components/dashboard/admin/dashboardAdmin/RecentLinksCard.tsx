@@ -105,50 +105,13 @@ export default function RecentLinksCard({
         <h3 className="text-[2em] md:text-[2em] font-bold text-shortblack">
           Recent Links
         </h3>
-        <div className="relative">
-          <button
-            onClick={() => setActiveDropdown(!activeDropdown)}
-            className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
-          >
-            <MoreHorizontal className="w-6 h-6 text-grays" />
-          </button>
-          <AnimatePresence>
-            {activeDropdown && (
-              <motion.div
-                ref={dropdownRef}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden"
-              >
-                <div className="p-2">
-                  <div className="px-3 py-2 text-[1.4em] font-semibold text-grays border-b border-gray-50 mb-1">
-                    Filter Status
-                  </div>
-                  {[
-                    { label: "All Links", value: "all" },
-                    { label: "Active", value: "active" },
-                    { label: "Disabled", value: "disabled" },
-                    { label: "Expired", value: "expired" },
-                  ].map((item) => (
-                    <button
-                      key={item.value}
-                      onClick={() => handleFilterClick(item.value)}
-                      className={clsx(
-                        "w-full text-left px-3 py-2 text-[1.4em] rounded-lg transition-colors",
-                        currentFilter === item.value
-                          ? "bg-blue-50 text-blue-600 font-medium"
-                          : "text-shortblack hover:bg-gray-50"
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <Link
+          href="/admin/links"
+          className="text-[1.4em] font-medium text-bluelight hover:text-blue-700 transition-colors flex items-center gap-1"
+        >
+          <span>Manage Links</span>
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
       </div>
 
       <div

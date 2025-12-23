@@ -338,14 +338,14 @@ export default function TransactionTable({
                         <XCircle className="w-5 h-5" />
                       </button>
                     )}
-                    {tx.txId && (
+                    {/* {tx.txId && (
                       <button
                         className="p-2.5 text-bluelight hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-colors"
                         title="Lihat Detail"
                       >
                         <ExternalLink className="w-5 h-5" />
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </div>
               </div>

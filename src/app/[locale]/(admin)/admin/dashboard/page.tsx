@@ -5,7 +5,7 @@ import SharedStatsGrid, {
 } from "@/components/dashboard/SharedStatsGrid"; // <--- IMPORT INI
 import RecentActivities from "@/components/dashboard/admin/dashboardAdmin/RecentActivities";
 import { useAdminDashboard } from "@/hooks/useAdminDashboard";
-import { CheckCircle2, Users, Link2, Ban } from "lucide-react"; // Import Icon
+import { CheckCircle2, Users, Link2 } from "lucide-react"; // Import Icon
 
 export default function AdminDashboard() {
   const { stats, activities, isLoading } = useAdminDashboard();
@@ -14,7 +14,7 @@ export default function AdminDashboard() {
     "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
   const formatNumber = (val: number) => val.toLocaleString("en-US");
 
-  // MAPPING DATA ADMIN
+  // MAPPING DATA ADMIN (3 Cards)
   const adminStatsCards: StatCardData[] = [
     {
       id: "paid",
@@ -43,15 +43,6 @@ export default function AdminDashboard() {
       icon: Link2,
       color: "purple",
     },
-    {
-      id: "blocked",
-      title: "Blocked Links",
-      value: stats ? formatNumber(stats.security.linksBlockedToday) : "...",
-      subLabel: "Blocked Today",
-      trend: stats?.security.trend,
-      icon: Ban,
-      color: "red",
-    },
   ];
 
   return (
@@ -60,7 +51,7 @@ export default function AdminDashboard() {
       <SharedStatsGrid
         cards={adminStatsCards}
         isLoading={isLoading}
-        columns={4}
+        columns={3}
       />
 
       <RecentActivities

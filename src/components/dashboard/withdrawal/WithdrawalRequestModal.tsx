@@ -476,89 +476,138 @@ export default function WithdrawalRequestModal({
                 </div>
               ) : (
                 // === STEP 2: INPUT AMOUNT ===
-                <div className="space-y-8">
-                  {/* Info Saldo & Tujuan */}
-                  <div className="bg-blues p-6 rounded-2xl flex items-center justify-between border border-blue-100">
-                    <div>
-                      <p className="text-[1.4em] text-grays mb-1">
-                        Available Balance
-                      </p>
-                      <p className="text-[2.4em] font-bold text-bluelight">
-                        {formatCurrency(Number(availableBalance) || 0)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[1.4em] text-grays mb-1">
-                        Destination
-                      </p>
-                      <p className="text-[1.6em] font-semibold text-shortblack truncate max-w-[200px]">
-                        {useDefault && defaultMethod
-                          ? defaultMethod.provider
-                          : selectedOtherMethod?.provider}
-                      </p>
-                      <p className="text-[1.2em] text-grays truncate max-w-[200px]">
-                        {useDefault && defaultMethod
-                          ? defaultMethod.accountNumber
-                          : selectedOtherMethod?.accountNumber}
-                      </p>
-                    </div>
-                  </div>
+                (() => {
+                  // Get fee from selected payment method (fee is in USD from backend)
+                  const selectedMethod =
+                    useDefault && defaultMethod
+                      ? defaultMethod
+                      : selectedOtherMethod;
+                  const feeUSD = selectedMethod?.fee || 0;
+                  // Convert fee from USD to user's local currency
+                  const feeLocal = toLocalCurrency(feeUSD);
 
-                  {/* Input Amount */}
-                  <div>
-                    <label className="block text-[1.6em] font-bold text-shortblack mb-3">
-                      Withdrawal Amount ({symbol})
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[2em] font-bold text-grays">
-                        {symbol}
-                      </span>
-                      <input
-                        type="number"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full pl-14 pr-6 py-4 rounded-2xl border-2 border-gray-200 text-[2.5em] font-bold text-shortblack focus:outline-none focus:border-bluelight transition-colors placeholder:text-gray-300"
-                        min={2}
-                        max={availableBalance}
-                      />
-                    </div>
-                    {/* Tombol Cepat % */}
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        onClick={setMinAmount}
-                        className="px-4 py-2 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.2em] font-medium transition-colors"
-                      >
-                        Min ({symbol}
-                        {currency === "IDR"
-                          ? minWithdrawalLocal.toLocaleString("id-ID")
-                          : minWithdrawalLocal.toLocaleString()}
-                        )
-                      </button>
-                      <button
-                        onClick={() => setPercentage(50)}
-                        className="px-4 py-2 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.2em] font-medium transition-colors"
-                      >
-                        50%
-                      </button>
-                      <button
-                        onClick={() => setPercentage(100)}
-                        className="px-4 py-2 rounded-lg bg-blue-100 text-bluelight hover:bg-blue-200 text-[1.2em] font-medium transition-colors"
-                      >
-                        Max ({formatCurrency(Number(availableBalance) || 0)})
-                      </button>
-                    </div>
-                  </div>
+                  const amountLocal = parseFloat(withdrawAmount) || 0;
+                  const totalAmount = amountLocal + feeLocal;
 
-                  <div className="flex gap-3 items-start p-4 bg-orange-50 rounded-xl text-orange-700 border border-orange-100">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <p className="text-[1.2em] leading-snug">
-                      Pastikan data akun sudah benar. Penarikan akan diproses
-                      dalam 24-48 jam kerja. Kesalahan input dapat menyebabkan
-                      dana hangus.
-                    </p>
-                  </div>
-                </div>
+                  return (
+                    <div className="space-y-6">
+                      {/* Info Saldo & Tujuan */}
+                      <div className="bg-blues p-5 rounded-2xl flex items-center justify-between border border-blue-100">
+                        <div>
+                          <p className="text-[1.2em] text-grays mb-0.5 uppercase tracking-wide font-medium">
+                            Available Balance
+                          </p>
+                          <p className="text-[2em] font-bold text-bluelight">
+                            {formatCurrency(Number(availableBalance) || 0)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[1.2em] text-grays mb-0.5 uppercase tracking-wide font-medium">
+                            Destination
+                          </p>
+                          <p className="text-[1.4em] font-semibold text-shortblack truncate max-w-[200px]">
+                            {useDefault && defaultMethod
+                              ? defaultMethod.provider
+                              : selectedOtherMethod?.provider}
+                          </p>
+                          <p className="text-[1.1em] text-grays truncate max-w-[200px]">
+                            {useDefault && defaultMethod
+                              ? defaultMethod.accountNumber
+                              : selectedOtherMethod?.accountNumber}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Input Amount */}
+                      <div>
+                        <label className="block text-[1.4em] font-bold text-shortblack mb-2">
+                          Withdrawal Amount ({symbol})
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[1.8em] font-bold text-grays">
+                            {symbol}
+                          </span>
+                          <input
+                            type="number"
+                            value={withdrawAmount}
+                            onChange={(e) => setWithdrawAmount(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full pl-14 pr-5 py-3.5 rounded-2xl border-2 border-gray-200 text-[2em] font-bold text-shortblack focus:outline-none focus:border-bluelight transition-colors placeholder:text-gray-300"
+                            min={2}
+                            max={availableBalance}
+                          />
+                        </div>
+                        {/* Tombol Cepat % */}
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={setMinAmount}
+                            className="px-3 py-1.5 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.1em] font-medium transition-colors"
+                          >
+                            Min ({symbol}
+                            {currency === "IDR"
+                              ? minWithdrawalLocal.toLocaleString("id-ID")
+                              : minWithdrawalLocal.toLocaleString()}
+                            )
+                          </button>
+                          <button
+                            onClick={() => setPercentage(50)}
+                            className="px-3 py-1.5 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.1em] font-medium transition-colors"
+                          >
+                            50%
+                          </button>
+                          <button
+                            onClick={() => setPercentage(100)}
+                            className="px-3 py-1.5 rounded-lg bg-blue-100 text-bluelight hover:bg-blue-200 text-[1.1em] font-medium transition-colors"
+                          >
+                            Max ({formatCurrency(Number(availableBalance) || 0)}
+                            )
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Fee & Total Breakdown */}
+                      <div className="space-y-2 pt-2 border-t border-gray-100">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[1.3em] text-grays">
+                            Fee Amount
+                          </span>
+                          <span className="text-[1.3em] text-grays">
+                            {symbol}{" "}
+                            {currency === "IDR"
+                              ? Math.round(feeLocal).toLocaleString("id-ID")
+                              : feeLocal.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[1.4em] font-semibold text-shortblack">
+                            Total Amount
+                          </span>
+                          <span className="text-[1.6em] font-bold text-shortblack">
+                            {symbol}{" "}
+                            {currency === "IDR"
+                              ? Math.round(totalAmount).toLocaleString("id-ID")
+                              : totalAmount.toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 items-start p-3 bg-orange-50 rounded-xl text-orange-700 border border-orange-100">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <p className="text-[1.1em] leading-snug">
+                          Pastikan data akun sudah benar. Penarikan akan
+                          diproses dalam 24-48 jam kerja. Kesalahan input dapat
+                          menyebabkan dana hangus.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()
               )}
             </div>
 

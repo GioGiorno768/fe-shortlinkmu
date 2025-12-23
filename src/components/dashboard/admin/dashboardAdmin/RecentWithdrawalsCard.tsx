@@ -113,50 +113,13 @@ export default function RecentWithdrawalsCard({
         <h3 className="text-[2em] md:text-[2em] font-bold text-shortblack">
           {t("title")}
         </h3>
-        <div className="relative">
-          <button
-            onClick={() => setActiveDropdown(!activeDropdown)}
-            className="p-2 hover:bg-gray-50 rounded-xl transition-colors"
-          >
-            <MoreHorizontal className="w-6 h-6 text-grays" />
-          </button>
-          <AnimatePresence>
-            {activeDropdown && (
-              <motion.div
-                ref={dropdownRef}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-20 overflow-hidden"
-              >
-                <div className="p-2">
-                  <div className="px-3 py-2 text-[1.4em] font-semibold text-grays border-b border-gray-50 mb-1">
-                    {t("filter.title")}
-                  </div>
-                  {[
-                    { label: t("filter.all"), value: "all" },
-                    { label: t("filter.pending"), value: "pending" },
-                    { label: t("filter.approved"), value: "approved" },
-                    { label: t("filter.paid"), value: "paid" },
-                  ].map((item) => (
-                    <button
-                      key={item.value}
-                      onClick={() => handleFilterClick(item.value)}
-                      className={clsx(
-                        "w-full text-left px-3 py-2 text-[1.4em] rounded-lg transition-colors",
-                        currentFilter === item.value
-                          ? "bg-blue-50 text-blue-600 font-medium"
-                          : "text-shortblack hover:bg-gray-50"
-                      )}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <Link
+          href="/admin/withdrawals"
+          className="text-[1.4em] font-medium text-bluelight hover:text-blue-700 transition-colors flex items-center gap-1"
+        >
+          <span>{t("viewAll")}</span>
+          <ArrowUpRight className="w-4 h-4" />
+        </Link>
       </div>
 
       <div
@@ -175,13 +138,18 @@ export default function RecentWithdrawalsCard({
               className="flex items-center justify-between p-3 md:p-4 rounded-2xl hover:bg-gray-50 transition-colors group cursor-pointer border border-transparent hover:border-gray-100 relative"
             >
               <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                {/* Avatar with fallback */}
+                {wd.user.avatar ? (
                   <img
                     src={wd.user.avatar}
                     alt={wd.user.name}
-                    className="w-full h-full object-cover"
+                    className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 object-cover shrink-0"
                   />
-                </div>
+                ) : (
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold shrink-0">
+                    {wd.user.name?.charAt(0)?.toUpperCase() || "?"}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h4 className="text-[1.4em] md:text-[1.6em] font-bold text-shortblack group-hover:text-bluelight transition-colors truncate">
