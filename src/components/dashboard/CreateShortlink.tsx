@@ -28,6 +28,7 @@ import type {
   GeneratedLinkData,
 } from "@/types/type";
 import { Link } from "@/i18n/routing";
+import { useAdsInfo } from "@/hooks/useAdsInfo";
 
 // Definisi Props
 interface CreateShortlinkProps {
@@ -45,6 +46,9 @@ export default function CreateShortlink({
 }: CreateShortlinkProps) {
   const t = useTranslations("Dashboard");
 
+  // Fetch ad levels from API
+  const { levels: adLevelsFromApi, isLoading: isLoadingLevels } = useAdsInfo();
+
   // Helper Timezone Local
   const getMinDateTimeLocal = () => {
     const localDate = new Date();
@@ -61,7 +65,7 @@ export default function CreateShortlink({
     password: "",
     title: "",
     expiresAt: "",
-    adsLevel: "level1",
+    adsLevel: "level1", // Default, will be updated when API loads
   });
 
   // State UI
@@ -72,13 +76,24 @@ export default function CreateShortlink({
 
   const adsLevelRef = useRef<HTMLDivElement>(null);
 
-  const adLevels: { key: AdLevel; label: string }[] = [
-    { key: "noAds", label: t("noAds") },
-    { key: "level1", label: t("adsLevel1") },
-    { key: "level2", label: t("adsLevel2") },
-    { key: "level3", label: t("adsLevel3") },
-    { key: "level4", label: t("adsLevel4") },
-  ];
+  // Map API data to dropdown options
+  const adLevels = adLevelsFromApi.map((level) => ({
+    key: level.slug as AdLevel,
+    label: level.name,
+  }));
+
+  // Set default adsLevel when API loads
+  useEffect(() => {
+    if (adLevelsFromApi.length > 0 && formData.adsLevel === "level1") {
+      // Set to first level from API (or find a "medium" level as default)
+      const defaultLevel =
+        adLevelsFromApi.find((l) => l.slug === "medium") || adLevelsFromApi[0];
+      setFormData((prev) => ({
+        ...prev,
+        adsLevel: defaultLevel.slug as AdLevel,
+      }));
+    }
+  }, [adLevelsFromApi]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -273,18 +288,20 @@ export default function CreateShortlink({
                     <button
                       type="button"
                       onClick={() => setIsAdsLevelOpen(!isAdsLevelOpen)}
-                      className="w-full text-[1.6em] px-4 py-3 rounded-xl border border-gray-200 bg-blues flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-bluelight"
+                      disabled={isLoadingLevels}
+                      className="w-full text-[1.6em] px-4 py-3 rounded-xl border border-gray-200 bg-blues flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-bluelight disabled:opacity-50"
                     >
-                      <span
-                        className={
-                          formData.adsLevel === "level1"
-                            ? "text-grays"
-                            : "text-shortblack"
-                        }
-                      >
-                        {adLevels.find((l) => l.key === formData.adsLevel)
-                          ?.label || t("adsLevel")}
-                      </span>
+                      {isLoadingLevels ? (
+                        <span className="text-grays flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : (
+                        <span className="text-shortblack">
+                          {adLevels.find((l) => l.key === formData.adsLevel)
+                            ?.label || t("adsLevel")}
+                        </span>
+                      )}
                       <ChevronDown
                         className={`w-5 h-5 text-grays transition-transform ${
                           isAdsLevelOpen ? "rotate-180" : ""
@@ -292,7 +309,7 @@ export default function CreateShortlink({
                       />
                     </button>
                     <AnimatePresence>
-                      {isAdsLevelOpen && (
+                      {isAdsLevelOpen && !isLoadingLevels && (
                         <motion.div
                           initial={{ opacity: 0, y: -5 }}
                           animate={{ opacity: 1, y: 0 }}

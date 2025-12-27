@@ -22,7 +22,7 @@ interface Props {
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
   onPayWithProof: (id: string, url: string) => Promise<void>;
-  detailBasePath?: string; // <--- Add for dynamic detail URL
+  currentUserId?: string | number; // For checking if admin is processor
 }
 
 export default function WithdrawalList({
@@ -36,8 +36,7 @@ export default function WithdrawalList({
   onApprove,
   onReject,
   onAddProof,
-  onPayWithProof,
-  detailBasePath, // <--- Add this
+  currentUserId,
 }: Props) {
   const { showAlert } = useAlert();
 
@@ -90,10 +89,7 @@ export default function WithdrawalList({
               openRejectModal={(id) =>
                 setModalState({ isOpen: true, type: "reject", id })
               }
-              openProofModal={(id) =>
-                setModalState({ isOpen: true, type: "proof", id })
-              }
-              detailBasePath={detailBasePath} // <--- Pass this
+              currentUserId={currentUserId}
             />
           ))
         )}

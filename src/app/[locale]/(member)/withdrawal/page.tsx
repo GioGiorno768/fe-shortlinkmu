@@ -19,6 +19,7 @@ export default function WithdrawalPage() {
     stats,
     method,
     allMethods,
+    settings,
     transactions,
     totalPages,
     page,
@@ -137,6 +138,7 @@ export default function WithdrawalPage() {
         defaultMethod={method}
         allMethods={allMethods}
         availableBalance={stats?.availableBalance || 0}
+        withdrawalSettings={settings}
         onSuccess={onConfirmRequest}
       />
 

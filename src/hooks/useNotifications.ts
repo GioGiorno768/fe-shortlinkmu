@@ -1,46 +1,40 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as notifService from "@/services/notificationService";
 import type { NotificationItem } from "@/types/type";
 
+// Query key for notifications (shared across all components using this hook)
+const NOTIFICATIONS_KEY = ["notifications"];
+
 /**
- * Notification hook with client-side caching
- * - Fetches ALL notifications once
- * - Filters client-side (instant, no loading per filter)
- * - Revalidates on refresh() call
+ * Notification hook with React Query for shared caching
+ * - All components using this hook share the same cache
+ * - Mutations auto-invalidate cache so changes sync everywhere
  */
 export function useNotifications() {
-  const [allNotifications, setAllNotifications] = useState<NotificationItem[]>(
-    []
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [category, setCategory] = useState<string>("all");
 
-  // Fetch all notifications (called once on mount)
-  const fetchNotifications = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // Fetch ALL notifications (no category filter to backend)
-      const data = await notifService.getNotifications();
-      setAllNotifications(data);
-    } catch (error) {
-      console.error("Gagal load notifikasi", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  // Initial load
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  // Fetch all notifications with React Query (shared cache)
+  const {
+    data: allNotifications = [],
+    isLoading,
+    refetch,
+  } = useQuery<NotificationItem[]>({
+    queryKey: NOTIFICATIONS_KEY,
+    queryFn: () => notifService.getNotifications(),
+    staleTime: 30 * 1000, // 30 seconds
+  });
 
   // Filter client-side (INSTANT - no API call)
   const filteredNotifications =
     category === "all"
       ? allNotifications
-      : allNotifications.filter((n) => n.category === category);
+      : allNotifications.filter(
+          (n: NotificationItem) => n.category === category
+        );
 
   // Change filter (instant, no loading)
   const filterByCategory = useCallback((newCategory: string) => {
@@ -49,30 +43,86 @@ export function useNotifications() {
 
   // Refresh - refetch from server
   const refresh = useCallback(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    refetch();
+  }, [refetch]);
 
   // Mark single notification as read
-  const markRead = async (id: string) => {
-    setAllNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-    await notifService.markAsRead(id);
-  };
+  const markReadMutation = useMutation({
+    mutationFn: notifService.markAsRead,
+    onMutate: async (id: string) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+      const previous =
+        queryClient.getQueryData<NotificationItem[]>(NOTIFICATIONS_KEY);
+
+      queryClient.setQueryData<NotificationItem[]>(
+        NOTIFICATIONS_KEY,
+        (old) =>
+          old?.map((n) => (n.id === id ? { ...n, isRead: true } : n)) ?? []
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(NOTIFICATIONS_KEY, context.previous);
+      }
+    },
+  });
 
   // Mark all notifications as read
-  const markAllRead = async () => {
-    setAllNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    await notifService.markAllAsRead();
-  };
+  const markAllReadMutation = useMutation({
+    mutationFn: notifService.markAllAsRead,
+    onMutate: async () => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+      const previous =
+        queryClient.getQueryData<NotificationItem[]>(NOTIFICATIONS_KEY);
+
+      queryClient.setQueryData<NotificationItem[]>(
+        NOTIFICATIONS_KEY,
+        (old) => old?.map((n) => ({ ...n, isRead: true })) ?? []
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(NOTIFICATIONS_KEY, context.previous);
+      }
+    },
+  });
 
   // Remove notification
-  const removeNotification = async (id: string) => {
-    setAllNotifications((prev) => prev.filter((n) => n.id !== id));
-    await notifService.deleteNotification(id);
-  };
+  const removeMutation = useMutation({
+    mutationFn: notifService.deleteNotification,
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: NOTIFICATIONS_KEY });
+      const previous =
+        queryClient.getQueryData<NotificationItem[]>(NOTIFICATIONS_KEY);
 
-  const unreadCount = allNotifications.filter((n) => !n.isRead).length;
+      queryClient.setQueryData<NotificationItem[]>(
+        NOTIFICATIONS_KEY,
+        (old) => old?.filter((n) => n.id !== id) ?? []
+      );
+
+      return { previous };
+    },
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(NOTIFICATIONS_KEY, context.previous);
+      }
+    },
+  });
+
+  const markRead = (id: string) => markReadMutation.mutate(id);
+  const markAllRead = () => markAllReadMutation.mutate();
+  const removeNotification = (id: string) => removeMutation.mutate(id);
+
+  const unreadCount = allNotifications.filter(
+    (n: NotificationItem) => !n.isRead
+  ).length;
 
   return {
     notifications: filteredNotifications, // Already filtered

@@ -8,7 +8,17 @@ export type NavItem = {
   isHeader?: boolean; // <--- PENTING BUAT PEMISAH
 };
 
-export type AdLevel = "noAds" | "level1" | "level2" | "level3" | "level4";
+export type AdLevel =
+  | "noAds"
+  | "level1"
+  | "level2"
+  | "level3"
+  | "level4"
+  | "low"
+  | "medium"
+  | "high"
+  | "aggressive"
+  | string;
 
 // Tipe data untuk list link di card
 export type TopLinkItem = {
@@ -189,6 +199,7 @@ export interface PaymentMethod {
   accountNumber: string; // cth: "1234567890" (masked)
   fee?: number; // Admin fee for this method
   isDefault?: boolean; // Is this the default method
+  currency?: string; // Currency code from template (IDR, USD, etc.)
 }
 
 export interface Transaction {
@@ -202,6 +213,9 @@ export interface Transaction {
   status: "pending" | "approved" | "rejected" | "paid" | "cancelled";
   txId?: string; // ID referensi transfer
   note?: string; // Note/reason from admin
+  currency?: string; // Currency code from payment method (IDR, USD, etc.)
+  localAmount?: number; // Amount in local currency (saved at withdrawal time)
+  exchangeRate?: number; // Exchange rate used at withdrawal time
 }
 
 export interface UserProfile {
@@ -312,7 +326,9 @@ export interface SavedPaymentMethod {
   accountNumber: string; // Nomor rekening/HP/Email
   isDefault: boolean; // Penanda kalo ini metode utama
   category: "wallet" | "bank" | "crypto"; // Opsional, buat grouping icon
-  fee: number; // Admin fee for this method (in IDR)
+  fee?: number; // Admin fee for this method - optional, set by backend
+  currency?: string; // Currency code from template (IDR, USD, etc.)
+  templateId?: number; // Reference to payment method template
 }
 
 export interface PrivacySettings {
@@ -466,6 +482,8 @@ export interface AdminUser {
     totalLinks: number;
     totalViews: number;
     walletBalance: number;
+    totalEarnings?: number;
+    avgCpm?: number;
   };
 }
 
@@ -506,7 +524,8 @@ export interface RecentWithdrawal {
   proofUrl?: string; // Link GDrive/Bukti
   rejectionReason?: string; // Alasan penolakan
   riskScore: "safe" | "medium" | "high"; // Fraud detection
-  processed_by?: string;
+  processedById?: string | number; // ID of admin who processed
+  processedByName?: string | null; // Name of admin who processed
   // Currency info for admin to know exact local amount
   currency?: string; // User's currency (e.g., 'IDR', 'USD')
   localAmount?: number; // Amount in user's local currency
@@ -554,7 +573,7 @@ export interface RecentUser {
   id: string;
   name: string;
   email: string;
-  avatar: string;
+  avatar?: string; // Optional - might not be set
   joinedAt: string; // ISO Date
   status: UserStatus;
 }
@@ -613,7 +632,7 @@ export interface AdminLink {
     email: string;
   };
   views: number;
-  validViews: number; // Valid (non-fraudulent) views
+  validViews?: number; // Valid (non-fraudulent) views - optional
   earnings: number;
   createdAt: string;
   expiredAt?: string;

@@ -4,222 +4,242 @@ import type {
   UserDetailData,
   UserStatus,
 } from "@/types/type";
+import apiClient from "./apiClient";
 
-// --- MOCK DATA (UPDATED) ---
-const MOCK_USERS: AdminUser[] = Array.from({ length: 20 }, (_, i) => ({
-  id: `user-${i}`,
-  name: i % 3 === 0 ? `Budi Santoso ${i}` : `Kevin Ragil ${i}`,
-  username: `user_${i}`,
-  email: `user${i}@example.com`,
-  // Simulasi: User genap punya avatar, ganjil kosong (biar kita tes inisial)
-  avatarUrl:
-    i % 2 === 0 ? `/avatars/avatar-1.webp` : "",
-  status: i % 10 === 0 ? "suspended" : "active",
-  joinedAt: new Date(Date.now() - i * 100000000).toISOString(),
-  // Random last login (antara sekarang sampai 7 hari lalu)
-  lastLogin: new Date(
-    Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000)
-  ).toISOString(),
-  stats: {
-    totalLinks: Math.floor(Math.random() * 100),
-    totalViews: Math.floor(Math.random() * 5000),
-    walletBalance: parseFloat((Math.random() * 50).toFixed(2)),
-  },
-}));
-
-// ... (Sisa fungsi getUsers dan updateUserStatus TETAP SAMA)
+// --- API Response Types ---
 interface GetUsersParams {
   page?: number;
   search?: string;
   status?: string;
 }
 
+interface ApiUserResponse {
+  id: number;
+  name: string;
+  email: string;
+  avatar: string | null;
+  is_banned: boolean;
+  created_at: string;
+  last_active_at: string | null;
+  links_count?: number;
+  total_earnings?: number;
+  total_valid_views?: number;
+  balance?: number;
+}
+
+interface ApiUserDetailResponse {
+  id: number;
+  name: string;
+  username: string;
+  email: string;
+  avatar_url: string | null;
+  status: "active" | "suspended";
+  joined_at: string;
+  last_login: string | null;
+  stats: {
+    total_links: number;
+    total_views: number;
+    wallet_balance: number;
+    total_earnings: number;
+    avg_cpm: number;
+  };
+  current_level: unknown;
+  payment_methods: Array<{
+    id: number;
+    provider: string;
+    account_name: string;
+    account_number: string;
+    is_default: boolean;
+    category: string;
+    fee: number;
+  }>;
+  withdrawal_history: Array<{
+    id: number;
+    tx_id: string;
+    date: string;
+    amount: number;
+    fee: number;
+    method: string;
+    account: string;
+    status: string;
+  }>;
+}
+
+interface ApiStatsResponse {
+  total_users: { count: number; trend: number };
+  active_today: { count: number; trend: number };
+  suspended_users: { count: number; trend: number };
+}
+
+// --- Helper: Transform API user to frontend format ---
+function transformUser(apiUser: ApiUserResponse): AdminUser {
+  // Calculate avg CPM same as backend: (total_earnings / total_valid_views) * 1000
+  const totalValidViews = Number(apiUser.total_valid_views || 0);
+  const totalEarnings = Number(apiUser.total_earnings || 0);
+  const avgCpm =
+    totalValidViews > 0 ? (totalEarnings / totalValidViews) * 1000 : 0;
+
+  return {
+    id: String(apiUser.id),
+    name: apiUser.name,
+    username: apiUser.email.split("@")[0],
+    email: apiUser.email,
+    avatarUrl: apiUser.avatar ? `/avatars/${apiUser.avatar}.webp` : "",
+    status: apiUser.is_banned ? "suspended" : "active",
+    joinedAt: apiUser.created_at,
+    lastLogin: apiUser.last_active_at || apiUser.created_at,
+    stats: {
+      totalLinks: Number(apiUser.links_count || 0),
+      totalViews: totalValidViews,
+      walletBalance: Number(apiUser.balance || 0),
+      totalEarnings: totalEarnings,
+      avgCpm: avgCpm,
+    },
+  };
+}
+
+// --- API Functions ---
+
 export async function getUsers(
   params: GetUsersParams
 ): Promise<{ data: AdminUser[]; totalPages: number; totalCount: number }> {
-  await new Promise((r) => setTimeout(r, 600));
+  const response = await apiClient.get<{
+    data: {
+      users: {
+        data: ApiUserResponse[];
+        last_page: number;
+        total: number;
+      };
+    };
+  }>("/admin/users", {
+    params: {
+      page: params.page || 1,
+      per_page: 8,
+      search: params.search || undefined,
+      is_banned:
+        params.status === "suspended"
+          ? true
+          : params.status === "active"
+          ? false
+          : undefined,
+    },
+  });
 
-  let filtered = [...MOCK_USERS];
+  const { users } = response.data.data;
 
-  if (params.search) {
-    const s = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (u) =>
-        u.name.toLowerCase().includes(s) ||
-        u.email.toLowerCase().includes(s) ||
-        u.username.toLowerCase().includes(s)
-    );
-  }
-
-  if (params.status && params.status !== "all") {
-    filtered = filtered.filter((u) => u.status === params.status);
-  }
-
-  const itemsPerPage = 8;
-  const page = params.page || 1;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const data = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
-
-  return { data, totalPages, totalCount: filtered.length };
+  return {
+    data: users.data.map(transformUser),
+    totalPages: users.last_page,
+    totalCount: users.total,
+  };
 }
 
 export async function getAllUserIds(params: GetUsersParams): Promise<string[]> {
-  await new Promise((r) => setTimeout(r, 600));
-
-  let filtered = [...MOCK_USERS];
-
-  if (params.search) {
-    const s = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (u) =>
-        u.name.toLowerCase().includes(s) ||
-        u.email.toLowerCase().includes(s) ||
-        u.username.toLowerCase().includes(s)
-    );
-  }
-
-  if (params.status && params.status !== "all") {
-    filtered = filtered.filter((u) => u.status === params.status);
-  }
-
-  return filtered.map((u) => u.id);
+  // For "Select All" mode, we don't need actual IDs
+  // The backend handles it with filters
+  // This function is kept for compatibility but returns empty array
+  // since the notify endpoint accepts select_all: true with filters
+  return [];
 }
 
 export async function getUserStats(): Promise<AdminUserStats> {
-  // NANTI GANTI: fetch('/api/admin/users/stats')
-  await new Promise((r) => setTimeout(r, 500));
+  const response = await apiClient.get<{ data: ApiStatsResponse }>(
+    "/admin/users/stats"
+  );
+
+  const stats = response.data.data;
 
   return {
-    totalUsers: { count: MOCK_USERS.length, trend: 12.5 }, // +12.5% user baru
-    activeToday: { count: Math.floor(MOCK_USERS.length * 0.8), trend: 5.2 }, // User aktif naik
+    totalUsers: {
+      count: stats.total_users.count,
+      trend: stats.total_users.trend,
+    },
+    activeToday: {
+      count: stats.active_today.count,
+      trend: stats.active_today.trend,
+    },
     suspendedUsers: {
-      count: MOCK_USERS.filter((u) => u.status === "suspended").length,
-      trend: -2.4,
-    }, // Suspended user turun (bagus)
+      count: stats.suspended_users.count,
+      trend: stats.suspended_users.trend,
+    },
   };
 }
 
 export async function getUserDetail(
   id: string
 ): Promise<UserDetailData | null> {
-  // NANTI GANTI: fetch(`/api/admin/users/${id}`)
-  console.log("Fetching detail for:", id);
-  await new Promise((r) => setTimeout(r, 800)); // Simulasi loading
+  try {
+    const response = await apiClient.get<{ data: ApiUserDetailResponse }>(
+      `/admin/users/${id}`
+    );
 
-  // Cari user dari mock list (atau balikin dummy full)
-  const baseUser = MOCK_USERS.find((u) => u.id === id) || MOCK_USERS[0];
+    const user = response.data.data;
 
-  return {
-    ...baseUser,
-    phoneNumber: "0812-3456-7890",
-    bio: "Content Creator di TikTok & Youtube",
-    paymentMethods: [
-      {
-        id: "pm-1",
-        provider: "DANA",
-        accountName: baseUser.name,
-        accountNumber: "0812****7890",
-        isDefault: true,
-        category: "wallet",
+    return {
+      id: String(user.id),
+      name: user.name,
+      username: user.username,
+      email: user.email,
+      avatarUrl: user.avatar_url || "",
+      status: user.status,
+      joinedAt: user.joined_at,
+      lastLogin: user.last_login || user.joined_at,
+      phoneNumber: "", // Not available from API
+      bio: "", // Not available from API
+      stats: {
+        totalLinks: user.stats.total_links,
+        totalViews: user.stats.total_views,
+        walletBalance: user.stats.wallet_balance,
+        totalEarnings: user.stats.total_earnings,
+        avgCpm: user.stats.avg_cpm,
       },
-      {
-        id: "pm-2",
-        provider: "BCA",
-        accountName: baseUser.name,
-        accountNumber: "123****888",
-        isDefault: false,
-        category: "bank",
-      },
-    ],
-    withdrawalHistory: [
-      {
-        id: "wd-1",
-        date: new Date().toISOString(),
-        amount: 25.5,
-        method: "DANA",
-        account: "0812****7890",
-        status: "paid",
-      },
-      {
-        id: "wd-2",
-        date: new Date(Date.now() - 86400000 * 5).toISOString(),
-        amount: 50.0,
-        method: "BCA",
-        account: "123****888",
-        status: "rejected",
-      },
-    ],
-    loginHistory: [
-      {
-        id: "log-1",
-        ip: "192.168.1.10",
-        device: "Chrome / Windows",
-        location: "Jakarta, ID",
-        timestamp: new Date().toISOString(),
-        status: "success",
-      },
-      {
-        id: "log-2",
-        ip: "10.0.0.55",
-        device: "Safari / iPhone",
-        location: "Bandung, ID",
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-        status: "success",
-      },
-      {
-        id: "log-3",
-        ip: "45.12.33.1",
-        device: "Firefox / Linux",
-        location: "Moscow, RU",
-        timestamp: new Date(Date.now() - 86400000 * 3).toISOString(),
-        status: "failed", // Suspicious login
-      },
-    ],
-    messageHistory: [
-      {
-        id: "msg-1",
-        subject: "Peringatan Pelanggaran TOS",
-        message:
-          "Kami mendeteksi aktivitas mencurigakan pada akun Anda. Mohon segera verifikasi identitas Anda untuk menghindari penangguhan akun.",
-        type: "warning",
-        category: "account",
-        sentAt: new Date(Date.now() - 86400000).toISOString(),
-        isRead: true,
-      },
-      {
-        id: "msg-2",
-        subject: "Fitur Baru: Withdrawal Otomatis",
-        message:
-          "Halo! Kami baru saja merilis fitur withdrawal otomatis. Sekarang Anda bisa menarik dana kapan saja tanpa menunggu persetujuan manual.",
-        type: "info",
-        category: "payment",
-        sentAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        isRead: false,
-      },
-      {
-        id: "msg-3",
-        subject: "Bonus Referral Bulan Ini",
-        message:
-          "Selamat! Anda mendapatkan bonus referral sebesar $5.00 karena telah mengundang 10 teman aktif bulan ini.",
-        type: "info",
-        category: "event",
-        sentAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-        isRead: true,
-      },
-    ],
-  };
+      paymentMethods: user.payment_methods.map((pm) => ({
+        id: String(pm.id),
+        provider: pm.provider,
+        accountName: pm.account_name,
+        accountNumber: pm.account_number,
+        isDefault: pm.is_default,
+        category: pm.category as "wallet" | "bank" | "crypto",
+        fee: pm.fee,
+      })),
+      withdrawalHistory: user.withdrawal_history.map((wh) => ({
+        id: String(wh.id),
+        txId: wh.tx_id,
+        date: wh.date,
+        amount: wh.amount,
+        fee: wh.fee,
+        method: wh.method,
+        account: wh.account,
+        status: wh.status as
+          | "pending"
+          | "approved"
+          | "rejected"
+          | "paid"
+          | "cancelled",
+      })),
+      // Empty arrays for hidden tabs
+      loginHistory: [],
+      messageHistory: [],
+    };
+  } catch (error) {
+    console.error("Error fetching user detail:", error);
+    return null;
+  }
 }
 
 export async function updateUserStatus(
   id: string,
-  status: UserStatus
+  status: UserStatus,
+  reason?: string
 ): Promise<void> {
-  // NANTI GANTI: fetch('/api/admin/users/status', { method: 'PATCH', ... })
-  await new Promise((r) => setTimeout(r, 500));
-
-  const user = MOCK_USERS.find((u) => u.id === id);
-  if (user) {
-    user.status = status;
+  if (status === "suspended") {
+    // Ban requires reason
+    await apiClient.patch(`/admin/users/${id}/ban`, {
+      reason: reason || "Pelanggaran Terms of Service",
+    });
+  } else {
+    // Unban doesn't need reason
+    await apiClient.patch(`/admin/users/${id}/unban`);
   }
 }
 
@@ -231,20 +251,17 @@ export async function sendNotification(params: {
   message: string;
   type: "warning" | "info";
 }): Promise<void> {
-  // NANTI GANTI: fetch('/api/admin/users/notify', { method: 'POST', body: ... })
-  const { userIds, selectAll, filters, subject, message, type } = params;
-
-  if (selectAll) {
-    console.log(
-      `Sending [${type.toUpperCase()}] notification to ALL USERS matching filters:`,
-      filters
-    );
-  } else {
-    console.log(
-      `Sending [${type.toUpperCase()}] notification to ${userIds.length} users.`
-    );
-  }
-
-  console.log("Content:", { subject, message });
-  await new Promise((r) => setTimeout(r, 1000)); // Simulasi loading
+  await apiClient.post("/admin/users/notify", {
+    user_ids: params.selectAll ? [] : params.userIds.map((id) => parseInt(id)),
+    select_all: params.selectAll,
+    filters: params.filters
+      ? {
+          search: params.filters.search || undefined,
+          status: params.filters.status || "all",
+        }
+      : undefined,
+    subject: params.subject,
+    message: params.message,
+    type: params.type,
+  });
 }

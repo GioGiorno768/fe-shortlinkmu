@@ -57,13 +57,18 @@ export default function LoginForm() {
       }, 800);
     } catch (err: any) {
       console.error("Login error:", err);
+      console.log("Error response status:", err.response?.status);
+      console.log("Error response data:", err.response?.data);
 
       // Handle different error types
       let errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
 
-      if (err.response?.status === 422) {
+      const status = err.response?.status;
+      const data = err.response?.data;
+
+      if (status === 422) {
         // Laravel validation error
-        const errors = err.response?.data?.errors;
+        const errors = data?.errors;
         if (errors?.email) {
           // Login failed - wrong credentials
           errorMessage = "Email atau password salah. Silakan coba lagi.";
@@ -74,16 +79,18 @@ export default function LoginForm() {
             ? firstError[0]
             : (firstError as string) || "Email atau password salah.";
         }
-      } else if (err.response?.status === 403) {
-        // Account banned
-        errorMessage =
-          err.response?.data?.message ||
-          "Akun Anda telah dinonaktifkan. Hubungi admin.";
+      } else if (status === 403) {
+        // Account banned - show reason from backend
+        const banReason = data?.ban_reason || "Pelanggaran Terms of Service";
+        errorMessage = `Akun Anda telah di-suspend. Alasan: ${banReason}`;
+      } else if (status === 401) {
+        // Unauthorized - wrong credentials
+        errorMessage = "Email atau password salah.";
       } else {
-        // Other errors
+        // Other errors (500, network, etc)
         errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
+          data?.message ||
+          data?.error ||
           "Terjadi kesalahan saat login. Silakan coba lagi.";
       }
 

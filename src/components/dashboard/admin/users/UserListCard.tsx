@@ -56,7 +56,8 @@ export default function UserListCard({
       minute: "2-digit",
     });
 
-  const formatCurrency = (val: number) => "$" + val.toFixed(2);
+  const formatCurrency = (val: number | string) =>
+    "$" + Number(val || 0).toFixed(2);
 
   return (
     <div
@@ -229,7 +230,7 @@ export default function UserListCard({
                 Total Views
               </p>
               <p className="font-bold text-shortblack text-sm md:text-base truncate">
-                {user.stats.totalViews.toLocaleString()}
+                {Number(user.stats.totalViews || 0).toLocaleString()}
               </p>
             </div>
           </div>

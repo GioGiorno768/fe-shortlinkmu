@@ -23,6 +23,7 @@ export default function WithdrawalPage() {
     handleReject,
     handleAddProof,
     handlePayWithProof,
+    currentUserId, // For processor check
   } = useAdminWithdrawals();
 
   return (
@@ -45,6 +46,7 @@ export default function WithdrawalPage() {
         onReject={handleReject}
         onAddProof={handleAddProof}
         onPayWithProof={handlePayWithProof}
+        currentUserId={currentUserId}
       />
     </div>
   );

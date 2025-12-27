@@ -136,7 +136,7 @@ export default function AdsInfoPage() {
               </div>
 
               {/* Revenue Info */}
-              <div className="mb-8 p-4 bg-slate-50 rounded-xl text-center space-y-2">
+              <div className="mb-8 p-4 bg-slate-50 rounded-xl text-center">
                 <div className="flex justify-center items-baseline gap-1">
                   <span className="text-[3em] font-bold text-shortblack">
                     {level.revenueShare}%
@@ -145,9 +145,6 @@ export default function AdsInfoPage() {
                     Revenue
                   </span>
                 </div>
-                <p className="text-[1.2em] text-bluelight font-medium">
-                  CPM Rate: {level.cpmRate}
-                </p>
               </div>
 
               {/* Features List */}
@@ -222,4 +219,3 @@ export default function AdsInfoPage() {
     </div>
   );
 }
-

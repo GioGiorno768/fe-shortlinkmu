@@ -14,7 +14,7 @@ export default function UserProfileCard({ user }: Props) {
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center gap-4 mb-6">
         <Image
-          src={user.avatar}
+          src={user.avatar || "/avatars/default.png"}
           alt={user.name}
           width={64}
           height={64}

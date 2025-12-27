@@ -1,26 +1,22 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import {
-  MoreHorizontal,
   CheckCircle2,
   XCircle,
   Clock,
-  ExternalLink,
   CreditCard,
   Copy,
-  Link2,
   ThumbsUp,
   Send,
   AlertTriangle,
   Calendar,
   MessageSquare,
+  Link2,
 } from "lucide-react";
 import clsx from "clsx";
-import { motion, AnimatePresence } from "motion/react";
 import type { RecentWithdrawal } from "@/types/type";
-import { useClickOutside } from "@/hooks/useClickOutside";
 
 interface WithdrawalItemProps {
   trx: RecentWithdrawal;
@@ -28,24 +24,36 @@ interface WithdrawalItemProps {
   onReject: (id: string, reason: string) => void;
   onAddProof: (id: string, url: string) => void;
   // Modal triggers
-  // Modal triggers
   openRejectModal: (id: string) => void;
-  openProofModal: (id: string) => void; // Added
-  detailBasePath?: string; // <--- Add this for dynamic URL
+  // Current admin ID for checking processor match
+  currentUserId?: string | number;
 }
 
 export default function WithdrawalItem({
   trx,
   onApprove,
   openRejectModal,
-  openProofModal,
-  detailBasePath = "/admin/withdrawals", // <--- Add with default
+  currentUserId,
 }: WithdrawalItemProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  useClickOutside(menuRef, () => setIsMenuOpen(false));
+  const [copied, setCopied] = useState(false);
 
-  const formatCurrency = (val: number) =>
+  // Check if current admin is the one who processed this withdrawal
+  const isCurrentProcessor =
+    currentUserId &&
+    trx.processedById &&
+    String(currentUserId) === String(trx.processedById);
+
+  // Format currency based on currency code
+  const formatCurrency = (val: number, currency?: string) => {
+    if (currency === "IDR") {
+      return `Rp ${val.toLocaleString("id-ID", { maximumFractionDigits: 0 })}`;
+    }
+    // Default to USD
+    return "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
+  };
+
+  // Helper to format USD amount
+  const formatUSD = (val: number) =>
     "$" + val.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
   const formatDate = (d: string) =>
@@ -95,20 +103,15 @@ export default function WithdrawalItem({
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[1.6em] font-bold text-shortblack truncate">
-                  {formatCurrency(trx.amount)}
+                  {/* Show local currency as main if available, otherwise USD */}
+                  {trx.localAmount && trx.currency && trx.currency !== "USD"
+                    ? formatCurrency(trx.localAmount, trx.currency)
+                    : formatUSD(trx.amount)}
                 </span>
-                {/* Show local currency amount if available */}
+                {/* Show USD equivalent as secondary when using local currency */}
                 {trx.localAmount && trx.currency && trx.currency !== "USD" && (
-                  <span className="text-[1.2em] text-bluelight font-semibold bg-blue-50 px-2 py-0.5 rounded">
-                    ≈{" "}
-                    {trx.currency === "IDR"
-                      ? `Rp ${trx.localAmount.toLocaleString("id-ID", {
-                          maximumFractionDigits: 0,
-                        })}`
-                      : `${trx.localAmount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })} ${trx.currency}`}
+                  <span className="text-[1.2em] text-grays font-medium bg-gray-100 px-2 py-0.5 rounded">
+                    ≈ {formatUSD(trx.amount)}
                   </span>
                 )}
                 <span
@@ -149,67 +152,47 @@ export default function WithdrawalItem({
               )}
               {trx.status === "approved" && (
                 <>
-                  <button
-                    onClick={() => onApprove(trx.id, trx.status)}
-                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
-                  >
-                    <Send className="w-4 h-4" /> Pay Now
-                  </button>
-                  <button
-                    onClick={() => openRejectModal(trx.id)}
-                    className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all items-center gap-1.5"
-                  >
-                    <XCircle className="w-4 h-4" /> Reject
-                  </button>
+                  {/* Show action buttons only if current admin is the processor, else show "In Process" */}
+                  {isCurrentProcessor ? (
+                    <>
+                      <button
+                        onClick={() => onApprove(trx.id, trx.status)}
+                        className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
+                      >
+                        <Send className="w-4 h-4" /> Pay Now
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(trx.id)}
+                        className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all items-center gap-1.5"
+                      >
+                        <XCircle className="w-4 h-4" /> Reject
+                      </button>
+                    </>
+                  ) : trx.processedByName ? (
+                    <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 font-semibold text-[0.9em]">
+                      <Clock className="w-4 h-4 animate-pulse" />
+                      <span>In Process by {trx.processedByName}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => onApprove(trx.id, trx.status)}
+                        className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow-md transition-all items-center gap-1.5"
+                      >
+                        <Send className="w-4 h-4" /> Pay Now
+                      </button>
+                      <button
+                        onClick={() => openRejectModal(trx.id)}
+                        className="hidden md:flex px-4 py-2 rounded-xl font-bold text-[0.9em] bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-all items-center gap-1.5"
+                      >
+                        <XCircle className="w-4 h-4" /> Reject
+                      </button>
+                    </>
+                  )}
                 </>
               )}
 
-              {/* Action Dropdown - Only for Super Admin (Detail link) */}
-              {detailBasePath.includes("super-admin") && (
-                <div className="relative" ref={menuRef}>
-                  <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="p-2 text-grays hover:bg-slate-50 rounded-lg transition-colors"
-                  >
-                    <MoreHorizontal className="w-5 h-5" />
-                  </button>
-                  <AnimatePresence>
-                    {isMenuOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden p-1"
-                      >
-                        {/* Detail Link - Only for Super Admin */}
-                        <a
-                          href={`${detailBasePath}/${trx.id}`}
-                          className="w-full text-left px-4 py-2.5 hover:bg-slate-50 rounded-lg text-shortblack font-medium text-[1.1em] flex items-center gap-2"
-                        >
-                          <ExternalLink className="w-4 h-4 text-grays" /> Detail
-                        </a>
-
-                        {/* 
-                          ===============================================
-                          PAYMENT PROOF FEATURE - DISABLED FOR NOW
-                          Uncomment this block to enable "Send Payment Proof" feature
-                          ===============================================
-                          <div className="h-px bg-gray-100 my-1" />
-                          <button
-                            onClick={() => {
-                              openProofModal(trx.id);
-                              setIsMenuOpen(false);
-                            }}
-                            className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg text-blue-600 font-medium text-[1.1em] flex items-center gap-2"
-                          >
-                            <Link2 className="w-4 h-4" /> Send Payment Proof
-                          </button>
-                        */}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+              {/* Detail dropdown removed - not needed as list view is comprehensive */}
             </div>
           </div>
 
@@ -265,44 +248,42 @@ export default function WithdrawalItem({
               <p className="text-grays text-[0.9em]">
                 Fee:{" "}
                 <span className="font-bold text-orange-600">
-                  {formatCurrency(trx.fee)}
-                  {/* Show local fee if we have valid localAmount and exchangeRate */}
+                  {/* Show local fee as main if available */}
+                  {trx.localAmount &&
+                  trx.exchangeRate &&
+                  trx.currency &&
+                  trx.currency !== "USD"
+                    ? formatCurrency(trx.fee * trx.exchangeRate, trx.currency)
+                    : formatUSD(trx.fee)}
+                  {/* Show USD equivalent as secondary */}
                   {trx.localAmount &&
                     trx.exchangeRate &&
                     trx.currency &&
                     trx.currency !== "USD" && (
                       <span className="text-grays font-normal ml-1">
-                        (≈{" "}
-                        {trx.currency === "IDR"
-                          ? `Rp ${Math.round(
-                              trx.fee * trx.exchangeRate
-                            ).toLocaleString("id-ID")}`
-                          : `${(trx.fee * trx.exchangeRate).toFixed(2)} ${
-                              trx.currency
-                            }`}
-                        )
+                        (≈ {formatUSD(trx.fee)})
                       </span>
                     )}
                 </span>
               </p>
               <p className="text-shortblack font-bold">
-                Total: {formatCurrency(trx.amount + trx.fee)}
-                {/* Show local total if we have valid localAmount */}
+                Total: {/* Show local total as main if available */}
+                {trx.localAmount &&
+                trx.exchangeRate &&
+                trx.currency &&
+                trx.currency !== "USD"
+                  ? formatCurrency(
+                      (trx.amount + trx.fee) * trx.exchangeRate,
+                      trx.currency
+                    )
+                  : formatUSD(trx.amount + trx.fee)}
+                {/* Show USD equivalent as secondary */}
                 {trx.localAmount &&
                   trx.exchangeRate &&
                   trx.currency &&
                   trx.currency !== "USD" && (
-                    <span className="text-bluelight font-semibold ml-1 text-[0.9em]">
-                      (≈{" "}
-                      {trx.currency === "IDR"
-                        ? `Rp ${Math.round(
-                            (trx.amount + trx.fee) * trx.exchangeRate
-                          ).toLocaleString("id-ID")}`
-                        : `${(
-                            (trx.amount + trx.fee) *
-                            trx.exchangeRate
-                          ).toFixed(2)} ${trx.currency}`}
-                      )
+                    <span className="text-grays font-normal ml-1 text-[0.9em]">
+                      (≈ {formatUSD(trx.amount + trx.fee)})
                     </span>
                   )}
               </p>
@@ -380,12 +361,28 @@ export default function WithdrawalItem({
           </>
         )}
         {trx.status === "approved" && (
-          <button
-            onClick={() => onApprove(trx.id, trx.status)}
-            className="w-full py-3 rounded-xl font-bold text-[1em] bg-green-600 hover:bg-green-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <Send className="w-5 h-5" /> Process Payment
-          </button>
+          <>
+            {isCurrentProcessor ? (
+              <button
+                onClick={() => onApprove(trx.id, trx.status)}
+                className="w-full py-3 rounded-xl font-bold text-[1em] bg-green-600 hover:bg-green-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-5 h-5" /> Process Payment
+              </button>
+            ) : trx.processedByName ? (
+              <div className="w-full py-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 font-semibold text-[1em] flex items-center justify-center gap-2">
+                <Clock className="w-5 h-5 animate-pulse" />
+                <span>In Process by {trx.processedByName}</span>
+              </div>
+            ) : (
+              <button
+                onClick={() => onApprove(trx.id, trx.status)}
+                className="w-full py-3 rounded-xl font-bold text-[1em] bg-green-600 hover:bg-green-700 text-white shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Send className="w-5 h-5" /> Process Payment
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

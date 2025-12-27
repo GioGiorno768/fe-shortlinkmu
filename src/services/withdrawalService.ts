@@ -117,6 +117,10 @@ export async function getWithdrawalData(
     accountName: p.payment_method?.account_name || "",
     status: p.status,
     note: p.note,
+    // Use currency info from payout record (saved at time of withdrawal)
+    currency: p.currency || p.payment_method?.template?.currency || null,
+    localAmount: p.local_amount ? parseFloat(p.local_amount) : undefined,
+    exchangeRate: p.exchange_rate ? parseFloat(p.exchange_rate) : undefined,
   }));
 
   return {
@@ -177,11 +181,12 @@ export async function getPrimaryPaymentMethod(): Promise<PaymentMethod | null> {
 
   return {
     id: defaultMethod.id.toString(),
-    provider: defaultMethod.bank_name || defaultMethod.provider, // bank_name is the field used by settingsService
+    provider: defaultMethod.bank_name || defaultMethod.provider,
     accountNumber: defaultMethod.account_number,
     accountName: defaultMethod.account_name,
     fee: defaultMethod.fee || 0,
     isDefault: defaultMethod.is_default || false,
+    currency: defaultMethod.template?.currency || null,
   };
 }
 
@@ -321,7 +326,12 @@ export async function getWithdrawals(
       proofUrl: w.proof_url,
       rejectionReason: w.notes,
       riskScore: "safe",
-      processed_by: w.processed_by,
+      processedById:
+        typeof w.processed_by === "object"
+          ? w.processed_by?.id
+          : w.processed_by,
+      processedByName:
+        typeof w.processed_by === "object" ? w.processed_by?.name : null, // Name of admin who processed
       // Currency info for admin
       currency: w.currency || "USD",
       localAmount: w.local_amount ? parseFloat(w.local_amount) : undefined,
@@ -379,13 +389,17 @@ export async function updateTransactionStatus(
     headers: authHeaders(),
     body: JSON.stringify({
       status,
-      note: reasonOrProof,
+      notes: reasonOrProof,
     }),
   });
 
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message || "Failed to update status");
+    // Create error object with status for race condition detection
+    const err = new Error(error.message || "Failed to update status") as any;
+    err.status = res.status;
+    err.response = { status: res.status, data: error };
+    throw err;
   }
 
   return true;

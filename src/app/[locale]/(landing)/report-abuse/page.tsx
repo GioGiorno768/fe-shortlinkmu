@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Footer from "@/components/landing/Footer";
 import Navbar from "@/components/landing/Navbar";
 import TitleSection from "@/components/landing/TitleSection";
@@ -6,9 +9,84 @@ import {
   Mail,
   MessageSquare,
   ShieldAlert,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+
+interface FormData {
+  url: string;
+  reason: string;
+  email: string;
+  details: string;
+}
+
+type FormStatus = "idle" | "loading" | "success" | "error";
+
 export default function ReportAbuse() {
+  const [formData, setFormData] = useState<FormData>({
+    url: "",
+    reason: "",
+    email: "",
+    details: "",
+  });
+  const [status, setStatus] = useState<FormStatus>("idle");
+  const [message, setMessage] = useState("");
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const response = await fetch(`${API_URL}/report`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          url: formData.url,
+          reason: formData.reason,
+          email: formData.email || undefined,
+          details: formData.details || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setStatus("success");
+        setMessage(
+          data.message ||
+            "Laporan Anda telah diterima. Terima kasih atas kontribusi Anda!"
+        );
+        // Reset form
+        setFormData({ url: "", reason: "", email: "", details: "" });
+      } else {
+        setStatus("error");
+        setMessage(
+          data.message || "Terjadi kesalahan. Silakan coba lagi nanti."
+        );
+      }
+    } catch (error) {
+      console.error("Report submission error:", error);
+      setStatus("error");
+      setMessage("Gagal mengirim laporan. Periksa koneksi internet Anda.");
+    }
+  };
+
   return (
     <main className="text-[10px] max-w-[155em] m-auto bg-white">
       {/* Navbar */}
@@ -34,13 +112,28 @@ export default function ReportAbuse() {
             pClassName="sm:w-[35em] w-full"
           />
 
+          {/* Success/Error Alert */}
+          {status === "success" && (
+            <div className="w-full md:w-[80%] lg:w-[60%] m-auto bg-green-50 border border-green-200 text-green-700 p-[2em] rounded-2xl flex items-center gap-[1.5em]">
+              <CheckCircle2 className="w-8 h-8 text-green-600 shrink-0" />
+              <p className="text-[1.6em]">{message}</p>
+            </div>
+          )}
+
+          {status === "error" && (
+            <div className="w-full md:w-[80%] lg:w-[60%] m-auto bg-red-50 border border-red-200 text-red-700 p-[2em] rounded-2xl flex items-center gap-[1.5em]">
+              <AlertCircle className="w-8 h-8 text-red-600 shrink-0" />
+              <p className="text-[1.6em]">{message}</p>
+            </div>
+          )}
+
           {/* Form Laporan */}
           <div className="w-full md:w-[80%] lg:w-[60%] m-auto bg-white p-[3em] sm:p-[5em] rounded-2xl shadow-lg border border-gray-100">
-            <form className="space-y-[4em]">
+            <form className="space-y-[4em]" onSubmit={handleSubmit}>
               {/* Input Link yang Dilaporkan */}
               <div className="relative">
                 <label
-                  htmlFor="abusive-link"
+                  htmlFor="url"
                   className="text-shortblack font-medium text-[1.8em] mb-[1em] block"
                 >
                   Link yang Dilaporkan <span className="text-red-500">*</span>
@@ -48,12 +141,15 @@ export default function ReportAbuse() {
                 <div className="relative">
                   <LinkIcon className="w-5 h-5 text-grays absolute left-[3em] top-1/2 -translate-y-1/2" />
                   <input
-                    type="text"
-                    id="abusive-link"
-                    name="abusive-link"
+                    type="url"
+                    id="url"
+                    name="url"
+                    value={formData.url}
+                    onChange={handleChange}
                     className="py-[1em] px-[4.5em] block w-full shadow-sm text-[1.6em] focus:outline-bluelight border border-gray-200 rounded-full bg-white"
                     placeholder="https://short.link/link-berbahaya"
                     required
+                    disabled={status === "loading"}
                   />
                 </div>
               </div>
@@ -71,9 +167,11 @@ export default function ReportAbuse() {
                   <select
                     id="reason"
                     name="reason"
+                    value={formData.reason}
+                    onChange={handleChange}
                     className="py-[1em] px-[4.5em] block w-full shadow-sm text-[1.6em] focus:outline-bluelight border border-gray-200 rounded-full bg-white appearance-none"
                     required
-                    defaultValue=""
+                    disabled={status === "loading"}
                   >
                     <option value="" disabled>
                       Pilih kategori...
@@ -110,7 +208,7 @@ export default function ReportAbuse() {
               {/* Input Email (Opsional) */}
               <div className="relative">
                 <label
-                  htmlFor="reporter-email"
+                  htmlFor="email"
                   className="text-shortblack font-medium text-[1.8em] mb-[1em] block"
                 >
                   Email Anda (Opsional)
@@ -119,10 +217,13 @@ export default function ReportAbuse() {
                   <Mail className="w-5 h-5 text-grays absolute left-[3em] top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
-                    id="reporter-email"
-                    name="reporter-email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     className="py-[1em] px-[4.5em] block w-full shadow-sm text-[1.6em] focus:outline-bluelight border border-gray-200 rounded-full bg-white"
                     placeholder="Email Anda untuk tindak lanjut"
+                    disabled={status === "loading"}
                   />
                 </div>
               </div>
@@ -141,8 +242,11 @@ export default function ReportAbuse() {
                     id="details"
                     name="details"
                     rows={4}
+                    value={formData.details}
+                    onChange={handleChange}
                     className="py-[1.3em] px-[4.5em] block w-full shadow-sm text-[1.6em] focus:outline-bluelight border border-gray-200 rounded-3xl bg-white"
                     placeholder="Jelaskan lebih lanjut (jika perlu)..."
+                    disabled={status === "loading"}
                   />
                 </div>
               </div>
@@ -150,9 +254,17 @@ export default function ReportAbuse() {
               {/* Tombol Submit */}
               <button
                 type="submit"
-                className="text-[1.8em] w-full bg-bluelight text-white px-[2em] py-[1.5em] rounded-full cursor-pointer font-semibold hover:bg-opacity-90 transition-all"
+                disabled={status === "loading"}
+                className="text-[1.8em] w-full bg-bluelight text-white px-[2em] py-[1.5em] rounded-full cursor-pointer font-semibold hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-[0.5em]"
               >
-                Kirim Laporan
+                {status === "loading" ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Mengirim...
+                  </>
+                ) : (
+                  "Kirim Laporan"
+                )}
               </button>
             </form>
           </div>

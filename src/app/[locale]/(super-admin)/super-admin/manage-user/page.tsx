@@ -61,18 +61,12 @@ export default function SuperAdminManageUserPage() {
     if (!selectedUserForSuspend || !reason) return;
 
     try {
-      // Toggle status to suspended
+      // Toggle status to suspended WITH reason
       await toggleStatus(
         selectedUserForSuspend.id,
-        selectedUserForSuspend.status
+        selectedUserForSuspend.status,
+        reason // Pass reason to hook -> service -> backend
       );
-
-      // TODO: Send notification to user with suspension reason
-      // await adminUserService.sendNotificationToUser(selectedUserForSuspend.id, {
-      //   subject: "Account Suspended",
-      //   message: reason,
-      //   type: "warning"
-      // });
 
       setIsSuspendModalOpen(false);
       setSelectedUserForSuspend(null);

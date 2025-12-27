@@ -210,7 +210,8 @@ export async function bulkUpdateLinkStatus(params: {
 // ===========================
 export async function updateLinkStatus(
   id: string,
-  status: LinkStatus
+  status: LinkStatus,
+  reason?: string
 ): Promise<boolean> {
   const linkId = id.replace("link-", "") || id;
 
@@ -219,6 +220,7 @@ export async function updateLinkStatus(
     headers: authHeaders(),
     body: JSON.stringify({
       is_banned: status === "disabled",
+      ban_reason: reason,
     }),
   });
 

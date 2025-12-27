@@ -1,7 +1,6 @@
 // src/components/dashboard/links/LinkList.tsx
 "use client";
 
-import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import LinkItem from "./LinkItem";
 import LinkFilters from "./LinkFilters";
@@ -17,8 +16,10 @@ interface LinkListProps {
   setFilters: (v: MemberLinkFilters) => void;
   page: number;
   setPage: (v: number) => void;
-  // Actions
+  // Loading states
   isLoading: boolean;
+  isFetching?: boolean;
+  // Actions
   onEdit: (id: string) => void;
   onToggleStatus: (id: string, status: "active" | "disabled") => void;
 }
@@ -31,17 +32,19 @@ export default function LinkList({
   page,
   setPage,
   isLoading,
+  isFetching = false,
   onEdit,
   onToggleStatus,
 }: LinkListProps) {
-  const [expandedLink, setExpandedLink] = useState<string | null>(null);
+  // Show spinner for initial load OR during refetch
+  const showLoading = isLoading || isFetching;
 
   return (
     <div className="rounded-xl mt-6 text-[10px]">
       <LinkFilters filters={filters} setFilters={setFilters} />
 
-      <div className="space-y-3 min-h-[200px]">
-        {isLoading ? (
+      <div className="space-y-4 min-h-[200px]">
+        {showLoading ? (
           <Spinner />
         ) : links.length === 0 ? (
           <p className="text-center text-grays py-8">
@@ -52,10 +55,6 @@ export default function LinkList({
             <LinkItem
               key={link.id}
               link={link}
-              isExpanded={expandedLink === link.id}
-              onToggleExpand={() =>
-                setExpandedLink(expandedLink === link.id ? null : link.id)
-              }
               onEdit={onEdit}
               onToggleStatus={onToggleStatus}
             />
@@ -63,7 +62,7 @@ export default function LinkList({
         )}
       </div>
 
-      {!isLoading && totalPages > 1 && (
+      {!showLoading && totalPages > 1 && (
         <Pagination
           currentPage={page}
           totalPages={totalPages}

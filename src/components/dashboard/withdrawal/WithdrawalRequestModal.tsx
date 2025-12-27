@@ -146,12 +146,20 @@ type CategoryKey = keyof typeof PAYMENT_CONFIG;
 
 import type { SavedPaymentMethod } from "@/types/type";
 
+interface WithdrawalSettings {
+  minWithdrawal: number;
+  maxWithdrawal: number;
+  limitCount: number;
+  limitDays: number;
+}
+
 interface WithdrawalRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultMethod: PaymentMethod | null;
   allMethods: SavedPaymentMethod[];
   availableBalance: number;
+  withdrawalSettings?: WithdrawalSettings | null;
   onSuccess: (amount: number, method: PaymentMethod) => Promise<void>;
 }
 
@@ -161,6 +169,7 @@ export default function WithdrawalRequestModal({
   defaultMethod,
   allMethods,
   availableBalance,
+  withdrawalSettings,
   onSuccess,
 }: WithdrawalRequestModalProps) {
   const { showAlert } = useAlert();
@@ -199,9 +208,17 @@ export default function WithdrawalRequestModal({
     }
   };
 
+  // Get min/max from settings (defaults: min $2, max = balance)
+  const minWithdrawalUSD = withdrawalSettings?.minWithdrawal ?? 2;
+  const maxWithdrawalUSD = withdrawalSettings?.maxWithdrawal ?? 0; // 0 = unlimited
+
   // Get minimum withdrawal in local currency (rounded up for clean display)
-  const minWithdrawalLocal = roundMinimumUp(toLocalCurrency(2));
-  const maxWithdrawalLocal = toLocalCurrency(Number(availableBalance) || 0);
+  const minWithdrawalLocal = roundMinimumUp(toLocalCurrency(minWithdrawalUSD));
+  // Max withdrawal: use the LOWER of (balance, admin max setting)
+  const balanceUSD = Number(availableBalance) || 0;
+  const effectiveMaxUSD =
+    maxWithdrawalUSD > 0 ? Math.min(balanceUSD, maxWithdrawalUSD) : balanceUSD;
+  const maxWithdrawalLocal = toLocalCurrency(effectiveMaxUSD);
 
   // --- STATE UTAMA ---
   const [step, setStep] = useState(1);
@@ -252,24 +269,57 @@ export default function WithdrawalRequestModal({
 
   // --- LOGIC STEP 2: SUBMIT ---
   const handleSubmit = async () => {
-    const amountLocal = parseFloat(withdrawAmount);
+    // Get selected method for PM currency
+    const selectedMethod =
+      useDefault && defaultMethod ? defaultMethod : selectedOtherMethod;
 
-    // Validate minimum in local currency
-    if (isNaN(amountLocal) || amountLocal < minWithdrawalLocal) {
-      showAlert(`Minimal penarikan adalah ${formatCurrency(2)}`, "error");
+    // Get PM currency from method, fallback to user preference
+    const pmCurrency = selectedMethod?.currency || currency;
+    const pmRates = getExchangeRates();
+    const pmRate = pmRates[pmCurrency as keyof typeof pmRates] || 1;
+
+    // Calculate min/max in PM currency using settings
+    const minWithdrawalPM =
+      pmCurrency === "IDR"
+        ? Math.ceil((minWithdrawalUSD * pmRate) / 1000) * 1000
+        : minWithdrawalUSD * pmRate;
+
+    // Max withdrawal: use the LOWER of (balance, admin max setting)
+    const balanceUSD = Number(availableBalance) || 0;
+    const effectiveMaxUSD =
+      maxWithdrawalUSD > 0
+        ? Math.min(balanceUSD, maxWithdrawalUSD)
+        : balanceUSD;
+    const maxWithdrawalPM = effectiveMaxUSD * pmRate;
+
+    const amountPM = parseFloat(withdrawAmount);
+
+    // Validate minimum in PM currency
+    if (isNaN(amountPM) || amountPM < minWithdrawalPM) {
+      const pmSymbol =
+        pmCurrency === "IDR"
+          ? "Rp "
+          : pmCurrency === "USD"
+          ? "$"
+          : pmCurrency + " ";
+      const minFormatted =
+        pmCurrency === "IDR"
+          ? Math.round(minWithdrawalPM).toLocaleString("id-ID")
+          : minWithdrawalPM.toFixed(2);
+      showAlert(`Minimal penarikan adalah ${pmSymbol}${minFormatted}`, "error");
       return;
     }
 
-    // Validate max in local currency
-    if (amountLocal > maxWithdrawalLocal) {
+    // Validate max in PM currency
+    if (amountPM > maxWithdrawalPM) {
       showAlert("Saldo tidak mencukupi.", "error");
       return;
     }
 
     setIsLoading(true);
 
-    // Convert back to USD for backend
-    const amountUSD = toUSD(amountLocal);
+    // Convert PM amount back to USD for backend
+    const amountUSD = amountPM / pmRate;
 
     // Tentukan metode mana yang dipake (Default atau Selected Other)
     const finalMethod: PaymentMethod =
@@ -280,6 +330,7 @@ export default function WithdrawalRequestModal({
             provider: selectedOtherMethod?.provider || "",
             accountName: selectedOtherMethod?.accountName || "",
             accountNumber: selectedOtherMethod?.accountNumber || "",
+            currency: selectedOtherMethod?.currency,
           };
 
     try {
@@ -477,20 +528,80 @@ export default function WithdrawalRequestModal({
               ) : (
                 // === STEP 2: INPUT AMOUNT ===
                 (() => {
-                  // Get fee from selected payment method (fee is in USD from backend)
+                  // Get selected payment method
                   const selectedMethod =
                     useDefault && defaultMethod
                       ? defaultMethod
                       : selectedOtherMethod;
-                  const feeUSD = selectedMethod?.fee || 0;
-                  // Convert fee from USD to user's local currency
-                  const feeLocal = toLocalCurrency(feeUSD);
 
-                  const amountLocal = parseFloat(withdrawAmount) || 0;
-                  const totalAmount = amountLocal + feeLocal;
+                  // 🎯 Get currency from payment method template, fallback to user preference
+                  const pmCurrency = selectedMethod?.currency || currency;
+                  const pmSymbol =
+                    pmCurrency === "IDR"
+                      ? "Rp"
+                      : pmCurrency === "USD"
+                      ? "$"
+                      : pmCurrency;
+
+                  // Convert using PM currency
+                  const pmRates = getExchangeRates();
+                  const pmRate =
+                    pmRates[pmCurrency as keyof typeof pmRates] || 1;
+                  const convertToPMCurrency = (usd: number) => usd * pmRate;
+
+                  // Calculate amounts in PM currency using settings
+                  const minWithdrawalPM =
+                    pmCurrency === "IDR"
+                      ? Math.ceil(
+                          convertToPMCurrency(minWithdrawalUSD) / 1000
+                        ) * 1000
+                      : convertToPMCurrency(minWithdrawalUSD);
+
+                  // Available balance in PM currency (for display)
+                  const balanceUSD = Number(availableBalance) || 0;
+                  const availableBalancePM = convertToPMCurrency(balanceUSD);
+
+                  // Max withdrawal for button/validation: use LOWER of (balance, admin max setting)
+                  // If maxWithdrawalUSD is 0, it means unlimited (use balance only)
+                  const effectiveMaxUSD =
+                    maxWithdrawalUSD > 0
+                      ? Math.min(balanceUSD, maxWithdrawalUSD)
+                      : balanceUSD;
+                  const maxWithdrawalPM = convertToPMCurrency(effectiveMaxUSD);
+
+                  // Fee from payment_methods is ALWAYS in USD (backend converts on save)
+                  // Convert to PM currency for display
+                  const feeUSD = Number(selectedMethod?.fee) || 0;
+                  const feeInPM = convertToPMCurrency(feeUSD);
+
+                  const amountPM = parseFloat(withdrawAmount) || 0;
+                  const totalAmount = amountPM + feeInPM;
+
+                  // Format helper for PM currency
+                  const formatPM = (amount: number) => {
+                    if (pmCurrency === "IDR") {
+                      return `${pmSymbol} ${Math.round(amount).toLocaleString(
+                        "id-ID"
+                      )}`;
+                    }
+                    return `${pmSymbol}${amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`;
+                  };
 
                   return (
                     <div className="space-y-6">
+                      {/* Currency Badge - Show which currency is being used */}
+                      <div className="flex items-center gap-2 bg-purple-50 text-purple-700 px-4 py-2 rounded-xl border border-purple-100">
+                        <Wallet className="w-4 h-4" />
+                        <span className="text-[1.2em] font-medium">
+                          Amount will be processed in{" "}
+                          <strong>{pmCurrency}</strong> (based on payment
+                          method)
+                        </span>
+                      </div>
+
                       {/* Info Saldo & Tujuan */}
                       <div className="bg-blues p-5 rounded-2xl flex items-center justify-between border border-blue-100">
                         <div>
@@ -498,7 +609,7 @@ export default function WithdrawalRequestModal({
                             Available Balance
                           </p>
                           <p className="text-[2em] font-bold text-bluelight">
-                            {formatCurrency(Number(availableBalance) || 0)}
+                            {formatPM(availableBalancePM)}
                           </p>
                         </div>
                         <div className="text-right">
@@ -521,46 +632,60 @@ export default function WithdrawalRequestModal({
                       {/* Input Amount */}
                       <div>
                         <label className="block text-[1.4em] font-bold text-shortblack mb-2">
-                          Withdrawal Amount ({symbol})
+                          Withdrawal Amount ({pmCurrency})
                         </label>
                         <div className="relative">
                           <span className="absolute left-5 top-1/2 -translate-y-1/2 text-[1.8em] font-bold text-grays">
-                            {symbol}
+                            {pmSymbol}
                           </span>
                           <input
                             type="number"
                             value={withdrawAmount}
                             onChange={(e) => setWithdrawAmount(e.target.value)}
-                            placeholder="0.00"
+                            placeholder={pmCurrency === "IDR" ? "0" : "0.00"}
                             className="w-full pl-14 pr-5 py-3.5 rounded-2xl border-2 border-gray-200 text-[2em] font-bold text-shortblack focus:outline-none focus:border-bluelight transition-colors placeholder:text-gray-300"
-                            min={2}
-                            max={availableBalance}
+                            min={minWithdrawalPM}
+                            max={maxWithdrawalPM}
                           />
                         </div>
-                        {/* Tombol Cepat % */}
-                        <div className="flex gap-2 mt-3">
+                        {/* Quick Amount Buttons */}
+                        <div className="flex gap-2 mt-3 flex-wrap">
                           <button
-                            onClick={setMinAmount}
+                            onClick={() =>
+                              setWithdrawAmount(
+                                pmCurrency === "IDR"
+                                  ? Math.round(minWithdrawalPM).toString()
+                                  : minWithdrawalPM.toFixed(2)
+                              )
+                            }
                             className="px-3 py-1.5 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.1em] font-medium transition-colors"
                           >
-                            Min ({symbol}
-                            {currency === "IDR"
-                              ? minWithdrawalLocal.toLocaleString("id-ID")
-                              : minWithdrawalLocal.toLocaleString()}
-                            )
+                            Min ({formatPM(minWithdrawalPM)})
                           </button>
                           <button
-                            onClick={() => setPercentage(50)}
+                            onClick={() => {
+                              const val = maxWithdrawalPM * 0.5;
+                              setWithdrawAmount(
+                                pmCurrency === "IDR"
+                                  ? Math.round(val).toString()
+                                  : val.toFixed(2)
+                              );
+                            }}
                             className="px-3 py-1.5 rounded-lg bg-gray-100 text-grays hover:bg-gray-200 text-[1.1em] font-medium transition-colors"
                           >
                             50%
                           </button>
                           <button
-                            onClick={() => setPercentage(100)}
+                            onClick={() =>
+                              setWithdrawAmount(
+                                pmCurrency === "IDR"
+                                  ? Math.round(maxWithdrawalPM).toString()
+                                  : maxWithdrawalPM.toFixed(2)
+                              )
+                            }
                             className="px-3 py-1.5 rounded-lg bg-blue-100 text-bluelight hover:bg-blue-200 text-[1.1em] font-medium transition-colors"
                           >
-                            Max ({formatCurrency(Number(availableBalance) || 0)}
-                            )
+                            Max ({formatPM(maxWithdrawalPM)})
                           </button>
                         </div>
                       </div>
@@ -572,13 +697,7 @@ export default function WithdrawalRequestModal({
                             Fee Amount
                           </span>
                           <span className="text-[1.3em] text-grays">
-                            {symbol}{" "}
-                            {currency === "IDR"
-                              ? Math.round(feeLocal).toLocaleString("id-ID")
-                              : feeLocal.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                            {formatPM(feeInPM)}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -586,13 +705,7 @@ export default function WithdrawalRequestModal({
                             Total Amount
                           </span>
                           <span className="text-[1.6em] font-bold text-shortblack">
-                            {symbol}{" "}
-                            {currency === "IDR"
-                              ? Math.round(totalAmount).toLocaleString("id-ID")
-                              : totalAmount.toLocaleString(undefined, {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2,
-                                })}
+                            {formatPM(totalAmount)}
                           </span>
                         </div>
                       </div>

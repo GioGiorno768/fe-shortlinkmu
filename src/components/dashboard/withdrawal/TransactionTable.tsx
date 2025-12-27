@@ -14,6 +14,7 @@ import {
 import clsx from "clsx";
 import type { Transaction } from "@/types/type";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { getExchangeRates } from "@/utils/currency";
 import { motion, AnimatePresence } from "motion/react";
 import Pagination from "../Pagination";
 
@@ -114,6 +115,35 @@ export default function TransactionTable({
     return (
       (parseFloat(String(tx.amount)) || 0) + (parseFloat(String(tx.fee)) || 0)
     );
+  };
+
+  // Convert USD amount to transaction's currency for display
+  const getDisplayAmount = (usdAmount: number, txCurrency?: string) => {
+    if (!txCurrency) return usdAmount;
+    const rates = getExchangeRates();
+    const rate = rates[txCurrency as keyof typeof rates] || 1;
+    return usdAmount * rate;
+  };
+
+  // Format amount based on currency - use saved local amount if available
+  const formatAmountForCurrency = (
+    usdAmount: number,
+    currency: string,
+    savedLocalAmount?: number
+  ) => {
+    // If we have a saved local amount (from database), use it directly
+    // This ensures user sees the exact amount they requested
+    const displayAmount =
+      savedLocalAmount !== undefined
+        ? savedLocalAmount
+        : getDisplayAmount(usdAmount, currency);
+
+    if (currency === "IDR") {
+      return `Rp ${Math.round(displayAmount).toLocaleString("id-ID")}`;
+    } else if (currency === "USD") {
+      return `$${displayAmount.toFixed(2)}`;
+    }
+    return `${currency} ${displayAmount.toFixed(2)}`;
   };
 
   return (
@@ -319,11 +349,40 @@ export default function TransactionTable({
                 <div className="flex items-center gap-4 sm:gap-6">
                   {/* Amount */}
                   <div className="text-right">
-                    <div className="text-[1.6em] font-bold text-shortblack">
-                      {formatCurrency(getTotalAmount(tx))}
+                    <div className="text-[1.6em] font-bold text-shortblack flex items-center gap-2 justify-end">
+                      {tx.currency ? (
+                        <>
+                          <span className="text-[0.7em] px-2 py-0.5 bg-purple-100 text-purple-600 rounded-md font-medium">
+                            {tx.currency}
+                          </span>
+                          {/* Use saved localAmount + fee converted at saved exchange rate */}
+                          {formatAmountForCurrency(
+                            getTotalAmount(tx),
+                            tx.currency,
+                            tx.localAmount !== undefined &&
+                              tx.exchangeRate !== undefined
+                              ? tx.localAmount +
+                                  (parseFloat(String(tx.fee)) || 0) *
+                                    tx.exchangeRate
+                              : undefined
+                          )}
+                        </>
+                      ) : (
+                        formatCurrency(getTotalAmount(tx))
+                      )}
                     </div>
                     <div className="text-[1.2em] text-grays">
-                      Fee: {formatCurrency(parseFloat(String(tx.fee)) || 0)}
+                      Fee:{" "}
+                      {tx.currency
+                        ? formatAmountForCurrency(
+                            parseFloat(String(tx.fee)) || 0,
+                            tx.currency,
+                            tx.exchangeRate !== undefined
+                              ? (parseFloat(String(tx.fee)) || 0) *
+                                  tx.exchangeRate
+                              : undefined
+                          )
+                        : formatCurrency(parseFloat(String(tx.fee)) || 0)}
                     </div>
                   </div>
 

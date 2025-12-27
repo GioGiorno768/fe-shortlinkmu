@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { EditableLinkData, AdLevel } from "@/types/type";
+import { useAdsInfo } from "@/hooks/useAdsInfo";
 
 interface EditLinkModalProps {
   isOpen: boolean;
@@ -40,25 +41,25 @@ export default function EditLinkModal({
   const modalRef = useRef<HTMLDivElement>(null);
   const adLevelRef = useRef<HTMLDivElement>(null);
 
+  // Fetch ad levels from API
+  const { levels: adLevelsFromApi, isLoading: isLoadingLevels } = useAdsInfo();
+
   // State Form
   const [formData, setFormData] = useState<EditableLinkData>({
     alias: "",
     password: "",
     expiresAt: "",
-    adsLevel: "level1",
+    adsLevel: "medium", // Default to medium
   });
 
   // State Dropdown Ads Level
   const [isAdLevelDropdownOpen, setIsAdLevelDropdownOpen] = useState(false);
 
-  // Opsi Ad Level
-  const adLevels: { key: AdLevel; label: string }[] = [
-    { key: "noAds", label: t("noAds") },
-    { key: "level1", label: t("adsLevel1") },
-    { key: "level2", label: t("adsLevel2") },
-    { key: "level3", label: t("adsLevel3") },
-    { key: "level4", label: t("adsLevel4") },
-  ];
+  // Map API data to dropdown options
+  const adLevels = adLevelsFromApi.map((level) => ({
+    key: level.slug as AdLevel,
+    label: level.name,
+  }));
 
   // Isi form saat modal dibuka / data berubah
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function EditLinkModal({
         alias: initialData.alias || "",
         password: initialData.password || "",
         expiresAt: initialData.expiresAt || "",
-        adsLevel: initialData.adsLevel || "level1",
+        adsLevel: initialData.adsLevel || "medium",
       });
     }
   }, [isOpen, initialData]);
@@ -237,16 +238,17 @@ export default function EditLinkModal({
                   >
                     <div className="flex items-center gap-3">
                       <Megaphone className="w-5 h-5 text-bluelight" />
-                      <span
-                        className={
-                          formData.adsLevel === "level1"
-                            ? "text-shortblack"
-                            : "text-shortblack font-medium"
-                        }
-                      >
-                        {adLevels.find((l) => l.key === formData.adsLevel)
-                          ?.label || t("adsLevel")}
-                      </span>
+                      {isLoadingLevels ? (
+                        <span className="text-grays flex items-center gap-2">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </span>
+                      ) : (
+                        <span className="text-shortblack font-medium">
+                          {adLevels.find((l) => l.key === formData.adsLevel)
+                            ?.label || t("adsLevel")}
+                        </span>
+                      )}
                     </div>
                     <ChevronDown
                       className={`w-5 h-5 text-grays transition-transform duration-300 ${

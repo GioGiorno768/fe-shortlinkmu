@@ -15,6 +15,7 @@ export default function NewLinkPage() {
     totalPages,
     generatedLink,
     isLoading,
+    isFetching,
     isMutating,
     page,
     setPage,
@@ -71,6 +72,7 @@ export default function NewLinkPage() {
         page={page}
         setPage={setPage}
         isLoading={isLoading}
+        isFetching={isFetching}
         onEdit={openEditModal}
         onToggleStatus={openConfirmModal}
       />

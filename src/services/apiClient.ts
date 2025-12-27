@@ -23,14 +23,32 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Interceptor: Handle Global Errors (401, etc)
+// Interceptor: Handle Global Errors (401, 403 banned, etc)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid
-      // removeToken(); // Optional: Auto logout? Careful with loop
-      // window.location.href = "/auth/login"; // Optional
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (status === 401) {
+        // Token expired or invalid
+        // removeToken(); // Optional: Auto logout? Careful with loop
+        // window.location.href = "/auth/login"; // Optional
+      }
+
+      // 🔥 Detect banned user (while logged in making API calls)
+      if (status === 403 && data?.error === "Account Banned") {
+        // Dispatch custom event for global banned popup
+        if (typeof window !== "undefined") {
+          const banEvent = new CustomEvent("user:banned", {
+            detail: {
+              message: data?.message || "Akun Anda telah di-suspend.",
+              reason: data?.ban_reason || "Pelanggaran Terms of Service",
+            },
+          });
+          window.dispatchEvent(banEvent);
+        }
+      }
     }
     return Promise.reject(error);
   }

@@ -11,6 +11,7 @@ export function useAdminLinks() {
     totalLinks: 0,
     newToday: 0,
     disabledLinks: 0,
+    activeLinks: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0); // <--- Total filtered links
@@ -111,13 +112,21 @@ export function useAdminLinks() {
     if (idsToUpdate.length === 0 && !isAllSelected) return;
 
     try {
-      await adminLinkService.bulkUpdateLinkStatus({
-        ids: idsToUpdate,
-        selectAll: isAllSelected && !targetIds, // Only true if not targeting specific IDs
-        filters,
-        status,
-        reason,
-      });
+      // Use single update for individual links (supports reason/notification)
+      // Use bulk update for multiple links or select all
+      if (targetIds && targetIds.length === 1 && !isAllSelected) {
+        // Single link action - use updateLinkStatus which supports reason
+        await adminLinkService.updateLinkStatus(targetIds[0], status, reason);
+      } else {
+        // Bulk action
+        await adminLinkService.bulkUpdateLinkStatus({
+          ids: idsToUpdate,
+          selectAll: isAllSelected && !targetIds,
+          filters,
+          status,
+          reason,
+        });
+      }
 
       const count =
         isAllSelected && !targetIds ? totalCount : idsToUpdate.length;

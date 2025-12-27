@@ -10,8 +10,6 @@ export default function SuperAdminLinksPage() {
     stats,
     links,
     isLoading,
-    search,
-    setSearch,
     filters,
     setFilters,
     selectedItems,
@@ -34,8 +32,6 @@ export default function SuperAdminLinksPage() {
       <LinkList
         links={links}
         isLoading={isLoading}
-        search={search}
-        setSearch={setSearch}
         filters={filters}
         setFilters={setFilters}
         selectedItems={selectedItems}

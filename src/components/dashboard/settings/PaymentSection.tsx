@@ -1,7 +1,7 @@
 // src/components/dashboard/settings/PaymentSection.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Save,
@@ -19,72 +19,30 @@ import {
 import clsx from "clsx";
 import type { SavedPaymentMethod } from "@/types/type";
 import ConfirmationModal from "../ConfirmationModal";
-import { usePaymentLogic } from "@/hooks/useSettings"; // Pake Hook baru
+import { usePaymentLogic } from "@/hooks/useSettings";
+import type { PaymentMethodTemplate } from "@/services/paymentTemplateService";
+import {
+  groupTemplatesByType,
+  getInputPlaceholder,
+  getHtmlInputType,
+} from "@/services/paymentTemplateService";
 
-// Konfigurasi Input Tetap Di Sini
-const PAYMENT_CONFIG = {
-  wallet: {
-    label: "Digital Wallet",
-    icon: Smartphone,
-    methods: [
-      { id: "DANA", label: "DANA", type: "number", placeholder: "0812xxxx" },
-      { id: "OVO", label: "OVO", type: "number", placeholder: "0812xxxx" },
-      { id: "GoPay", label: "GoPay", type: "number", placeholder: "0812xxxx" },
-      {
-        id: "PayPal",
-        label: "PayPal",
-        type: "email",
-        placeholder: "name@email.com",
-      },
-    ],
-  },
-  bank: {
-    label: "Bank Transfer",
-    icon: Landmark,
-    methods: [
-      {
-        id: "BCA",
-        label: "Bank BCA",
-        type: "number",
-        placeholder: "1234567890",
-      },
-      {
-        id: "BRI",
-        label: "Bank BRI",
-        type: "number",
-        placeholder: "1234567890",
-      },
-      {
-        id: "Mandiri",
-        label: "Bank Mandiri",
-        type: "number",
-        placeholder: "1234567890",
-      },
-    ],
-  },
-  // Crypto - Disabled for now, will enable when project grows
-  // crypto: {
-  //   label: "Crypto",
-  //   icon: Bitcoin,
-  //   methods: [
-  //     {
-  //       id: "USDT",
-  //       label: "USDT (TRC20)",
-  //       type: "text",
-  //       placeholder: "Txr...",
-  //     },
-  //     { id: "BTC", label: "Bitcoin", type: "text", placeholder: "1A1z..." },
-  //   ],
-  // },
-};
+// Category config for icons and labels
+const CATEGORY_CONFIG = {
+  wallet: { label: "Digital Wallet", icon: Smartphone },
+  bank: { label: "Bank Transfer", icon: Landmark },
+  crypto: { label: "Crypto", icon: Bitcoin },
+} as const;
 
-type CategoryKey = keyof typeof PAYMENT_CONFIG;
+type CategoryKey = keyof typeof CATEGORY_CONFIG;
 
 export default function PaymentSection() {
-  // Panggil Hook Sakti - sekarang fetch data sendiri
+  // Hook with templates from API
   const {
     methods,
+    templates,
     isLoading,
+    isLoadingTemplates,
     error,
     addMethod,
     removeMethod,
@@ -92,10 +50,23 @@ export default function PaymentSection() {
     isProcessing,
   } = usePaymentLogic();
 
+  // Group templates by type
+  const groupedTemplates = useMemo(
+    () => groupTemplatesByType(templates),
+    [templates]
+  );
+
+  // Get available categories (only those with templates)
+  const availableCategories = useMemo(() => {
+    return (Object.keys(CATEGORY_CONFIG) as CategoryKey[]).filter(
+      (key) => groupedTemplates[key]?.length > 0
+    );
+  }, [groupedTemplates]);
+
   // State Form Lokal
   const [activeCategory, setActiveCategory] = useState<CategoryKey>("wallet");
-  const [selectedMethodId, setSelectedMethodId] = useState(
-    PAYMENT_CONFIG.wallet.methods[0].id
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(
+    null
   );
   const [details, setDetails] = useState({
     accountName: "",
@@ -105,31 +76,55 @@ export default function PaymentSection() {
   // State Modal Delete
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Get current category templates
+  const currentTemplates = groupedTemplates[activeCategory] || [];
+
+  // Get selected template
+  const selectedTemplate = useMemo(
+    () => templates.find((t) => t.id === selectedTemplateId) || null,
+    [templates, selectedTemplateId]
+  );
+
+  // Set default template when category changes or templates load
   const handleCategoryChange = (key: CategoryKey) => {
     setActiveCategory(key);
-    setSelectedMethodId(PAYMENT_CONFIG[key].methods[0].id);
+    const categoryTemplates = groupedTemplates[key] || [];
+    if (categoryTemplates.length > 0) {
+      setSelectedTemplateId(categoryTemplates[0].id);
+    }
     setDetails({ ...details, accountNumber: "" });
   };
 
+  // Initialize default template when templates load
+  useMemo(() => {
+    if (templates.length > 0 && selectedTemplateId === null) {
+      const firstCategory = availableCategories[0] || "wallet";
+      setActiveCategory(firstCategory);
+      const categoryTemplates = groupedTemplates[firstCategory] || [];
+      if (categoryTemplates.length > 0) {
+        setSelectedTemplateId(categoryTemplates[0].id);
+      }
+    }
+  }, [templates, availableCategories, groupedTemplates, selectedTemplateId]);
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedTemplate) return;
+
     const success = await addMethod({
-      provider: selectedMethodId,
+      provider: selectedTemplate.name,
       accountName: details.accountName,
       accountNumber: details.accountNumber,
-      category: activeCategory,
+      category: selectedTemplate.type as "wallet" | "bank" | "crypto",
+      templateId: selectedTemplate.id,
+      currency: selectedTemplate.currency,
     });
     // Reset form kalau sukses
     if (success) setDetails({ accountName: "", accountNumber: "" });
   };
 
-  const currentCategoryConfig = PAYMENT_CONFIG[activeCategory];
-  const currentMethodConfig = currentCategoryConfig.methods.find(
-    (m) => m.id === selectedMethodId
-  );
-
   // Loading state
-  if (isLoading) {
+  if (isLoading || isLoadingTemplates) {
     return (
       <div className="flex justify-center items-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-bluelight" />
@@ -190,9 +185,17 @@ export default function PaymentSection() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-[1.6em] font-bold text-shortblack">
-                        {method.provider}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-[1.6em] font-bold text-shortblack">
+                          {method.provider}
+                        </h3>
+                        {/* Currency Badge */}
+                        {method.currency && (
+                          <span className="text-[1em] px-2 py-0.5 bg-purple-100 text-purple-600 rounded-md font-medium">
+                            {method.currency}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[1.4em] text-grays truncate">
                         {method.accountName}
                       </p>
@@ -240,114 +243,143 @@ export default function PaymentSection() {
           <Plus className="w-6 h-6 text-bluelight" /> Add New Method
         </h2>
 
-        <form onSubmit={handleAddSubmit} className="space-y-8">
-          {/* Category Tabs */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {(Object.keys(PAYMENT_CONFIG) as CategoryKey[]).map((key) => {
-              const config = PAYMENT_CONFIG[key];
-              const isActive = activeCategory === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => handleCategoryChange(key)}
-                  className={clsx(
-                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all",
-                    isActive
-                      ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20"
-                      : "border-gray-100 bg-white text-grays hover:bg-slate-50"
-                  )}
-                >
-                  <config.icon
-                    className={clsx("w-8 h-8", isActive && "animate-bounce")}
-                  />
-                  <span className="text-[1.4em] font-bold">{config.label}</span>
-                </button>
-              );
-            })}
+        {templates.length === 0 ? (
+          <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-3xl text-grays">
+            <p className="text-[1.4em]">
+              Tidak ada template pembayaran tersedia saat ini.
+            </p>
           </div>
-
-          {/* Input Fields */}
-          <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6">
-            {/* Provider Select */}
-            <div className="space-y-2">
-              <label className="text-[1.4em] font-bold text-shortblack">
-                Select Provider
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedMethodId}
-                  onChange={(e) => setSelectedMethodId(e.target.value)}
-                  className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
-                >
-                  {currentCategoryConfig.methods.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-grays pointer-events-none" />
-              </div>
+        ) : (
+          <form onSubmit={handleAddSubmit} className="space-y-8">
+            {/* Category Tabs */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {availableCategories.map((key) => {
+                const config = CATEGORY_CONFIG[key];
+                const isActive = activeCategory === key;
+                const count = groupedTemplates[key]?.length || 0;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handleCategoryChange(key)}
+                    className={clsx(
+                      "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all",
+                      isActive
+                        ? "border-bluelight bg-blue-50 text-bluelight ring-2 ring-bluelight/20"
+                        : "border-gray-100 bg-white text-grays hover:bg-slate-50"
+                    )}
+                  >
+                    <config.icon
+                      className={clsx("w-8 h-8", isActive && "animate-bounce")}
+                    />
+                    <span className="text-[1.4em] font-bold">
+                      {config.label}
+                    </span>
+                    <span className="text-[1.1em] text-grays">
+                      {count} provider{count !== 1 ? "s" : ""}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="h-px bg-blue-200/50 my-4"></div>
+            {/* Input Fields */}
+            <div className="bg-blues rounded-3xl p-8 border border-blue-100 space-y-6">
+              {/* Provider Select */}
+              <div className="space-y-2">
+                <label className="text-[1.4em] font-bold text-shortblack">
+                  Select Provider
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedTemplateId || ""}
+                    onChange={(e) =>
+                      setSelectedTemplateId(Number(e.target.value))
+                    }
+                    className="w-full px-6 py-4 pr-12 rounded-xl border border-gray-200 bg-white text-[1.6em] font-medium text-shortblack focus:outline-none focus:ring-2 focus:ring-bluelight/50 appearance-none cursor-pointer"
+                  >
+                    {currentTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({t.currency})
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-6 h-6 text-grays pointer-events-none" />
+                </div>
+                {/* Selected template info */}
+                {selectedTemplate && (
+                  <div className="flex items-center gap-2 mt-2 text-[1.2em] text-grays">
+                    <span>Currency:</span>
+                    <span className="px-2 py-0.5 bg-purple-100 text-purple-600 rounded font-medium">
+                      {selectedTemplate.currency}
+                    </span>
+                    <span className="mx-2">•</span>
+                    <span>Fee: ${Number(selectedTemplate.fee).toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Account Name */}
-            <div className="space-y-2">
-              <label className="text-[1.4em] font-medium text-grays">
-                Account Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
+              <div className="h-px bg-blue-200/50 my-4"></div>
+
+              {/* Account Name */}
+              <div className="space-y-2">
+                <label className="text-[1.4em] font-medium text-grays">
+                  Account Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-grays" />
+                  <input
+                    type="text"
+                    value={details.accountName}
+                    onChange={(e) =>
+                      setDetails({ ...details, accountName: e.target.value })
+                    }
+                    className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50"
+                    placeholder="e.g. Kevin Ragil"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Account Number */}
+              <div className="space-y-2">
+                <label className="text-[1.4em] font-medium text-grays">
+                  {selectedTemplate?.input_label || "Account Number / ID"}
+                </label>
                 <input
-                  type="text"
-                  value={details.accountName}
+                  type={getHtmlInputType(
+                    selectedTemplate?.input_type || "text"
+                  )}
+                  value={details.accountNumber}
                   onChange={(e) =>
-                    setDetails({ ...details, accountName: e.target.value })
+                    setDetails({ ...details, accountNumber: e.target.value })
                   }
-                  className="w-full pl-14 pr-4 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50"
-                  placeholder="e.g. Kevin Ragil"
+                  className="w-full px-6 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50 font-mono"
+                  placeholder={getInputPlaceholder(
+                    selectedTemplate?.input_type || "text"
+                  )}
                   required
                 />
               </div>
             </div>
 
-            {/* Account Number */}
-            <div className="space-y-2">
-              <label className="text-[1.4em] font-medium text-grays">
-                Account Number / ID
-              </label>
-              <input
-                type={currentMethodConfig?.type || "text"}
-                value={details.accountNumber}
-                onChange={(e) =>
-                  setDetails({ ...details, accountNumber: e.target.value })
-                }
-                className="w-full px-6 py-3 rounded-xl border border-gray-200 text-[1.5em] focus:outline-none focus:ring-2 focus:ring-bluelight/50 font-mono"
-                placeholder={
-                  currentMethodConfig?.placeholder || "Enter number..."
-                }
-                required
-              />
+            {/* Submit */}
+            <div className="flex justify-end pt-2">
+              <button
+                type="submit"
+                disabled={isProcessing || !selectedTemplate}
+                className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200"
+              >
+                {isProcessing ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <Save className="w-6 h-6" />
+                )}
+                Save Method
+              </button>
             </div>
-          </div>
-
-          {/* Submit */}
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              disabled={isProcessing}
-              className="bg-bluelight text-white px-10 py-4 rounded-xl font-bold text-[1.6em] hover:bg-opacity-90 transition-all flex items-center gap-3 disabled:opacity-50 shadow-lg shadow-blue-200"
-            >
-              {isProcessing ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <Save className="w-6 h-6" />
-              )}
-              Save Method
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </motion.div>
 
       {/* Delete Modal */}

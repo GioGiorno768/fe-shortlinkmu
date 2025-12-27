@@ -18,6 +18,44 @@ export interface GeneratedLinkData {
   earnPerClick: number;
 }
 
+// ============ AD LEVEL MAPPING HELPERS ============
+// Maps between frontend slugs and backend numeric IDs
+// Backend stores: 1=Low, 2=Medium, 3=High, 4=Aggressive
+
+const AD_LEVEL_SLUG_TO_ID: Record<string, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+  aggressive: 4,
+  // Legacy support
+  noAds: 0,
+  level1: 1,
+  level2: 2,
+  level3: 3,
+  level4: 4,
+};
+
+const AD_LEVEL_ID_TO_SLUG: Record<number, AdLevel> = {
+  0: "low", // noAds maps to low for safety
+  1: "low",
+  2: "medium",
+  3: "high",
+  4: "aggressive",
+};
+
+// Convert slug/legacy format to numeric ID for backend
+const getAdLevelId = (adsLevel: string | undefined): number => {
+  if (!adsLevel) return 2; // Default to medium
+  return AD_LEVEL_SLUG_TO_ID[adsLevel] ?? 2;
+};
+
+// Convert numeric ID from backend to slug for frontend
+const getAdLevelSlug = (id: number | undefined): AdLevel => {
+  if (id === undefined || id === null) return "medium";
+  return AD_LEVEL_ID_TO_SLUG[id] ?? "medium";
+};
+// ================================================
+
 // Update params interface
 interface GetLinksParams {
   page?: number;
@@ -75,7 +113,10 @@ export const getLinks = async (
         search: filters.search,
         filter: backendFilter, // Sort/Special lists
         status: backendStatus, // Active/Disabled
-        ad_level: filters.adsLevel !== "all" ? filters.adsLevel : undefined, // New param
+        ad_level:
+          filters.adsLevel !== "all"
+            ? getAdLevelId(filters.adsLevel)
+            : undefined, // Map slug to ID
       },
     });
 
@@ -96,7 +137,7 @@ export const getLinks = async (
       totalEarning: parseFloat(link.total_earned || 0),
       totalClicks: link.total_views || 0,
       averageCPM: parseFloat(link.calculated_cpm || 0),
-      adsLevel: (link.ad_level ? `level${link.ad_level}` : "level1") as AdLevel,
+      adsLevel: getAdLevelSlug(link.ad_level),
       password: link.password,
       passwordProtected: !!link.password,
       status: link.status,
@@ -122,9 +163,7 @@ export const createLink = async (
       alias: data.alias || undefined,
       password: data.password || undefined,
       expired_at: data.expiresAt || undefined,
-      ad_level: data.adsLevel
-        ? parseInt(data.adsLevel.replace("level", ""))
-        : 1,
+      ad_level: getAdLevelId(data.adsLevel),
     };
 
     const response = await apiClient.post("/links", payload);
@@ -162,9 +201,7 @@ export const updateLink = async (
       alias: data.alias,
       password: data.password || null, // Send null to remove password
       expired_at: data.expiresAt || null,
-      ad_level: data.adsLevel
-        ? parseInt(data.adsLevel.replace("level", ""))
-        : 1,
+      ad_level: getAdLevelId(data.adsLevel),
     };
 
     const response = await apiClient.put(`/links/${id}`, payload);
@@ -183,7 +220,7 @@ export const updateLink = async (
       totalEarning: link.total_earned || 0,
       totalClicks: link.total_views_count || 0,
       averageCPM: 0,
-      adsLevel: (link.ad_level ? `level${link.ad_level}` : "level1") as AdLevel,
+      adsLevel: getAdLevelSlug(link.ad_level),
       passwordProtected: !!link.password,
       status: link.status,
       dateExpired: link.expired_at,

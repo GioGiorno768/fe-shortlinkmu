@@ -59,11 +59,15 @@ export function useAdminUsers() {
     setIsAllSelected(false); // Reset select all
   }, [search, statusFilter]);
 
-  const toggleStatus = async (id: string, currentStatus: UserStatus) => {
+  const toggleStatus = async (
+    id: string,
+    currentStatus: UserStatus,
+    reason?: string
+  ) => {
     // Suspended <-> Active toggle (no more "process" status)
     const newStatus = currentStatus === "suspended" ? "active" : "suspended";
     try {
-      await adminUserService.updateUserStatus(id, newStatus);
+      await adminUserService.updateUserStatus(id, newStatus, reason);
       // Optimistic update
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, status: newStatus } : u))

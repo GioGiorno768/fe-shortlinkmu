@@ -7,10 +7,12 @@ import type {
   AdLevelConfig,
   AdFeature,
   GlobalFeature,
+  CountryRate,
 } from "@/services/adLevelService";
 import { formatCPM } from "@/services/adLevelService";
 import { motion, AnimatePresence } from "motion/react";
 import FeatureSelector from "./FeatureSelector";
+import CountryRateEditor from "./CountryRateEditor";
 
 interface AdLevelModalProps {
   isOpen: boolean;
@@ -87,6 +89,9 @@ export default function AdLevelModal({
   // New global features selection
   const [enabledFeatures, setEnabledFeatures] = useState<string[]>([]);
 
+  // Country-specific CPC rates
+  const [countryRates, setCountryRates] = useState<CountryRate[]>([]);
+
   // Initialize form with editing data
   useEffect(() => {
     if (editingLevel) {
@@ -101,6 +106,7 @@ export default function AdLevelModal({
       });
       setFeatures(editingLevel.features);
       setEnabledFeatures(editingLevel.enabledFeatures || []);
+      setCountryRates(editingLevel.countryRates || []);
     } else {
       setFormData({
         levelNumber: nextLevelNumber,
@@ -120,6 +126,7 @@ export default function AdLevelModal({
         },
       ]);
       setEnabledFeatures([]);
+      setCountryRates([]);
     }
   }, [editingLevel, nextLevelNumber, isOpen]);
 
@@ -131,6 +138,7 @@ export default function AdLevelModal({
       isPopular: false, // Popular status is now controlled via button in card, not modal
       features, // Keep legacy features for backward compatibility
       enabledFeatures, // New global features
+      countryRates, // Per-country CPC rates
     };
 
     await onSubmit(data);
@@ -307,6 +315,14 @@ export default function AdLevelModal({
                       />
                     </div>
                   </div>
+
+                  {/* Country-Specific CPC Rates */}
+                  <CountryRateEditor
+                    countryRates={countryRates}
+                    onChange={setCountryRates}
+                    defaultCpcRate={formData.cpcRate}
+                    disabled={isSubmitting}
+                  />
 
                   {/* Color Theme */}
                   <div>

@@ -10,7 +10,7 @@ import AdLevelModal from "@/components/dashboard/super-admin/AdLevelModal";
 import GlobalFeatureModal from "@/components/dashboard/super-admin/GlobalFeatureModal";
 import ConfirmationModal from "@/components/dashboard/ConfirmationModal";
 import GlobalAlert from "@/components/dashboard/GlobalAlert";
-import type { AdLevelConfig } from "@/services/adLevelService";
+import { AdLevelConfig } from "@/services/adLevelService";
 
 export default function AdsConfigurationPage() {
   const {

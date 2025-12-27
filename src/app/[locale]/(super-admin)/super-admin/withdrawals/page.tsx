@@ -23,6 +23,7 @@ export default function SuperAdminWithdrawalsPage() {
     handleReject,
     handleAddProof,
     handlePayWithProof,
+    currentUserId, // For processor check
   } = useAdminWithdrawals();
 
   return (
@@ -45,7 +46,7 @@ export default function SuperAdminWithdrawalsPage() {
         onReject={handleReject}
         onAddProof={handleAddProof}
         onPayWithProof={handlePayWithProof}
-        detailBasePath="/super-admin/withdrawals" // <--- Fix detail URL
+        currentUserId={currentUserId}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Edit2, Trash2, Crown, ExternalLink, Check } from "lucide-react";
+import { Edit2, Trash2, Crown, ExternalLink, Check, Globe } from "lucide-react";
 import clsx from "clsx";
 import type { AdLevelConfig, GlobalFeature } from "@/services/adLevelService";
 import { calculateCPM, formatCPM } from "@/services/adLevelService";
@@ -123,6 +123,14 @@ export default function AdLevelCard({
           <p className="text-[1em] text-grays">
             CPC: ${level.cpcRate.toFixed(4)}
           </p>
+          {/* Country Rates Badge */}
+          {level.countryRates && level.countryRates.length > 0 && (
+            <p className="text-[1em] text-purple-600 font-medium flex items-center justify-center gap-1">
+              <Globe className="w-3 h-3" />
+              {level.countryRates.length}{" "}
+              {level.countryRates.length === 1 ? "country" : "countries"}
+            </p>
+          )}
         </div>
       </div>
 

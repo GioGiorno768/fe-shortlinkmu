@@ -13,6 +13,7 @@ export interface AdLevelConfig {
   demoUrl: string;
   features: AdFeature[]; // Legacy features (for backward compatibility)
   enabledFeatures?: string[]; // New: IDs of global features enabled for this level
+  countryRates?: CountryRate[]; // Per-country CPC rate overrides
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,13 @@ export interface AdFeature {
   label: string;
   included: boolean;
   value?: string | boolean;
+}
+
+// Country-specific CPC rate override
+export interface CountryRate {
+  countryCode: string;
+  countryName: string;
+  cpcRate: number;
 }
 
 // Mock data for development

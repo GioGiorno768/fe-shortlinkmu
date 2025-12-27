@@ -117,7 +117,7 @@ export default function TransactionTable({
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
                         <Image
-                          src={trx.user.avatar}
+                          src={trx.user.avatar || "/avatars/default.png"}
                           alt={trx.user.name}
                           width={40}
                           height={40}

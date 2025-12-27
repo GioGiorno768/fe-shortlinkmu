@@ -104,6 +104,7 @@ export function useSecurityLogic() {
 export const paymentKeys = {
   all: ["payment-methods"] as const,
   list: () => [...paymentKeys.all, "list"] as const,
+  templates: () => ["payment-templates"] as const,
 };
 
 export function usePaymentLogic() {
@@ -121,6 +122,18 @@ export function usePaymentLogic() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Fetch available payment templates
+  const { data: templates = [], isLoading: isLoadingTemplates } = useQuery({
+    queryKey: paymentKeys.templates(),
+    queryFn: async () => {
+      const { getPaymentTemplates } = await import(
+        "@/services/paymentTemplateService"
+      );
+      return getPaymentTemplates();
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes (templates change rarely)
+  });
+
   // Mutation: Add payment method
   const addMutation = useMutation({
     mutationFn: (data: Omit<SavedPaymentMethod, "id" | "isDefault">) =>
@@ -128,6 +141,10 @@ export function usePaymentLogic() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: paymentKeys.all });
       showAlert("Metode pembayaran ditambahkan!", "success");
+      // Hard refresh page after 1 second to ensure data is updated
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: () => {
       showAlert("Gagal menambah metode.", "error");
@@ -213,7 +230,9 @@ export function usePaymentLogic() {
 
   return {
     methods,
+    templates,
     isLoading,
+    isLoadingTemplates,
     error: error ? "Gagal memuat metode pembayaran." : null,
     addMethod,
     removeMethod,

@@ -112,13 +112,32 @@ export function useWithdrawal() {
       amount: number;
       usedMethod: PaymentMethod;
     }) => {
-      // Get current exchange rate and calculate local amount
+      // Use payment method's currency (from template), NOT user's preference
+      // This ensures admin sees amounts in the correct currency for the payment provider
+      const methodCurrency = usedMethod.currency || "USD";
+
+      // Get exchange rate for the payment method's currency
       const rates = getExchangeRates();
-      const exchangeRate = rates[currency] || 1;
-      const localAmount = convertFromUSD(amount, currency);
+      // Cast to valid CurrencyCode, default to USD if not recognized
+      const validCurrencies = [
+        "USD",
+        "IDR",
+        "EUR",
+        "GBP",
+        "MYR",
+        "SGD",
+      ] as const;
+      type ValidCurrency = (typeof validCurrencies)[number];
+      const currencyCode: ValidCurrency = validCurrencies.includes(
+        methodCurrency as ValidCurrency
+      )
+        ? (methodCurrency as ValidCurrency)
+        : "USD";
+      const exchangeRate = rates[currencyCode] || 1;
+      const localAmount = convertFromUSD(amount, currencyCode);
 
       return withdrawalService.requestWithdrawal(amount, usedMethod, {
-        currency,
+        currency: methodCurrency,
         localAmount,
         exchangeRate,
       });

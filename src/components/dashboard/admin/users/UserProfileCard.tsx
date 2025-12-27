@@ -54,7 +54,8 @@ export default function UserProfileCard({ data }: UserProfileCardProps) {
 
         <div className="space-y-4 text-left bg-slate-50 p-6 rounded-2xl border border-gray-100">
           <InfoRow label={t("overview.email")} value={data.email} />
-          <InfoRow label={t("overview.phone")} value={data.phoneNumber} />
+          {/* Phone number hidden - user profile doesn't have phone settings */}
+          {/* <InfoRow label={t("overview.phone")} value={data.phoneNumber} /> */}
           <InfoRow
             label={t("overview.joined")}
             value={format.dateTime(new Date(data.joinedAt), {
@@ -65,22 +66,40 @@ export default function UserProfileCard({ data }: UserProfileCardProps) {
         </div>
       </div>
 
-      {/* Quick Stats */}
+      {/* Quick Stats - 2x2 Grid */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
-          <p className="text-[1.2em] text-grays mb-1">
+        <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+          <p className="text-[1.1em] text-grays mb-1">
             {t("overview.totalViews")}
           </p>
-          <p className="text-[2em] font-bold text-bluelight">
+          <p className="text-[1.8em] font-bold text-bluelight">
             {format.number(data.stats.totalViews)}
           </p>
         </div>
-        <div className="p-6 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
-          <p className="text-[1.2em] text-grays mb-1">
+        <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+          <p className="text-[1.1em] text-grays mb-1">
             {t("overview.walletBalance")}
           </p>
-          <p className="text-[2em] font-bold text-green-600">
+          <p className="text-[1.8em] font-bold text-green-600">
             {format.number(data.stats.walletBalance, {
+              style: "currency",
+              currency: "USD",
+            })}
+          </p>
+        </div>
+        <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+          <p className="text-[1.1em] text-grays mb-1">Total Earnings</p>
+          <p className="text-[1.8em] font-bold text-emerald-600">
+            {format.number(data.stats.totalEarnings || 0, {
+              style: "currency",
+              currency: "USD",
+            })}
+          </p>
+        </div>
+        <div className="p-5 bg-white rounded-2xl border border-gray-100 shadow-sm text-center">
+          <p className="text-[1.1em] text-grays mb-1">Avg CPM</p>
+          <p className="text-[1.8em] font-bold text-purple-600">
+            {format.number(data.stats.avgCpm || 0, {
               style: "currency",
               currency: "USD",
             })}

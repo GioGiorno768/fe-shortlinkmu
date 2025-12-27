@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as withdrawalService from "@/services/withdrawalService";
+import { getUser } from "@/services/authService";
 import { useAlert } from "@/hooks/useAlert";
 import type {
   RecentWithdrawal,
@@ -12,6 +13,10 @@ export function useAdminWithdrawals() {
   const [transactions, setTransactions] = useState<RecentWithdrawal[]>([]);
   const [stats, setStats] = useState<AdminWithdrawalStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Get current user ID for checking if current admin is the processor
+  const currentUser = getUser();
+  const currentUserId = currentUser?.id;
 
   // State Pagination & Filter
   const [page, setPage] = useState(1);
@@ -70,8 +75,27 @@ export function useAdminWithdrawals() {
       } else {
         showAlert("Withdrawal marked as Paid.", "success");
       }
-    } catch (e) {
-      showAlert("Error updating status.", "error");
+    } catch (e: any) {
+      // Check if it's a race condition error (403 - another admin already processed)
+      const errorMessage = e?.response?.data?.message || e?.message || "";
+
+      if (
+        e?.response?.status === 403 &&
+        (errorMessage.includes("sedang diproses") ||
+          errorMessage.includes("sudah diproses"))
+      ) {
+        // Another admin already processed this withdrawal
+        showAlert(
+          "Pembayaran sudah diproses oleh admin lain. Memuat ulang data...",
+          "warning"
+        );
+        // Auto-refresh after 1 second
+        setTimeout(() => {
+          fetchData();
+        }, 1000);
+      } else {
+        showAlert("Error updating status.", "error");
+      }
     }
   };
 
@@ -82,8 +106,22 @@ export function useAdminWithdrawals() {
         prev.map((t) => (t.id === id ? { ...t, status: "rejected" } : t))
       );
       showAlert("Withdrawal rejected.", "info");
-    } catch (e) {
-      showAlert("Error rejecting.", "error");
+    } catch (e: any) {
+      const errorMessage = e?.response?.data?.message || e?.message || "";
+
+      if (
+        e?.response?.status === 403 &&
+        (errorMessage.includes("sedang diproses") ||
+          errorMessage.includes("sudah diproses"))
+      ) {
+        showAlert(
+          "Pembayaran sudah diproses oleh admin lain. Memuat ulang data...",
+          "warning"
+        );
+        setTimeout(() => fetchData(), 1000);
+      } else {
+        showAlert("Error rejecting.", "error");
+      }
     }
   };
 
@@ -113,8 +151,22 @@ export function useAdminWithdrawals() {
         )
       );
       showAlert("Payment completed & proof attached!", "success");
-    } catch (e) {
-      showAlert("Error processing payment.", "error");
+    } catch (e: any) {
+      const errorMessage = e?.response?.data?.message || e?.message || "";
+
+      if (
+        e?.response?.status === 403 &&
+        (errorMessage.includes("sedang diproses") ||
+          errorMessage.includes("sudah diproses"))
+      ) {
+        showAlert(
+          "Pembayaran sudah diproses oleh admin lain. Memuat ulang data...",
+          "warning"
+        );
+        setTimeout(() => fetchData(), 1000);
+      } else {
+        showAlert("Error processing payment.", "error");
+      }
     }
   };
 
@@ -131,5 +183,6 @@ export function useAdminWithdrawals() {
     handleReject,
     handleAddProof,
     handlePayWithProof,
+    currentUserId, // For checking if current admin is the processor
   };
 }

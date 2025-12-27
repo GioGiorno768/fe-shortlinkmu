@@ -8,6 +8,7 @@ import type { AdminUser, UserStatus } from "@/types/type";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import UserListCard from "./UserListCard";
 import Pagination from "@/components/dashboard/Pagination";
+import Spinner from "../../Spinner";
 
 interface UserTableProps {
   users: AdminUser[];
@@ -144,11 +145,9 @@ export default function UserTable({
       {/* LIST CONTENT */}
       <div className="space-y-4 min-h-[400px]">
         {isLoading ? (
-          <div className="p-12 text-center text-grays bg-white rounded-3xl border border-gray-100">
-            Lagi loading data user nih...
-          </div>
+          <Spinner />
         ) : users.length === 0 ? (
-          <div className="p-12 text-center text-grays bg-white rounded-3xl border border-gray-100">
+          <div className="p-12 text-center text-grays bg-white rounded-3xl border border-gray-100 text-[1.4em]">
             Gak nemu user yang dicari.
           </div>
         ) : (

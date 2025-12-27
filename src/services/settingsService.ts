@@ -102,16 +102,31 @@ export async function getPaymentMethods(): Promise<SavedPaymentMethod[]> {
     accountName: m.account_name,
     accountNumber: m.account_number,
     isDefault: m.is_default || false,
-    category: m.method_type === "ewallet" ? "wallet" : "bank",
-    fee: m.fee || 0, // Fee in IDR from backend
+    category:
+      m.method_type === "ewallet"
+        ? "wallet"
+        : m.method_type === "crypto"
+        ? "crypto"
+        : "bank",
+    fee: m.fee || 0,
+    currency: m.template?.currency || null,
+    templateId: m.template_id || null,
   }));
 }
 
 export async function addPaymentMethod(
-  data: Omit<SavedPaymentMethod, "id" | "isDefault" | "fee">
+  data: Omit<SavedPaymentMethod, "id" | "isDefault" | "fee"> & {
+    templateId?: number;
+  }
 ): Promise<SavedPaymentMethod> {
   const response = await apiClient.post("/payment-methods", {
-    method_type: data.category === "wallet" ? "ewallet" : "bank_transfer",
+    template_id: data.templateId,
+    method_type:
+      data.category === "wallet"
+        ? "ewallet"
+        : data.category === "crypto"
+        ? "crypto"
+        : "bank_transfer",
     account_name: data.accountName,
     account_number: data.accountNumber,
     bank_name: data.provider,
@@ -126,6 +141,7 @@ export async function addPaymentMethod(
     isDefault: m.is_default || false,
     category: data.category,
     fee: m.fee || 0,
+    currency: m.template?.currency || data.currency,
   };
 }
 
